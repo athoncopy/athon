@@ -1,10 +1,23 @@
 <?php
+# ------------------------------------------------------------------------------------
+# MARIS XDS REPOSITORY
+# Copyright (C) 2007 - 2010  MARiS Project
+# Dpt. Medical and Diagnostic Sciences, University of Padova - csaccavini@rad.unipd.it
+# This program is distributed under the terms and conditions of the GPL
+# See the LICENSE files for details
+# ------------------------------------------------------------------------------------
 
 ##### FILE DI CONFIGURAZIONE DEL REPOSITORY
-
+include_once('config.php');
 ### QUERY FOR HTTP kind of CONNECTION WITH REGISTRY (NORMAL or TLS)
 $http_con = "SELECT HTTPD FROM HTTP WHERE HTTP.ACTIVE = 'A'";
+if($database=="MYSQL"){
 include_once('./lib/functions_mysql.php');
+}
+else if($database=="ORACLE"){
+include_once('./lib/functions_oracle.php');
+}
+
 $res_http = query_select($http_con);
 
 ##### OTTENGO LE INFORMAZIONI SUL PROTOCOLLO
@@ -27,7 +40,7 @@ $rep_port = $res[0][2];
 
 //------------------------- LOCAL FILE SYSTEM PATHS -------------------------//
 $tmp_path = "./tmp/";
-$tmpQuery_path = "./tmpQuery/";
+//$tmpQuery_path = "./tmpQuery/";
 $lib_path = "./lib/";
    $tmp_path_2 = "tmp/";                         //nota: sempre con lo / finale!!!
 
@@ -50,7 +63,10 @@ $www_docs_path = $www_REP_path.$relative_docs_path_2;//PER COMPORRE L'URI
 #### VARIABILI DI SERVIZIO
 
 #### LOGS
-$log_path = "./log/log.out";
+//$log_path = "./log/log.out";
+$log_path = "./log/";
+
+
 //$logActive = "A";
 $logActive = $res_config[0][1];
 
@@ -98,7 +114,6 @@ $path_to_ATNA_jar = "./atna/java/";
 
 ###### A CHI SPEDIRE I MESSAGGI ATNA
 $get_ATNA_node = "SELECT * FROM ATNA";
-include_once('./lib/functions_mysql.php');
 	$res_ATNA = query_select($get_ATNA_node);
 
 $ATNA_host = $res_ATNA[0][1];

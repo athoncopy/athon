@@ -1,11 +1,19 @@
 <?php
+# ------------------------------------------------------------------------------------
+# MARIS XDS REGISTRY
+# Copyright (C) 2007 - 2010  MARiS Project
+# Dpt. Medical and Diagnostic Sciences, University of Padova - csaccavini@rad.unipd.it
+# This program is distributed under the terms and conditions of the GPL
+# See the LICENSE files for details
+# ------------------------------------------------------------------------------------
 
-/*
-* Created on 30-nov-2005
-* Biasio
-*/
-
-include_once('lib/functions_mysql.php');
+include_once('./config/config.php');
+if($database=="MYSQL"){
+include_once('./lib/functions_mysql.php');
+}
+else if($database=="ORACLE"){
+include_once('./lib/functions_oracle.php');
+}
 
 #### XDSSubmissionSet.sourceId
 function validate_XDSSubmissionSetSourceId($dom,$idfile,$save_files)
@@ -85,7 +93,7 @@ function validate_XDSSubmissionSetSourceId($dom,$idfile,$save_files)
 
     	//QUERY AL DB
     	//$query = "SELECT * FROM SUBMISSIONS WHERE XDSSubmissionSet_uniqueId = '$ebxml_value'";
-	$query = "SELECT * FROM KNOWN_SOUCES_Ids WHERE XDSSubmissionset_sourceId = '$ebxml_value'";
+	$query = "SELECT * FROM KNOWN_SOUCES_IDS WHERE XDSSUBMISSIONSET_SOURCEID = '$ebxml_value'";
 	 
   if($save_files){
 
@@ -179,7 +187,7 @@ function validate_XDSDocumentEntryUniqueId($dom)
 	}
 
 	//QUERY AL DB
-    	$query = "SELECT * FROM DOCUMENTS WHERE  XDSDocumentEntry_uniqueId = '$ebxml_value'";
+    	$query = "SELECT * FROM DOCUMENTS WHERE  XDSDOCUMENTENTRY_UNIQUEID = '$ebxml_value'";
 	 
 // 		fwrite($fp_uniqueIdQuery,$query);
 // 	fclose($fp_uniqueIdQuery);
