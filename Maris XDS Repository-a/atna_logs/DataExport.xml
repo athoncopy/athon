@@ -1,0 +1,14 @@
+<AuditMessage>
+	<EventIdentification EventDateTime="2007-06-29T12:31:28" EventActionCode="R" EventOutcomeIndicator="0">
+		<EventID code="110106" codeSystemName="DCM" displayName="Export"/>
+	</EventIdentification>
+	<ActiveParticipant UserID="XDS Repository" UserIsRequestor="true" NetworkAccessPointID="10.135.0.115">
+		<RoleIDCode code="110153" codeSystemName="DCM" displayName="Source"/>
+	</ActiveParticipant>
+	<ActiveParticipant UserID="XDS Consumer" UserIsRequestor="false" NetworkAccessPointTypeCode="2" NetworkAccessPointID="10.135.0.114">
+		<RoleIDCode code="110154" codeSystemName="DCM" displayName="Destination Media"/>
+	</ActiveParticipant>
+	<AuditSourceIdentification AuditSourceID="MARIS_XDS">
+		<AuditSourceTypeCode code="4"/>
+	</AuditSourceIdentification>
+</AuditMessage>
