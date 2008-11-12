@@ -621,7 +621,10 @@ writeSQLQuery($INSERT_INTO_RegistryPackage);
 			#### CASO DI FOLDER
 			if($name_value=='XDSFolder' && $lastUpdateTime)// && $ExternalIdentifier_count==1)
 			{
-				$datetime="00000000000000";
+				//$datetime="00000000000000";
+				$today = date("Ymd");
+				$cur_hour = date("His");
+				$datetime = $today.$cur_hour;
 
 				$insert_lastUpdateTime_Slot="INSERT INTO Slot (name,slotType,value,parent) VALUES ('lastUpdateTime','NULL','$datetime','$value_parent')";
 				writeSQLQuery($insert_lastUpdateTime_Slot);

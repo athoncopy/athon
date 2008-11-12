@@ -588,7 +588,7 @@ $msg_mail .= "<Signature Id=\"signatureID\" xmlns=\"http://www.w3.org/2000/09/xm
 <SignatureProperty Id=\"recommendedRegistry\"
 target=\"signatureID\">http://".$_SERVER['SERVER_NAME'].$www_REG_path.$service_query."</SignatureProperty>
 <SignatureProperty Id=\"sendAcknowledgementTo\"
-target=\"signatureID\">xds@rad.unipd.it</SignatureProperty>
+target=\"signatureID\">".$NAV_to."</SignatureProperty>
 </SignatureProperties>
 <Manifest Id=\"IHEManifest\">";
 
@@ -606,6 +606,12 @@ $msg_mail .= "
 </Signature>".$eol;
 
 $msg_mail .= "--".$bound_mail."--";
+
+	$fp_ebxml_nav = fopen($tmp_path.$idfile."-nav_msg-".$idfile,"w+");
+	fwrite($fp_ebxml_nav,$msg_mail);
+	fclose($fp_ebxml_nav);
+
+
 
 mail($NAV_to, "Notification of Document Availability",$msg_mail, $headers_mail);
 }

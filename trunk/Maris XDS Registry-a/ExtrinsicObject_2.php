@@ -148,9 +148,9 @@ VALUES
 
 writeSQLQuery($INSERT_INTO_ExtrinsicObject);
 			
-	$fp_INSERT_INTO_ExtrinsicObject = fopen("tmpQuery/INSERT_INTO_ExtrinsicObject","w+");
+	/*$fp_INSERT_INTO_ExtrinsicObject = fopen("tmpQuery/INSERT_INTO_ExtrinsicObject","w+");
 		fwrite($fp_INSERT_INTO_ExtrinsicObject,$INSERT_INTO_ExtrinsicObject);
-	fclose($fp_INSERT_INTO_ExtrinsicObject);
+	fclose($fp_INSERT_INTO_ExtrinsicObject);*/
 	
 	$ris = query_exec($INSERT_INTO_ExtrinsicObject);
 
@@ -449,7 +449,7 @@ writeSQLQuery($INSERT_INTO_ExtrinsicObject);
 			#### FOLDER
 			if($code_classificationNode=="XDSFolder")
 			{
-				$queryForClassificationScheme="SELECT id FROM ClassificationScheme WHERE ClassificationScheme. Name_value = 'XDSFolder.codeList'";
+				$queryForClassificationScheme="SELECT id FROM ClassificationScheme WHERE ClassificationScheme.Name_value = 'XDSFolder.codeList'";
 				writeSQLQuery($queryForClassificationScheme);
 				$ris_ClassificationScheme=query_select($queryForClassificationScheme);
 
@@ -459,7 +459,7 @@ writeSQLQuery($INSERT_INTO_ExtrinsicObject);
 			#### SUBMISSIONSET
 			else if($code_classificationNode=="XDSSubmissionSet")
 			{
-				$queryForClassificationScheme="SELECT id FROM ClassificationScheme WHERE ClassificationScheme. Name_value = 'XDSSubmissionSet.contentTypeCode'";
+				$queryForClassificationScheme="SELECT id FROM ClassificationScheme WHERE ClassificationScheme.Name_value = 'XDSSubmissionSet.contentTypeCode'";
 				writeSQLQuery($queryForClassificationScheme);
 				$ris_ClassificationScheme=query_select($queryForClassificationScheme);
 
@@ -472,6 +472,7 @@ writeSQLQuery($INSERT_INTO_ExtrinsicObject);
 			if($value_nodeRepresentation == '')
 			{
 				$value_nodeRepresentation = "NULL";
+				//$value_nodeRepresentation = "default";
 			}
 
 			$DB_array_classification_attributes['classificationScheme'] = $value_classificationScheme;
@@ -486,9 +487,9 @@ writeSQLQuery($INSERT_INTO_ExtrinsicObject);
 			##### SONO PRONTO A SCRIVERE NEL DB
 			$INSERT_INTO_Classification = "INSERT INTO Classification (id,accessControlPolicy,objectType,classificationNode,classificationScheme,classifiedObject,nodeRepresentation) VALUES ('".trim($DB_array_classification_attributes['id'])."','".trim($DB_array_classification_attributes['accessControlPolicy'])."','".trim($DB_array_classification_attributes['objectType'])."','".trim($DB_array_classification_attributes['classificationNode'])."','".trim($DB_array_classification_attributes['classificationScheme'])."','".trim($DB_array_classification_attributes['classifiedObject'])."','".trim($DB_array_classification_attributes['nodeRepresentation'])."')";
 			writeSQLQuery($INSERT_INTO_Classification);
-			$fp = fopen("tmpQuery/INSERT_INTO_Classification","w+");
+			/*$fp = fopen("tmpQuery/INSERT_INTO_Classification","w+");
     			fwrite($fp,$INSERT_INTO_Classification);
-			fclose($fp);
+			fclose($fp);*/
 			
 			$ris = query_exec($INSERT_INTO_Classification);
 
@@ -542,9 +543,9 @@ writeSQLQuery($INSERT_INTO_ExtrinsicObject);
 		##### SONO PRONTO A SCRIVERE NEL DB
         	$INSERT_INTO_Name = "INSERT INTO Name (charset,lang,value,parent) VALUES ('".trim($DB_array_name['charset'])."','".trim($DB_array_name['lang'])."','".trim(adjustString($DB_array_name['value']))."','".trim($DB_array_name['parent'])."')";
 		writeSQLQuery($INSERT_INTO_Name);
-		$fp_INSERT_INTO_Name = fopen("tmpQuery/INSERT_INTO_Name","w+");
+		/*$fp_INSERT_INTO_Name = fopen("tmpQuery/INSERT_INTO_Name","w+");
 		fwrite($fp_INSERT_INTO_Name,$INSERT_INTO_Name);
-		fclose($fp_INSERT_INTO_Name);
+		fclose($fp_INSERT_INTO_Name);*/
 	
 		$ris = query_exec($INSERT_INTO_Name);
 
@@ -552,7 +553,7 @@ writeSQLQuery($INSERT_INTO_ExtrinsicObject);
 		}//END of for child_nodes
 		//else
 		//{
-		
+		//Slot di Classification
 
 		for($sl = 0;$sl < count($classification_child_nodes);$sl++)
 			{

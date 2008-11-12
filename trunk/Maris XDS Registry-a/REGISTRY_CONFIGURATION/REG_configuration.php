@@ -79,6 +79,7 @@ $service_query = "query.php";
 ###### PER LA CHIAMATA AL JAR FILE (VALIDAZIONE ebXML CON SCHEMA)
 $path_to_VALIDATION_jar = "./XSD_VALIDATION_JAR/";
 $path_to_XSD_file = "./schemas/rs.xsd";
+$path_to_XSD_file_sq = "./schemas3/query.xsd";
 
 ###### PER COSTRUIRE L'ebXML DI RISPOSTA ALLE QUERY (NAMESPACES)
 $ns_rim = "rim";

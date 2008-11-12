@@ -11,9 +11,9 @@
 # hostname
   $ip_q = 'localhost';
 # user name
-  $user_db_q = 'marco';
+  $user_db_q = 'xds';
 # password
-  $password_db_q = 'marco';
+  $password_db_q = 'xds';
 # database name
-  $db_name_q = 'XDS_REG'; 
+  $db_name_q = 'XDS_REGISTRY'; 
 ?>

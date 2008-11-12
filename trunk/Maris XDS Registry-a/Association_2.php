@@ -302,7 +302,8 @@ function fill_Association_tables($dom,$RegistryPackage_id_array,$ExtrinsicObject
 					#### ricavo data-ora correnti
 					$today = date("Ymd");
 					$cur_hour = date("His");
-					$datetime = $today.$cur_hour;
+					//$datetime = $today.$cur_hour;
+					$datetime = "CURRENT_TIMESTAMP";
 
 					####UPDATE DI lastUpdateTime
 					$update_lastUpdateTime="UPDATE Slot SET Slot.value = '$datetime' WHERE Slot.name = 'lastUpdateTime' AND Slot.parent = '$value_sourceObject'";
