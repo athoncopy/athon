@@ -9,13 +9,7 @@
 
 
 include_once('./config/config.php');
-if($database=="MYSQL"){
-include_once('./lib/functions_mysql.php');
-}
-else if($database=="ORACLE"){
-include_once('./lib/functions_oracle.php');
-}
-
+require_once('./lib/functions_'.$database.'.php');
 
 $Login = $_POST['login'];
 $Password = crypt($_POST['password'],'xds');

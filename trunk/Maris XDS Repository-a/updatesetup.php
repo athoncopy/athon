@@ -8,12 +8,7 @@
 # ------------------------------------------------------------------------------------
 
 include_once('./config/config.php');
-if($database=="MYSQL"){
-include_once('./lib/functions_mysql.php');
-}
-else if($database=="ORACLE"){
-include_once('./lib/functions_oracle.php');
-}
+require_once('./lib/functions_'.$database.'.php');
 
 $REG_host_post = $_POST['registry_host'];
 $REG_port_post = $_POST['registry_port'];

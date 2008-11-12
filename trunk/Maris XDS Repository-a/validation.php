@@ -6,15 +6,6 @@
 # This program is distributed under the terms and conditions of the GPL
 # See the LICENSE files for details
 # ------------------------------------------------------------------------------------
-include_once($lib_path."domxml-php4-to-php5.php");
-include_once('./config/config.php');
-if($database=="MYSQL"){
-include_once('./lib/functions_mysql.php');
-}
-else if($database=="ORACLE"){
-include_once('./lib/functions_oracle.php');
-}
-
 #### XDSSubmissionSet.sourceId
 function validate_XDSSubmissionSetSourceId($dom,$idfile,$save_files)
 {
