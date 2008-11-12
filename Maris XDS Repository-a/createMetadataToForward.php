@@ -1,4 +1,11 @@
 <?php
+# ------------------------------------------------------------------------------------
+# MARIS XDS REPOSITORY
+# Copyright (C) 2007 - 2010  MARiS Project
+# Dpt. Medical and Diagnostic Sciences, University of Padova - csaccavini@rad.unipd.it
+# This program is distributed under the terms and conditions of the GPL
+# See the LICENSE files for details
+# ------------------------------------------------------------------------------------
 
 function modifyMetadata($dom_ebXML,$ExtrinsicObject_node,$file_name,$document_URI,$allegato_STRING,$idfile,$document_token)
 {
@@ -158,14 +165,24 @@ function modifyMetadata($dom_ebXML,$ExtrinsicObject_node,$file_name,$document_UR
 
 ############### TABELLA DOCUMENTS ##############
 	#### RECUPERO DATA E ORA ATTUALI
-	$today = date("Y-m-d");
+	/*$today = date("Y-m-d");
 	$cur_hour = date("H:i:s");
-	$datetime = $today." ".$cur_hour;
+	$datetime = $today." ".$cur_hour;*/
+	
+	/*$insert_into_DOCUMENTS = "INSERT INTO DOCUMENTS (XDSDocumentEntry_uniqueId,ExtrinsicObject_id,file_system_id,size,hash,URI,TEXT,DATE) VALUES ('$ebxml_value','$ExtrinsicObject_id_attr','$file_name','$size','$hash','$Document_URI','".adjustString($allegato_STRING)."','$datetime')";*/
+	$datetime="CURRENT_TIMESTAMP";
+	$insert_into_DOCUMENTS = "INSERT INTO DOCUMENTS (XDSDOCUMENTENTRY_UNIQUEID,EXTRINSICOBJECT_ID,FILE_SYSTEM_ID,LENGTH,HASH,DATA) VALUES ('$ebxml_value','$ExtrinsicObject_id_attr','$file_name','$size','$hash',$datetime)";
 
-	$insert_into_DOCUMENTS = "INSERT INTO DOCUMENTS (XDSDocumentEntry_uniqueId,ExtrinsicObject_id,file_system_id,size,hash,URI,TEXT,DATE) VALUES ('$ebxml_value','$ExtrinsicObject_id_attr','$file_name','$size','$hash','$Document_URI','".adjustString($allegato_STRING)."','$datetime')";
-
+	$fp_insert_into_DOCUMENTS= fopen($tmp_path.$idfile."-insert_into_DOCUMENTS-".$idfile, "wb+");
+    	fwrite($fp_insert_into_DOCUMENTS,$insert_into_DOCUMENTS);
+	fclose($fp_insert_into_DOCUMENTS);
 	#### ESEGUO L'INSERIMENTO NELLA TABELLA DOCUMENTS 
-   	include_once("lib/functions_mysql.php");
+   	if($database=="MYSQL"){
+		include_once('./lib/functions_mysql.php');
+		}
+	else if($database=="ORACLE"){
+		include_once('./lib/functions_oracle.php');
+		}
 		$ris = query_execute($insert_into_DOCUMENTS); //FINO A QUA OK!!!
 	
 ##############################################################################
@@ -326,14 +343,25 @@ function mantainMetadata($ExtrinsicObject_node,$file_name,$document_URI,$allegat
 
 	############### TABELLA DOCUMENTS ##############
 	#### RECUPERO DATA E ORA ATTUALI
-	$today = date("Y-m-d");
+	/*$today = date("Y-m-d");
 	$cur_hour = date("H:i:s");
 	$datetime = $today." ".$cur_hour;
 
-	$insert_into_DOCUMENTS = "INSERT INTO DOCUMENTS (XDSDocumentEntry_uniqueId,ExtrinsicObject_id,file_system_id,size,hash,URI,TEXT,DATE) VALUES ('$ebxml_value','$ExtrinsicObject_id_attr','$file_name','$size','$hash','$Document_URI','".adjustString($allegato_STRING)."','$datetime')";
+	$insert_into_DOCUMENTS = "INSERT INTO DOCUMENTS (XDSDocumentEntry_uniqueId,ExtrinsicObject_id,file_system_id,size,hash,URI,TEXT,DATE) VALUES ('$ebxml_value','$ExtrinsicObject_id_attr','$file_name','$size','$hash','$Document_URI','".adjustString($allegato_STRING)."','$datetime')";*/
+	$datetime="CURRENT_TIMESTAMP";
+	$insert_into_DOCUMENTS = "INSERT INTO DOCUMENTS (XDSDOCUMENTENTRY_UNIQUEID,EXTRINSICOBJECT_ID,FILE_SYSTEM_ID,SIZE,HASH,DATA) VALUES ('$ebxml_value','$ExtrinsicObject_id_attr','$file_name','$size','$hash','$Document_URI','$datetime')";
+
+	$fp_insert_into_DOCUMENTS= fopen($tmp_path.$idfile."-insert_into_DOCUMENTS-".$idfile, "wb+");
+    	fwrite($fp_insert_into_DOCUMENTS,$insert_into_DOCUMENTS);
+	fclose($fp_insert_into_DOCUMENTS);
 
 	#### ESEGUO L'INSERIMENTO NELLA TABELLA DOCUMENTS 
-   	include_once("lib/functions_mysql.php");
+   	if($database=="MYSQL"){
+		include_once('./lib/functions_mysql.php');
+		}
+	else if($database=="ORACLE"){
+		include_once('./lib/functions_oracle.php');
+		}
 		$ris = query_execute($insert_into_DOCUMENTS); //FINO A QUA OK!!!
 
 }//END OF mantainMetadata($ExtrinsicObject_node,$file_name,$document_URI,$allegato_STRING)

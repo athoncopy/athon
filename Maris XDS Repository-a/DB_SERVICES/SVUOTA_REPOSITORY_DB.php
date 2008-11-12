@@ -1,11 +1,19 @@
 <?php
+# ------------------------------------------------------------------------------------
+# MARIS XDS REPOSITORY
+# Copyright (C) 2007 - 2010  MARiS Project
+# Dpt. Medical and Diagnostic Sciences, University of Padova - csaccavini@rad.unipd.it
+# This program is distributed under the terms and conditions of the GPL
+# See the LICENSE files for details
+# ------------------------------------------------------------------------------------
 
 #### IF YOU WANT TO MAKE an INSERT or an UPDATE
+include_once('../config/config.php');
+if($database=="MYSQL"){
 function query_execute($query)
 {
 # IMPORT MYSQL PARAMETERS (NOTE: IT WORKS WITH ABSOLUTE PATH ONLY !!)
 	include('../config/repository_mysql_db.php');
-# open connection to db
     $connessione = mysql_connect($ip, $user_db, $password_db)
         or die("Connessione non riuscita: " . mysql_error());
 
@@ -20,6 +28,31 @@ function query_execute($query)
     return $a;
 
 }//END OF query_execute($query)
+}
+else if($database=="ORACLE"){
+function query_execute($query)
+{
+# IMPORT MYSQL PARAMETERS (NOTE: IT WORKS WITH ABSOLUTE PATH ONLY !!)
+include('../config/repository_oracle_db.php');
+# open connection to db
+//putenv("ORACLE_HOME=/usr/lib/oracle/xe/app/oracle/product/10.2.0");
+$conn = OCILogOn($user_db,$password_db,$db)
+or die( "Could not connect to Oracle database!") or die (ocierror());;
+
+# execute the EXEC query
+$statement = ociparse($conn, $query);
+$risultato = ociexecute($statement);
+
+
+# close connection
+ocilogoff($conn);
+
+    $a = 1;
+    return $a;
+
+}//END OF query_exec($query)
+}
+
 
 #### PARAMETRO DI AUTORIZZAZIONE
 $action = $_POST['delete_repository'];
@@ -32,9 +65,10 @@ if($action=="database")
 #### COMANDI
 $query_DOCUMENTS = "TRUNCATE TABLE DOCUMENTS";
 $query_TOKENS = "TRUNCATE TABLE TOKEN";
+$query_AuditableEvent = "TRUNCATE TABLE AUDITABLEEVENT";
 
 #### CREO L'ARRAY DEI COMANDI DA ESEGUIRE
-$svuota_array =array($query_DOCUMENTS,$query_TOKENS);
+$svuota_array =array($query_DOCUMENTS,$query_TOKENS,$query_AuditableEvent);
 	$i = 0;
 	while($i<count($svuota_array))
 	{
@@ -63,7 +97,7 @@ if($action=="tmp")
 
 $system=PHP_OS;
 
-$windows=substr_count(strtoupper($system),"WIN");
+$windows=substr_count(strtoupper($system),"WINDOWS");
 
 
 
@@ -80,4 +114,26 @@ else{
 	}
 
 }
+
+if($action=="documents")
+{
+
+$system=PHP_OS;
+
+$windows=substr_count(strtoupper($system),"WINDOWS");
+
+
+
+if ($windows>0){
+	exec('del ..\\Submitted_Documents\\* /q');
+	header('location: ../setup.php');
+
+	}
+else{	
+	exec('rm -f -R ../Submitted_Documents/*');
+	header('location: ../setup.php');
+	}
+
+}
+
 ?>

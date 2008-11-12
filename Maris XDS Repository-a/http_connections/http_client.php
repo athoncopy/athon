@@ -1,11 +1,14 @@
 <?php
 
-/*
- * Created on 11-nov-2005
- * Biasio
- */
+# ------------------------------------------------------------------------------------
+# MARIS XDS REPOSITORY
+# Copyright (C) 2007 - 2010  MARiS Project
+# Dpt. Medical and Diagnostic Sciences, University of Padova - csaccavini@rad.unipd.it
+# This program is distributed under the terms and conditions of the GPL
+# See the LICENSE files for details
+# ------------------------------------------------------------------------------------
 
-include_once("../repository/lib/log.php");
+include_once("./lib/log.php");
 
 
 class HTTP_Client
@@ -40,11 +43,11 @@ function connect()
 	$this->socket = fsockopen($this->host,$this->port,$this->errno,$this->errstr,$this->timeout);
 
 
-//$log->writeTimeFile("HTTP_client: Setto il socket");
+//writeTimeFile("HTTP_client: Setto il socket");
 	if($this->save_files){
 	$fp_HTTP_Client_CONNECTION_STATUS = fopen("tmp/".$this->idfile."-HTTP_Client_CONNECTION_STATUS-".$this->idfile,"w+");
 	}
-//$log->writeTimeFile("HTTP_client: Verifico connessione");
+//writeTimeFile("HTTP_client: Verifico connessione");
 
 
 	if(!$this->socket)
@@ -62,7 +65,7 @@ function connect()
 		fwrite($fp_HTTP_Client_CONNECTION_STATUS,"CONNESSIONE CON IL REGISTRY $this->host *** AVVENUTA REGOLARMENTE ***");
 		fclose($fp_HTTP_Client_CONNECTION_STATUS);
 		}
-		//$log->writeTimeFile("HTTP_client: Connessione avvenuta regolarmente");
+		//writeTimeFile("HTTP_client: Connessione avvenuta regolarmente");
 		return true;
 	}
 
@@ -71,7 +74,7 @@ function connect()
 #### SPEDISCE: METODO PRINCIPALE
 function send_request()
 { 
-$log = new Log("REP");
+//$log = new Log("REP");
 
 	if(!$this->connect())
 	{
@@ -82,13 +85,13 @@ $log = new Log("REP");
 	else	#####CASO SENZA ERRORI
 	{
 
-//$log->writeTimeFile("HTTP_client: Entro nel caso senza errori");
+//writeTimeFile("HTTP_client: Entro nel caso senza errori");
 		$this->result = $this->request($this->post_data);
 
-//$log->writeTimeFile("HTTP_client: Ottengo il risultato");
+//writeTimeFile("HTTP_client: Ottengo il risultato");
 		##### COMPONGO L'ARRAY DA RITORNARE
 		$ret = array($this->result,"");
-//$log->writeTimeFile("HTTP_client: Restituisco il messaggio");
+//writeTimeFile("HTTP_client: Restituisco il messaggio");
 		return $ret;
 	}
 
@@ -97,7 +100,7 @@ $log = new Log("REP");
 function request($post_data)
 {
 
-$log = new Log("REP");
+//$log = new Log("REP");
 	$this->buf = "";
 	$post = "POST ".$this->path." HTTP/1.1\r\n".
 		"Host: ".$this->host."\r\n".
@@ -116,7 +119,7 @@ $log = new Log("REP");
     	fwrite($fp_HTTP_Client_POSTED,$post);
 	fclose($fp_HTTP_Client_POSTED);
 	}
-	//$log->writeTimeFile("HTTP_client_request: Scrivo file HTTP_Client_POSTED");
+	//writeTimeFile("HTTP_client_request: Scrivo file HTTP_Client_POSTED");
 	
 	fwrite($this->socket,$post);
 
@@ -124,10 +127,9 @@ $log = new Log("REP");
 	{
 		#$this->buf .= fgets($this->socket, 2048);
 		$this->buf .= fgets($this->socket);
-	//$log->writeTimeFile("HTTP_client_request: Dentro il while");
 
 	}
-	//$log->writeTimeFile("HTTP_client_request: Restituisco il messaggio");
+	//writeTimeFile("HTTP_client_request: Restituisco il messaggio");
 	$this->close();
 
 

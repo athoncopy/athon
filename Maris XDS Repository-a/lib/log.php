@@ -1,4 +1,11 @@
 <?php
+# ------------------------------------------------------------------------------------
+# MARIS XDS REPOSITORY
+# Copyright (C) 2007 - 2010  MARiS Project
+# Dpt. Medical and Diagnostic Sciences, University of Padova - csaccavini@rad.unipd.it
+# This program is distributed under the terms and conditions of the GPL
+# See the LICENSE files for details
+# ------------------------------------------------------------------------------------
 ##### CLASSE PER LA CREAZIONE DEI LOGs #####
 class Log
 {
@@ -56,7 +63,7 @@ class Log
 	#### INPUT:  $current    COMPLETO CON IL NOME DEL FILE
 	function setCurrentLogPath($current)
 	{
-		$this->current_log_path = $current;
+		$this->current_log_path = $current.'log.out';
 
 	}//END OF setCurrentLogPath($current)
 	### DEFAULT
@@ -83,7 +90,7 @@ class Log
 	}//END OF setDefaultCurrentFileSLogPath($currentf)
 
 	### PER SETTARE IL NUMERO DI SESSIONE (RANDOM)
-	function setCurrentNumFile()
+	/*function setCurrentNumFile()
 	{
 		$stringa5 = "";
       		for($i=0; $i<12; $i++)
@@ -100,7 +107,7 @@ class Log
 		#### NELLA FORMA    __if60igcqyc0f
 		$this->cur_num = "__$stringa5";
 
-	}//EOND OF setCurrentNumFile()
+	}//EOND OF setCurrentNumFile()*/
 
 	#### PER SETTARE ATTIVO O MENO IL LOGGING
 	function setLogActive($active)
@@ -109,11 +116,11 @@ class Log
 
 	}//END OF setLogActive($active)
 
-	function setCleanCache($active)
+	/*function setCleanCache($active)
 	{
 		$this->isCleanCacheActive = $active;
 
-	}//END OF setCleanCache($active)
+	}//END OF setCleanCache($active)*/
 
 	#### METODO DI LOGGING
 	## INPUT: $log_text   TESTO DI LOG
@@ -168,7 +175,7 @@ class Log
 
 	}//END OF makeLog($log_text)
 
-	function writeTimeFile($tempotxt)
+	/*function writeTimeFile($tempotxt)
 	{
 		### CASO DI LOGGING ATTIVO
 
@@ -209,7 +216,7 @@ class Log
 
 	#### SCRIVE I LOGS IN FILES SEPARATI
 	#### NON MODIFICARE IN SCRITTURA $log_text  !!!!
-	/*function writeLogFileS($log_text,$file_name,$mandatory)
+	function writeLogFileS($log_text,$file_name,$mandatory)
 	{
 		$pathToFile = '';
 
@@ -385,4 +392,46 @@ function writeLogFileS($log_text,$file_name,$mandatory)
 
 
 }//END OF CLASS Log
+
+
+
+function writeTimeFile($tempotxt)
+	{
+			### CASO DI LOGGING ATTIVO
+			if ($_SESSION['logActive']=='A'){
+			### CONTROLLO CHE IL PATH SIA SETTATO
+			
+			### APERTURA DEL FILE IN FORMA TAIL ED IN SOLA SCRITTURA
+			$handler_log_time = fopen($_SESSION['log_path']."time_of_operation",'ab+');
+
+			#### RECUPERO DATA E ORA ATTUALI
+			$today_t = date("d-M-Y");
+			$cur_hour_t = date("H:i:s");
+
+			#### FORMA:  [gg-MMM-AAAA hh:mm:ss] -
+			$datetime_t = "\n[$today_t $cur_hour_t] -";
+
+			//$log_tempo = $tempotxt;
+			## CASO DI DATO TIPO ARRAY
+			if(is_array($tempotxt))
+			{
+				$txt = "";
+				### IMPOSTA L'ARRAY NELLA FORMA [etichetta] = valore
+				foreach($log_text as $element => $value) 
+				{
+   					$txt = $txt."$element = $value\n";
+				}//END OF foreach
+				$tempotxt = $txt;
+			}//END OF if(is_array($log_text))			
+
+			### SCRIVO IL LOG
+
+			fwrite($handler_log_time,"$datetime_t $tempotxt");
+
+			#### CHIUDO L'HANDLER
+			fclose($handler_log_time);
+		}
+	}//END OF makeLog($log_text)
+
+
 ?>

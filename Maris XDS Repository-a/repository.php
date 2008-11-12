@@ -1,9 +1,10 @@
 <?php
 
-/*
- * Created on 26-ott-2005
- * Biasio - Castellini
- */
+# MARIS XDS REPOSITORY
+# Copyright (C) 2007 - 2010  MARiS Project
+# Dpt. Medical and Diagnostic Sciences, University of Padova - csaccavini@rad.unipd.it
+# This program is distributed under the terms and conditions of the GPL
+# See the LICENSE files for details
 
 //BLOCCO IL BUFFER DI USCITA
 ob_start();//OKKIO FONADAMENTALE!!!!!!!!!!
@@ -28,18 +29,26 @@ if($clean_cache=="A")
 $log = new Log("REP");
 $log->set_tmp_path($tmp_path);
 $log->set_idfile($idfile);
-$log->writeTimeFile($idfile."--Repository: Ho ricevuto la richiesta");
 $log->setLogActive($logActive);
-$log->setCleanCache($clean_cache);
-$log->setCurrentNumFile();
+//$log->setCleanCache($clean_cache);
+//$log->setCurrentNumFile();
 $log->setCurrentLogPath($log_path);
 $log->setCurrentFileSLogPath($tmp_path);
+
+
+
+$_SESSION['tmp_path']=$tmp_path;
+$_SESSION['idfile']=$idfile;
+$_SESSION['logActive']=$logActive;
+$_SESSION['log_path']=$log_path;
+
+writeTimeFile($idfile."--Repository: Ho ricevuto la richiesta");
 ##########################
 
 //RECUPERO GLI HEADERS RICEVUTI DA APACHE
 $headers = apache_request_headers();
 
-$log->writeTimeFile($idfile."--Repository: RECUPERO GLI HEADERS RICEVUTI DA APACHE");
+writeTimeFile($idfile."--Repository: RECUPERO GLI HEADERS RICEVUTI DA APACHE");
 
 
 $log->writeLogFile("RECEIVED:",1);
@@ -52,7 +61,7 @@ $log->writeLogFileS($headers,$idfile."-headers_received-".$idfile,"M");
 
 
 
-$log->writeTimeFile($idfile."--Repository: Scrivo headers_received");
+writeTimeFile($idfile."--Repository: Scrivo headers_received");
 
 //COPIO IN LOCALE TUTTI GLI HEADERS RICEVUTI
 // $fp_headers_received = fopen($tmp_path."headers_received","wb+");
@@ -74,7 +83,7 @@ $log->writeLogFileS($input,$idfile."-pre_decode_received-".$idfile,"M");
 // fclose($fp_pre_decode_received);
 
 
-$log->writeTimeFile($idfile."--Repository: Scrivo pre_decode_received");
+writeTimeFile($idfile."--Repository: Scrivo pre_decode_received");
 
 
 //PASSO A DECODARE IL FILE CREATO
@@ -96,11 +105,11 @@ include($lib_path.'mimeDecode.php');
 #### PRIMA OCCORRENZA DELL'ENVELOPE SOAP
 if(strstr(strtoupper($input),"SOAP-ENV")){
 $body = substr($input,strpos(strtoupper($input),"<SOAP-ENV:ENVELOPE"));
-$log->writeTimeFile($idfile."--Repository: trovato SOAP-ENV:ENVELOPE");
+writeTimeFile($idfile."--Repository: trovato SOAP-ENV:ENVELOPE");
 }
 else if(strstr(strtoupper($input),"SOAPENV")){
 $body = substr($input,strpos(strtoupper($input),"<SOAPENV:ENVELOPE"));
-$log->writeTimeFile($idfile."--Repository: trovato SOAPENV:ENVELOPE");
+writeTimeFile($idfile."--Repository: trovato SOAPENV:ENVELOPE");
 }
 
 $log->writeLogFile("RECEIVED:",1);
@@ -109,10 +118,6 @@ $log->writeLogFile($body,0);
 
 $log->writeLogFileS($body,$idfile."-body-".$idfile,"N");
 
-//CONTENUTO
-// $fp = fopen($tmp_path."body","wb+");
-//     fwrite($fp,$body);
-// fclose($fp);
 
 $content_type = stristr($headers["Content-Type"],'boundary');
 $pre_boundary = substr($content_type,strpos($content_type,'"')+1);
@@ -122,20 +127,15 @@ $fine_boundary = strpos($pre_boundary,'"')+1;
 $boundary = '';
 $boundary = substr($pre_boundary,0,$fine_boundary-1);
 
-$log->writeTimeFile($idfile."--Repository: Il content type e ".$content_type);
+writeTimeFile($idfile."--Repository: Il content type e ".$content_type);
 
-$log->writeTimeFile($idfile."--Repository: Il pre boundary ".$pre_boundary);
+writeTimeFile($idfile."--Repository: Il pre boundary ".$pre_boundary);
 
-
-
-
-
-$log->writeTimeFile($idfile."--Repository: Il boundary e ".$boundary);
 
 ## TEST 11721: CONTROLLO CHE NON SIA the PAYLOAD is not metadata
 if($boundary == '')//boundary non dichiarato --> no payload
 { 
-$log->writeTimeFile($idfile."--Repository: Non e presente il boundary");
+writeTimeFile($idfile."--Repository: Non e presente il boundary");
 	include_once('payload.php');
 	$dom_pre_decode_received = domxml_open_mem(file_get_contents($tmp_path.$idfile."-pre_decode_received-".$idfile));
 	$isPayloadNotEmpty = controllaPayload($dom_pre_decode_received);
@@ -156,7 +156,7 @@ $log->writeTimeFile($idfile."--Repository: Non e presente il boundary");
 	$log->writeLogFileS($empty_payload_response,$idfile."-empty_payload_response-".$idfile,"M");
 
 
-$log->writeTimeFile($idfile."--Repository: Scrivo empty_payload_response");
+writeTimeFile($idfile."--Repository: Scrivo empty_payload_response");
 
 //SPEDISCO : PULISCO IL BUFFER DI USCITA
 	ob_get_clean();//OKKIO FONDAMENTALE!!!!!
@@ -207,7 +207,7 @@ $log->writeLogFileS($boundary,$idfile."-boundary-".$idfile,"N");
 // fclose($fp_bo);
 
 
-$log->writeTimeFile($idfile."--Repository: Scrivo boundary");
+writeTimeFile($idfile."--Repository: Scrivo boundary");
 
 
 ###### CASO DI PRESENZA DI ATTACHMENTS
@@ -274,7 +274,7 @@ $java_call_result = exec("$comando_java_validation",$output,$error);
 $error_message = "";
 
 
-$log->writeTimeFile($idfile."--Repository: Ho validato il messaggio");
+writeTimeFile($idfile."--Repository: Ho validato il messaggio");
 
 
 
@@ -357,7 +357,7 @@ include_once('validation.php');
 #### SECONDA COSA: DEVO VALIDARE XDSSubmissionSet.sourceId
 $SourceId_valid_array = validate_XDSSubmissionSetSourceId($dom_ebXML,$idfile,$save_files);
 
-$log->writeTimeFile($idfile."--Repository: Verifico se il XDSSubmissionSetSourceId valido");
+writeTimeFile($idfile."--Repository: Verifico se il XDSSubmissionSetSourceId valido");
 
 
 #########Ho tolto la validazione del sourceID#######
@@ -372,9 +372,9 @@ if($SourceId_valid_array[0])
 	$failure_response = makeSoapedFailureResponse($advertise,$logentry);
 
 	  //SCRIVO LA RISPOSTA IN UN FILE
-// 	 $fp = fopen($tmp_path."sourceId_failure_response", "wb+");
-//            fwrite($fp,$failure_response);
-//         fclose($fp);
+ 	 $fp = fopen($tmp_path."sourceId_failure_response", "wb+");
+            fwrite($fp,$failure_response);
+         fclose($fp);
 
 	$log->writeLogFile("SENT:",1);
 	$log->writeLogFile($failure_response,0);
@@ -417,7 +417,7 @@ if(!empty($ExtrinsicObject_array))#### IMPORTANTE!!
 #### TERZA COSA: DEVO VALIDARE XDSDocumentEntry.uniqueId
 $UniqueId_valid_array = validate_XDSDocumentEntryUniqueId($dom_ebXML);
 
-$log->writeTimeFile($idfile."--Repository: Verifico se il XDSDocumentEntryUniqueId è valido");
+writeTimeFile($idfile."--Repository: Verifico se il XDSDocumentEntryUniqueId è valido");
 
 if(!$UniqueId_valid_array[0])
 {
@@ -483,8 +483,7 @@ for($o = 0 ; $o < (count($ExtrinsicObject_array)) ; $o++)
 	#### RICAVO ATTRIBUTO mymeType
 	$ExtrinsicObject_mimeType_attr = $ExtrinsicObject_node->get_attribute('mimeType');
 	#### RICAVO LA RELATIVA ESTENSIONE PER IL FILE
-	$get_extension = "SELECT extension FROM mimeType WHERE code = '$ExtrinsicObject_mimeType_attr'";
-	//include_once('lib/functions_mysql.php');
+	$get_extension = "SELECT EXTENSION FROM MIMETYPE WHERE CODE = '$ExtrinsicObject_mimeType_attr'";
 		$res = query_select($get_extension);
 
 	$file_extension = $res[0][0];
@@ -635,7 +634,7 @@ $client->set_post_data($post_data);
 
 
 
-$log->writeTimeFile($idfile."--Repository:  La dimensione e ".filesize($file_forwarded_written));
+writeTimeFile($idfile."--Repository: La dimensione e ".filesize($file_forwarded_written));
 
 
 
@@ -652,7 +651,7 @@ $client->set_port($reg_port);
 
 ######## INOLTRO AL REGISTRY E ATTENDO LA RISPOSTA ##########
 
-$log->writeTimeFile($idfile."--Repository: Inoltro al registry e attendo la risposta");
+writeTimeFile($idfile."--Repository: Inoltro al registry e attendo la risposta");
 
 $registry_response_arr = $client->send_request();
 
@@ -660,7 +659,7 @@ $registry_response_arr = $client->send_request();
 
 $registry_response_log = $registry_response_arr[1];
 
-$log->writeTimeFile($idfile."--Repository: Ho ottenuto la risposta dal registry");
+writeTimeFile($idfile."--Repository: Ho ottenuto la risposta dal registry");
 
 
 #### CASO DI ERORE DI CERTIFICATO
@@ -805,10 +804,16 @@ if($file = fopen($tmp_path.$idfile."-body_response-".$idfile,'rb'))
 //ob_end_flush();//OKKIO FONDAMENTALE!!!!!!!!
 
 
-$log->writeTimeFile($idfile."--Repository: Ho spedito l'ack al Source");
+writeTimeFile($idfile."--Repository: Ho spedito l'ack al Source");
 
-$log->writeTimeFile($idfile."--Repository: Ho terminato");
+writeTimeFile($idfile."--Repository: Ho terminato");
 //================  FINE RISPOSTA AL DOCUMENT SOURCE  =================//
+
+
+unset($_SESSION['tmp_path']);
+unset($_SESSION['idfile']);
+unset($_SESSION['logActive']);
+unset($_SESSION['log_query_path']);
 
 //PULISCO LA CACHE TEMPORANEA
 $system=PHP_OS;
@@ -823,7 +828,7 @@ if($clean_cache=="A")
 	}
 	else{	
 	exec('rm -f '.$tmp_path.$idfile."*");
-	exec('rm -f '.$tmpQuery_path."*");
+	//exec('rm -f '.$tmpQuery_path."*");
 	}
 
 }

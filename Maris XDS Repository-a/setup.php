@@ -1,6 +1,19 @@
 <?php
+# ------------------------------------------------------------------------------------
+# MARIS XDS REPOSITORY
+# Copyright (C) 2007 - 2010  MARiS Project
+# Dpt. Medical and Diagnostic Sciences, University of Padova - csaccavini@rad.unipd.it
+# This program is distributed under the terms and conditions of the GPL
+# See the LICENSE files for details
+# ------------------------------------------------------------------------------------
 
+include_once('./config/config.php');
+if($database=="MYSQL"){
 include_once('./lib/functions_mysql.php');
+}
+else if($database=="ORACLE"){
+include_once('./lib/functions_oracle.php');
+}
 
 $autenticato = false;
 
@@ -288,11 +301,20 @@ echo "<br>";
 echo "<br>";
 echo "<INPUT type=\"Submit\" value=\"Delete Database\"><br></br>";
 echo "</FORM>";
+
+
+echo "<FORM action=\"./DB_SERVICES/SVUOTA_REPOSITORY_DB.php\" method=\"POST\" >";
+echo "If you press button \"Delete Submitted Documents\" all documents in the Repository will be deleted";
+echo "<INPUT type=\"hidden\" name=\"delete_repository\" value=\"documents\"";
+echo "<br>";
+echo "<br>";
+echo "<INPUT type=\"Submit\" value=\"Delete Submitted Documents\"><br></br>";
+echo "</FORM>";
 }
 
 #################### KNOWN SOURCES ###################
 
-$get_SOURCES="SELECT * FROM KNOWN_SOUCES_Ids";
+$get_SOURCES="SELECT * FROM KNOWN_SOUCES_IDS";
 
 
 $res_REP_SOURCES = query_select($get_SOURCES);
