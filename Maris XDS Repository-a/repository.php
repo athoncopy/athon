@@ -12,8 +12,10 @@ ob_start();//OKKIO FONADAMENTALE!!!!!!!!!!
 ##### CONFIGURAZIONE DEL REPOSITORY
 include("config/REP_configuration.php");
 #######################################
-include($lib_path."utilities.php");
+include_once($lib_path."domxml-php4-to-php5.php");
+include_once($lib_path."utilities.php");
 include_once($lib_path."log.php");
+include_once($lib_path."dom_utils.php");
 $system=PHP_OS;
 
 $windows=substr_count(strtoupper($system),"WIN");
@@ -120,6 +122,9 @@ $log->writeLogFile($body,0);
 
 $log->writeLogFileS($body,$idfile."-body-".$idfile,"N");*/
 
+if(stripos($headers["Content-Type"],"boundary")){
+if (preg_match('(boundary="[A-Za-z0-9_]+")',$headers["Content-Type"])) {
+writeTimeFile($idfile."--Repository: Ho trovato il boundary di tipo boundary=\"bvdwetrct637crtv\"");
 
 $content_type = stristr($headers["Content-Type"],'boundary');
 $pre_boundary = substr($content_type,strpos($content_type,'"')+1);
@@ -129,9 +134,35 @@ $fine_boundary = strpos($pre_boundary,'"')+1;
 $boundary = '';
 $boundary = substr($pre_boundary,0,$fine_boundary-1);
 
-writeTimeFile($idfile."--Repository: Il content type e ".$content_type);
+writeTimeFile($idfile."--Repository: Il boundary ".$boundary);
+}
 
-writeTimeFile($idfile."--Repository: Il pre boundary ".$pre_boundary);
+else if (preg_match('(boundary=[A-Za-z0-9_]+[;])',$headers["Content-Type"])) {
+writeTimeFile($idfile."--Repository: Ho trovato il boundary di tipo boundary=bvdwetrct637crtv;");
+$content_type = stristr($headers["Content-Type"],'boundary');
+$pre_boundary = substr($content_type,strpos($content_type,'=')+1);
+$fine_boundary = strpos($pre_boundary,';');
+//BOUNDARY ESATTO
+$boundary = '';
+$boundary = substr($pre_boundary,0,$fine_boundary);
+
+writeTimeFile($idfile."--Repository: Il boundary ".$boundary);
+
+}
+
+else {
+writeTimeFile($idfile."--Repository: Il boundary non e' del tipo boundary=\"bvdwetrct637crtv\" o boundary=bvdwetrct637crtv;");
+
+ }
+
+$MTOM=false;
+}
+//Caso MTOM
+else {
+writeTimeFile($idfile."--Repository: Probabilmente siamo nel caso MTOM");
+$MTOM=true;
+$boundary = "--boundary_per_MTOM";
+}
 
 
 ## TEST 11721: CONTROLLO CHE NON SIA the PAYLOAD is not metadata
@@ -277,48 +308,19 @@ $fp_ebxml_val = fopen($tmp_path.$idfile."-ebxml_for_validation-".$idfile,"w+");
 	fwrite($fp_ebxml_val,$ebxml_STRING_VALIDATION);
 fclose($fp_ebxml_val);
 
-####### VALIDAZIONE DELL'ebXML SECONDO LO SCHEMA
-//$comando_java_validation=("/usr/lib/jvm/java-1.5.0-sun-1.5.0_03/jre/bin/java -jar ".$path_to_VALIDATION_jar."valid.jar -xsd ".$path_to_XSD_file." -xml ".$tmp_path.$idfile."-ebxml_for_validation-".$idfile);
-$comando_java_validation=($java_path."java -jar ".$path_to_VALIDATION_jar."valid.jar -xsd ".$path_to_XSD_file." -xml ".$tmp_path.$idfile."-ebxml_for_validation-".$idfile);
 
+libxml_use_internal_errors(true);
+$domEbxml = DOMDocument::loadXML($ebxml_STRING_VALIDATION);
 
-if($save_files){
-$fp_ebxml_val = fopen($tmp_path.$idfile."-comando_java_validation-".$idfile,"w+");
-	fwrite($fp_ebxml_val,$comando_java_validation);
-fclose($fp_ebxml_val);
-}
-
-#### ESEGUO IL COMANDO
-$java_call_result = exec("$comando_java_validation",$output,$error);
-$error_message = "";
-
-
-writeTimeFile($idfile."--Repository: Ho validato il messaggio");
-
-
-
-### SE NON SI SONO VERIFICATI ERRORI NELLA CHIAMATA AL METODO
-if($error==0)
-{
-	##### CASO DI VALIDAZIONE NON RIUSCITA
-	#### true=""
-	$isValid = ($output[0]=="");
-	for($jj=0;$jj <= count($output)-1;$jj++)
-	{
-		if(!$isValid)
-		{
-		  $error_message=$error_message."\n".$output[$jj]."\n";
-
-		}//END OF if(!($output[$jj]==""))
-
-	}//END OF for($jj=0;$jj <= count($output)-1;$jj++)
-
-}//END OF if($error==0)
-
-#### NEL CASO DI MANCATA VALIDAZIONE RESTITUISCE
-#### IL MESSAGGIO DI FAIL IN SOAP ED ESCE
-if(!$isValid)
-{
+// Valido il messaggio da uno schema
+if (!$domEbxml->schemaValidate('schemas/rs.xsd')) {
+	$error_message = "Schema Validation Failed\n"; 
+	$errors = libxml_get_errors();
+	print_r($errors);
+    	foreach ($errors as $error) {
+        	$error_message .= $error->message."\n";
+   	 }
+	//$error_message.= $errors->message;
 	### RESTITUISCE IL MESSAGGIO DI FAIL IN SOAP
     	$SOAPED_failure_response = makeSoapedFailureResponse($error_message,$logentry);
 
@@ -351,9 +353,52 @@ if(!$isValid)
 	ob_end_flush();
 	### BLOCCO L'ESECUZIONE DELLO SCRIPT
 	exit;
+	}
 
-}//END OF if(!$isValid)
 
+####### VALIDAZIONE DELL'ebXML SECONDO LO SCHEMA
+/*
+$comando_java_validation=($java_path."java -jar ".$path_to_VALIDATION_jar."valid.jar -xsd ".$path_to_XSD_file." -xml ".$tmp_path.$idfile."-ebxml_for_validation-".$idfile);
+
+
+if($save_files){
+$fp_ebxml_val = fopen($tmp_path.$idfile."-comando_java_validation-".$idfile,"w+");
+	fwrite($fp_ebxml_val,$comando_java_validation);
+fclose($fp_ebxml_val);
+}
+
+#### ESEGUO IL COMANDO
+$java_call_result = exec("$comando_java_validation",$output,$error);
+$error_message = "";
+
+
+
+
+
+
+### SE NON SI SONO VERIFICATI ERRORI NELLA CHIAMATA AL METODO
+if($error==0)
+{
+	##### CASO DI VALIDAZIONE NON RIUSCITA
+	#### true=""
+	$isValid = ($output[0]=="");
+	for($jj=0;$jj <= count($output)-1;$jj++)
+	{
+		if(!$isValid)
+		{
+		  $error_message=$error_message."\n".$output[$jj]."\n";
+
+		}//END OF if(!($output[$jj]==""))
+
+	}//END OF for($jj=0;$jj <= count($output)-1;$jj++)
+
+}//END OF if($error==0)*/
+
+
+
+
+
+writeTimeFile($idfile."--Repository: Ho validato il messaggio");
 
 if($save_files){
 $fp_SCHEMA_val = fopen($tmp_path.$idfile."-SCHEMA_validation-".$idfile,"w+");
@@ -667,7 +712,7 @@ writeTimeFile($idfile."--Repository: In Content-ID non e formattato bene");
 
 ### SALVATAGGIO DELL'ALLEGATO SU FILESYSTEM
 ##################################################################
-	include_once($lib_path."dom_utils.php");
+	
 #### MI ASSICURO CHE URI,SIZE ED HASH NON SIANO GIA' SPECIFICATE NEL METADATA
 	$mod = modifiable($ExtrinsicObject_node);
 
