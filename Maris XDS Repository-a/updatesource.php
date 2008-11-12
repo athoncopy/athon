@@ -21,7 +21,7 @@ $REP_source_name = $_POST['source_name'];
 $REP_source_description = $_POST['source_description'];
 
 if($REP_source_action=="delete"){
-	$deleteREP_source = "DELETE FROM KNOWN_SOUCES_Ids WHERE ID='$REP_source_id'";
+	$deleteREP_source = "DELETE FROM KNOWN_SOUCES_IDS WHERE ID='$REP_source_id'";
 	$REP_delete_source = query_execute($deleteREP_source);
 }
 

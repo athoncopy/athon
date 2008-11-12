@@ -35,7 +35,7 @@ if ($user == $res_users[0][0] && crypt($password,'xds') == $res_users[0][1]){
 if (!$autenticato){
   header('WWW-Authenticate: Basic realm="Pagina di accesso"');
   header('HTTP/1.0 401 Unauthorized');
-  echo "<h1>Autentcation failed.</h1>";
+  echo "<h1>Authentication failed.</h1>";
 }
   else {
 
@@ -150,6 +150,7 @@ $REP_www = str_replace('setup.php','',$script);
 $REP_log = $res_REP_config[0][1];
 $REP_cache = $res_REP_config[0][2];
 $REP_files = $res_REP_config[0][3];
+$REP_java = $res_REP_config[0][4];
 
 
 echo "<INPUT type=\"hidden\" name=\"repository_www\" value=\"$REP_www\" size=\"50\" maxlength=\"100\">";
@@ -274,7 +275,11 @@ echo "Registry HTTP: <select name=\"registry_http\">
    <option value=\"TLS\" selected=\"selected\">TLS</option>
   </select><br></br>";}
 
+#################### JAVA_PATH ###################
 
+echo "<h3>JAVA HOME</h3>";
+echo "JAVA_HOME could be /usr/lib/jvm/jre/bin/ or /usr/lib/jvm/java-xxx/bin/ or C:\\\\Programmi\\Java\\jre.xxx\\bin\\<br>";
+echo "<INPUT type=\"text\" name=\"repository_java_home\" value=\"$REP_java\" size=\"50\" maxlength=\"100\"><br></br>";
 
 
 
@@ -342,6 +347,9 @@ echo "<tr><td><INPUT type=\"image\" title=\"Insert Known Source\" src=\"add.png\
 echo "</form>";
 
 echo "</table>";
+
+
+
 
 #################### PASSWORD ####################
 

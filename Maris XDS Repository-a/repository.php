@@ -260,7 +260,7 @@ fclose($fp_ebxml_val);
 
 ####### VALIDAZIONE DELL'ebXML SECONDO LO SCHEMA
 //$comando_java_validation=("/usr/lib/jvm/java-1.5.0-sun-1.5.0_03/jre/bin/java -jar ".$path_to_VALIDATION_jar."valid.jar -xsd ".$path_to_XSD_file." -xml ".$tmp_path.$idfile."-ebxml_for_validation-".$idfile);
-$comando_java_validation=("java -jar ".$path_to_VALIDATION_jar."valid.jar -xsd ".$path_to_XSD_file." -xml ".$tmp_path.$idfile."-ebxml_for_validation-".$idfile);
+$comando_java_validation=($java_path."java -jar ".$path_to_VALIDATION_jar."valid.jar -xsd ".$path_to_XSD_file." -xml ".$tmp_path.$idfile."-ebxml_for_validation-".$idfile);
 
 
 if($save_files){
@@ -470,6 +470,65 @@ $log->writeLogFileS('SUPERATO I VINCOLI DI VALIDAZIONE',$idfile."-post_validatio
 // fclose($fp);
 ############ !!! IL METADATA RICEVUTO E' VALIDO !!! ############
 
+
+
+// Devo verificare che siano corretti i boundary
+$conta_EO = count($ExtrinsicObject_array);
+$conta_boundary=substr_count($body,$boundary)-1;
+
+
+if($conta_boundary!=$conta_EO)#### IMPORTANTE!!
+{
+#### QUARTA COSA: DEVO VERIFICARE CHE CI SIANO I BOUNDARY
+writeTimeFile($idfile."--Repository: Non ci sono abbastanza boundary");
+
+         //RESTITUISCE IL MESSAGGIO DI ERRORE
+	$advertise = "\nThe boundary is not correctly set or there are less boundary than ExtrinsicObject\n";
+	$failure_response = makeSoapedFailureResponse($advertise,$logentry);
+
+//SCRIVO LA RISPOSTA IN UN FILE
+// 	$fp = fopen($tmp_path."uniqueId_failure_response", "wb+");
+//            fwrite($fp,$failure_response);
+//         fclose($fp);
+
+	$log->writeLogFile("SENT:",1);
+	$log->writeLogFile($failure_response,0);
+	$file_written3 = $log->writeLogFileS($failure_response,$idfile."-boundary_failure_response-".$idfile,"M");
+
+	//PULISCO IL BUFFER DI USCITA
+	ob_get_clean();//OKKIO FONDAMENTALE!!!!!
+
+	//HEADERS
+	header("HTTP/1.1 200 OK");
+	header("Path: $www_REP_path");
+	header("Content-Type: text/xml;charset=UTF-8");
+	header("Content-Length: ".(string)filesize($file_written3));
+	//CONTENUTO DEL FILE DI RISPOSTA
+	if($file3 = fopen($file_written3, 'rb'))
+	{
+   		while((!feof($file3)) && (connection_status()==0))
+   		{
+     			print(fread($file3, 1024*8));
+      			flush();//NOTA BENE!!!!!!!!!
+   		}
+
+   		fclose($file3);
+	}
+
+	//SPEDISCO E PULISCO IL BUFFER DI USCITA
+	ob_end_flush();
+	//BLOCCO L'ESECUZIONE DELLO SCRIPT
+	exit;
+}//FINE if($conta_boundary==$conta_EO)
+
+
+
+
+
+
+
+
+
 // $ExtrinsicObject_array = $dom_ebXML->get_elements_by_tagname("ExtrinsicObject");
 #### CICLO SU TUTTI I FILE ALLEGATI
 for($o = 0 ; $o < (count($ExtrinsicObject_array)) ; $o++)
@@ -501,24 +560,36 @@ for($o = 0 ; $o < (count($ExtrinsicObject_array)) ; $o++)
 
 	$document_URI = $relative_docs_path.$file_name;
 	$document_URI2 = $relative_docs_path_2.$file_name;
-	$selectTOKEN= "SELECT MAX(TOKEN_ID) AS TOKEN_ID FROM TOKEN";
+		
+	/*$selectTOKEN="SELECT KEY_PROG FROM DOCUMENTS WHERE XDSDOCUMENTENTRY_UNIQUEID = '".$UniqueId."'";
+	writeTimeFile($idfile."--Repository: uniqueid".$selectTOKEN);
+	//$selectTOKEN= "SELECT MAX(TOKEN_ID) AS TOKEN_ID FROM TOKEN";
 		$res_token = query_select($selectTOKEN);
-		$next_token = $res_token[0][0]+1;
-		//$next_token = 2;
+		$next_token = $res_token[0][0];
 
 	$document_token = $www_REP_path."getDocument.php?token=".$next_token;
+	writeTimeFile($idfile."--Repository: document_token".$document_token);
 
 	$insertTOKEN= "INSERT INTO TOKEN (TOKEN_ID,URI) VALUES ('$next_token','$document_URI2')";
+	writeTimeFile($idfile."--Repository: token".$insertTOKEN);
 
-	$ris_token = query_execute($insertTOKEN);
+		$ris_token = query_execute($insertTOKEN);*/
 ################################################################
 ### SALVATAGGIO DELL'ALLEGATO SU FILESYSTEM
 
 	#### ORA DEVO ANDARE SUL FILE Body PER SALVARE L' ALLEGATO
-	$content_id = "Content-Id: <$ExtrinsicObject_id_attr>";
-
+	$contentID_UP=strtoupper("Content-ID: <$ExtrinsicObject_id_attr>");
+	$allegato_STRING_2 = substr($body,(strpos(strtoupper($body),$contentID_UP)+strlen($contentID_UP)),(strpos($body,$boundary,(strpos(strtoupper($body),$contentID_UP)))-strpos(strtoupper($body),$contentID_UP)-strlen($contentID_UP)));
+	/*if(strpos($body,"Content-ID: <$ExtrinsicObject_id_attr>")){
+	$content_id = "Content-ID: <$ExtrinsicObject_id_attr>";
 	$allegato_STRING_2 = substr($body,(strpos($body,$content_id)+strlen($content_id)),(strpos($body,$boundary,(strpos($body,$content_id)))-strpos($body,$content_id)-strlen($content_id)));
+	}
 
+	
+	if(strpos($body,"Content-Id: <$ExtrinsicObject_id_attr>")){
+	$content_id = "Content-Id: <$ExtrinsicObject_id_attr>";
+	$allegato_STRING_2 = substr($body,(strpos($body,$content_id)+strlen($content_id)),(strpos($body,$boundary,(strpos($body,$content_id)))-strpos($body,$content_id)-strlen($content_id)));
+	}*/
 	### PULISCO LA STRINGA IN CAPO E IN CODA: ATTENZIONE NON MODIFICARE !!!
 	$allegato_STRING = trim($allegato_STRING_2,"\n\r");### QUI HO L'ALLEGATO
 ##################### NON MODIFICARE!!!!!!! #########
@@ -537,12 +608,34 @@ for($o = 0 ; $o < (count($ExtrinsicObject_array)) ; $o++)
 	$mod = modifiable($ExtrinsicObject_node);
 
 
-if($save_files){
+	if($save_files){
 	$fp = fopen($tmp_path.$idfile."-MOD-".$idfile, "w+");
 		fwrite($fp,$mod);
 	fclose($fp);
 
 }
+
+
+	$datetime="CURRENT_TIMESTAMP";
+	$insert_into_DOCUMENTS = "INSERT INTO DOCUMENTS (XDSDOCUMENTENTRY_UNIQUEID,DATA,URI) VALUES ('$UniqueId_valid_array[2]',$datetime,'$document_URI2')";
+	//writeTimeFile($idfile."--Repository: INSERT INTO DOCUMENTS".$insert_into_DOCUMENTS);
+
+	$fp_insert_into_DOCUMENTS= fopen($tmp_path.$idfile."-insert_into_DOCUMENTS-".$idfile, "wb+");
+    	fwrite($fp_insert_into_DOCUMENTS,$insert_into_DOCUMENTS);
+	fclose($fp_insert_into_DOCUMENTS);
+
+
+	$ris = query_execute($insert_into_DOCUMENTS); //FINO A QUA OK!!!
+
+
+	$selectTOKEN="SELECT KEY_PROG FROM DOCUMENTS WHERE XDSDOCUMENTENTRY_UNIQUEID = '".$UniqueId_valid_array[2]."'";
+	//writeTimeFile($idfile."--Repository: uniqueid".$selectTOKEN);
+	//$selectTOKEN= "SELECT MAX(TOKEN_ID) AS TOKEN_ID FROM TOKEN";
+		$res_token = query_select($selectTOKEN);
+		$next_token = $res_token[0][0];
+
+	$document_token = $www_REP_path."getDocument.php?token=".$next_token;
+	writeTimeFile($idfile."--Repository: document_token".$document_token);
 
 #### MODIFICO IL METADATA PER FORWARDARLO SUCCESSIVAMENTE AL REGISTRY
       if($mod) ### CASO HASH-SIZE-URI NON PRESENTI
@@ -551,7 +644,8 @@ if($save_files){
 
 		#### INSERISCO NEL DB E OTTENGO L'ebXML MODIFICATO
 		//$dom_ebXML = modifyMetadata($dom_ebXML,$ExtrinsicObject_node,$file_name,$document_URI,$allegato_STRING,$idfile);
-		$dom_ebXML = modifyMetadata($dom_ebXML,$ExtrinsicObject_node,$file_name,$document_URI,$allegato_STRING,$idfile,$document_token);
+		//$dom_ebXML = modifyMetadata($dom_ebXML,$ExtrinsicObject_node,$file_name,$document_URI,$allegato_STRING,$idfile,$document_token);
+		$dom_ebXML = modifyMetadata($dom_ebXML,$ExtrinsicObject_node,$file_name,$idfile,$document_URI,$document_token); 
       }//END OF if($mod)
 	else if(!$mod)### CASO HASH-SIZE-URI GIA' PRESENTI
 	{
@@ -559,10 +653,51 @@ if($save_files){
 
 		#### INSERISCO NEL DB E MANTENGO L'ebXML INALTERATO
 		//mantainMetadata($ExtrinsicObject_node,$file_name,$document_URI,$allegato_STRING);
-		mantainMetadata($ExtrinsicObject_node,$file_name,$document_URI,$allegato_STRING,$document_token);
+		//mantainMetadata($ExtrinsicObject_node,$file_name,$document_URI,$allegato_STRING,$document_token);
+		mantainMetadata($ExtrinsicObject_node,$file_name,$document_URI);
 
 	}//END OF else if(!$mod)
  #########################################################
+
+	/*
+	$update_into_DOCUMENTS = "INSERT INTO DOCUMENTS (XDSDOCUMENTENTRY_UNIQUEID,EXTRINSICOBJECT_ID,FILE_SYSTEM_ID,LENGTH,HASH,DATA) VALUES ('$ebxml_value','$ExtrinsicObject_id_attr','$file_name','$size','$hash',$datetime)";
+
+	$fp_insert_into_DOCUMENTS= fopen($tmp_path.$idfile."-update_into_DOCUMENTS-".$idfile, "wb+");
+    	fwrite($fp_insert_into_DOCUMENTS,$insert_into_DOCUMENTS);
+	fclose($fp_insert_into_DOCUMENTS);*
+
+
+	$ris = query_execute($insert_into_DOCUMENTS); //FINO A QUA OK!!!
+
+
+	#### ESEGUO L'INSERIMENTO NELLA TABELLA DOCUMENTS 
+   	/*if($database=="MYSQL"){
+		include_once('./lib/functions_mysql.php');
+		}
+	else if($database=="ORACLE"){
+		include_once('./lib/functions_oracle.php');
+		}*/
+
+
+	/*
+	$document_URI2 = $relative_docs_path_2.$file_name;
+		
+	$selectTOKEN="SELECT KEY_PROG FROM DOCUMENTS WHERE XDSDOCUMENTENTRY_UNIQUEID = '".$UniqueId."'";
+	writeTimeFile($idfile."--Repository: uniqueid".$selectTOKEN);
+	//$selectTOKEN= "SELECT MAX(TOKEN_ID) AS TOKEN_ID FROM TOKEN";
+		$res_token = query_select($selectTOKEN);
+		$next_token = $res_token[0][0];
+
+	$document_token = $www_REP_path."getDocument.php?token=".$next_token;
+	writeTimeFile($idfile."--Repository: document_token".$document_token);
+
+	$insertTOKEN= "INSERT INTO TOKEN (TOKEN_ID,URI) VALUES ('$next_token','$document_URI2')";
+	writeTimeFile($idfile."--Repository: token".$insertTOKEN);
+
+	$ris_token = query_execute($insertTOKEN);*/
+
+
+
 
 }//END OF for($o = 0 ; $o < (count($ExtrinsicObject_array)) ; $o++)
 

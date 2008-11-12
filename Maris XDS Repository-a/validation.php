@@ -187,7 +187,7 @@ function validate_XDSDocumentEntryUniqueId($dom)
 	}
 
 	//QUERY AL DB
-    	$query = "SELECT * FROM DOCUMENTS WHERE  XDSDOCUMENTENTRY_UNIQUEID = '$ebxml_value'";
+    	$query = "SELECT XDSDOCUMENTENTRY_UNIQUEID FROM DOCUMENTS WHERE XDSDOCUMENTENTRY_UNIQUEID = '$ebxml_value'";
 	 
 // 		fwrite($fp_uniqueIdQuery,$query);
 // 	fclose($fp_uniqueIdQuery);
@@ -203,7 +203,7 @@ function validate_XDSDocumentEntryUniqueId($dom)
 
 	}//END OF for($index=0;$index<(count($dom_ebXML_ExtrinsicObject_node_array));$index++)
 
-	$ret = array($isEmpty,$failure);
+	$ret = array($isEmpty,$failure,$ebxml_value);
 	return $ret;
   
 }//end of validate_XDSDocumentEntryUniqueId($dom)

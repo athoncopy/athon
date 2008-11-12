@@ -17,7 +17,7 @@ include_once('./lib/functions_oracle.php');
 }
 
 $token=$_GET["token"];
-$get_token="SELECT URI FROM TOKEN WHERE TOKEN_ID=$token";
+$get_token="SELECT URI FROM DOCUMENTS WHERE KEY_PROG=$token";
 $uri_token=query_select($get_token);
 
 if($ATNA_active=='A'){
@@ -30,7 +30,7 @@ $ip_consumer=$_SERVER['REMOTE_ADDR'];
 
 createExportEvent($eventOutcomeIndicator,$ip_repository,$ip_consumer);
 
-$java_atna_export=("java -jar ".$path_to_ATNA_jar."syslog.jar -u ".$ATNA_host." -p ".$ATNA_port." -f ".$atna_path."DataExport.xml");
+$java_atna_export=($java_path."java -jar ".$path_to_ATNA_jar."syslog.jar -u ".$ATNA_host." -p ".$ATNA_port." -f ".$atna_path."DataExport.xml");
 //echo $java_atna_export;
 if($save_files){
 $fp_ebxml_val = fopen($tmp_path.$idfile."-comando_java_atna_export-".$idfile,"w+");

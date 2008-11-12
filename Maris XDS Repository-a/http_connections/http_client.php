@@ -8,7 +8,7 @@
 # See the LICENSE files for details
 # ------------------------------------------------------------------------------------
 
-include_once("./lib/log.php");
+//include_once("./lib/log.php");
 
 
 class HTTP_Client
@@ -38,7 +38,7 @@ function HTTP_Client($host,$port,$timeout)
 
 //apre connessione
 function connect()
-{ $log = new Log("REP");
+{ //$log = new Log("REP");
 
 	$this->socket = fsockopen($this->host,$this->port,$this->errno,$this->errstr,$this->timeout);
 

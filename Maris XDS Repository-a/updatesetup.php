@@ -45,11 +45,12 @@ $REP_www_post = $_POST['repository_www'];
 $REP_log_post = $_POST['repository_log'];
 $REP_cache_post = $_POST['repository_cache'];
 $REP_files_post = $_POST['repository_files'];
+$REP_java_home = $_POST['repository_java_home'];
 
 $deleteREP_config = "DELETE FROM CONFIG";
 $REP_delete_config = query_execute($deleteREP_config);
 
-$insertREP_config = "INSERT INTO CONFIG (WWW,LOG,CACHE,FILES) VALUES ('$REP_www_post','$REP_log_post','$REP_cache_post','$REP_files_post')";
+$insertREP_config = "INSERT INTO CONFIG (WWW,LOG,CACHE,FILES,JAVA_PATH) VALUES ('$REP_www_post','$REP_log_post','$REP_cache_post','$REP_files_post','$REP_java_home')";
 //echo $insertREP_config;
 $REP_insert_config = query_execute($insertREP_config);
 
