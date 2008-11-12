@@ -11,6 +11,14 @@
 //BLOCCO IL BUFFER DI USCITA
 ob_start();//OKKIO FONADAMENTALE!!!!!!!!!!
 
+//Parte per calcolare i tempi di esecuzione
+$mtime = microtime();
+$mtime = explode(" ",$mtime);
+$mtime = $mtime[1] + $mtime[0];
+$starttime = $mtime;
+
+
+
 ##### CONFIGURAZIONE DEL REPOSITORY
 include("REGISTRY_CONFIGURATION/REG_configuration.php");
 #######################################
@@ -22,24 +30,19 @@ include($lib_path."utilities.php");
 $idfile = idrandom_file();
 
 $_SESSION['tmp_path']=$tmp_path;
+$_SESSION['tmpQueryService_path']=$tmpQueryService_path;
 $_SESSION['idfile']=$idfile;
 $_SESSION['logActive']=$logActive;
 $_SESSION['log_path']=$log_path;
 $_SESSION['www_REG_path']=$www_REG_path;
 include_once("./lib/log.php");
-//$log = new Log_REG("REG");
-/*$log = new Log_REG();
-$log->set_tmp_path($tmp_path);
-$log->set_idfile($idfile);
-$log->setLogActive($logActive);
-$log->setCurrentLogPath($log_path);*/
 
 
-//PULISCO LA CACHE TEMPORANEA
-/*if($clean_cache=="A"){
-	exec('rm -f '.$tmp_path."*");
-	exec('rm -f '.$tmpQuery_path."*");
-	}*/
+if(!is_dir($tmp_path)){
+mkdir($tmp_path, 0777,true);
+}
+
+
 
 writeTimeFile($idfile."--Registry: Rimuovo la cache temporanea");
 
@@ -101,7 +104,6 @@ if($content_type)
 	fclose($fp_bo);
 
 	//PASSO A DECODARE IL FILE CREATO
-	//include($lib_path.'mimeDecode.php');
 
 	$filename = $tmp_path.$idfile."-ebxml_imbustato_soap-".$idfile;
    		$input  = fread(fopen($filename,'rb'),filesize($filename));
@@ -388,7 +390,7 @@ writeTimeFile($idfile."--Registry: Inserito nel Database Association");
 //============ REGISTRY RESPONSE  ==============//
 
 ####### RISPOSTA POSITIVA
-$registry_response = makeSoapedSuccessResponse($logentry);
+$registry_response = makeSoapedSuccessResponse();
 
 //SCRIVO LA RISPOSTA IN UN FILE
 $fp_registry_response = fopen($tmp_path.$idfile."-registry_response.xml","wb+");
@@ -517,9 +519,9 @@ require_once('./lib/syslog.php');
 
 // ATNA IMPORT per Register Document Set
 $eventOutcomeIndicator="0"; //EventOutcomeIndicator 0 OK 12 ERROR
-$registry_endpoint="http://".$reg_host.":".$reg_port.$www_REG_path."registry.php";
+$registry_endpoint=$http_protocol.$ip_server.":".$port_server.$www_REG_path."registry.php";
 	
-$ip_repository=$_SERVER['REMOTE_ADDR']; 
+$ip_repository=$_SERVER['REMOTE_ADDR'];
 
 $today = date("Y-m-d");
 $cur_hour = date("H:i:s");
@@ -558,11 +560,16 @@ writeTimeFile($idfile."--Registry: Ho spedito i messaggi di ATNA");
 
 }
 
+//Parte per calcolare i tempi di esecuzione
+$mtime = microtime();
+$mtime = explode(" ",$mtime);
+$mtime = $mtime[1] + $mtime[0];
+$endtime = $mtime;
+$totaltime = number_format($endtime - $starttime,15);
 
-
-
-
-
+$STAT_SUBMISSION="INSERT INTO STATS (REPOSITORY,DATA,EXECUTION_TIME,OPERATION) VALUES ('".$_SERVER['REMOTE_ADDR']."',CURRENT_TIMESTAMP,'$totaltime','QUERY')";
+$ris = query_exec2($STAT_SUBMISSION,$connessione);
+writeSQLQuery($ris.": ".$STAT_SUBMISSION);
 
 disconnectDB($connessione);
 
@@ -577,14 +584,13 @@ $system=PHP_OS;
 $windows=substr_count(strtoupper($system),"WIN");
 
 
-if($clean_cache=="A")
+if($clean_cache=="O")
 {
 	if ($windows>0){
 	exec('del tmp\\'.$idfile."* /q");	
 	}
 	else{	
 	exec('rm -f '.$tmp_path.$idfile."*");
-	exec('rm -f '.$tmpQuery_path."*");
 	}
 
 }

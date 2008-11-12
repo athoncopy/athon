@@ -18,6 +18,7 @@ include("REGISTRY_CONFIGURATION/REG_configuration.php");
 include_once($lib_path."domxml-php4-to-php5.php");
 include($lib_path."utilities.php");
 include("./lib/log.php");
+include_once('reg_validation.php');
 $idfile = idrandom_file();
 
 $_SESSION['tmp_path']=$tmp_path;
@@ -27,6 +28,13 @@ $_SESSION['log_path']=$log_path;
 
 //PULISCO LA CACHE TEMPORANEA
 exec('rm -f '.$tmpQueryService_path."*");
+
+if(!is_dir($tmpQueryService_path)){
+mkdir($tmpQueryService_path, 0777,true);
+}
+
+$error_code=array();
+$failure_response=array();
 
 //RECUPERO GLI HEADERS RICEVUTI DA APACHE
 $headers = apache_request_headers();
@@ -46,11 +54,7 @@ fclose($fp);
 
 	//SBUSTO	
 $ebxml_imbustato_soap_STRING = file_get_contents($tmpQueryService_path."AdhocQueryRequest_imbustato_soap");
-/*
-$ebxml_STRING = 
-substr($ebxml_imbustato_soap_STRING,strpos($ebxml_imbustato_soap_STRING,"Body>")+5,(strpos($ebxml_imbustato_soap_STRING,"</SOAP-ENV:Body>")));
-$ebxml_STRING = str_replace("</SOAP-ENV:Body></SOAP-ENV:Envelope>","",$ebxml_STRING);
-*/
+
 
 #########################################################################
 $ebxml_STRING
@@ -68,55 +72,12 @@ $fp_AdhocQueryRequest = fopen($tmpQueryService_path."AdhocQueryRequest","w+");
 fclose($fp_AdhocQueryRequest);
 
 
+$schema='schemas/query.xsd';
+$isValid = isValid($ebxml_STRING,$schema);
 
-libxml_use_internal_errors(true);
-$domEbxml = DOMDocument::loadXML($ebxml_STRING);
-
-// Valido il messaggio da uno schema
-if (!$domEbxml->schemaValidate('schemas/query.xsd')) {
-	$error_message = "Schema Validation Failed\n"; 
-	$errors = libxml_get_errors();
-	print_r($errors);
-    	foreach ($errors as $error) {
-        	$error_message .= $error->message."\n";
-   	 }
-	//$error_message.= $errors->message;
-	### RESTITUISCE IL MESSAGGIO DI FAIL IN SOAP
-    	$SOAPED_failure_response = makeSoapedFailureResponse($error_message,$logentry);
-
-	### SCRIVO LA RISPOSTA IN UN FILE
-	// File da scrivere
-	 $fp = fopen($tmpQueryService_path."SOAPED_failure_VALIDATION_response","w+");
-           fwrite($fp,$SOAPED_failure_response);
-         fclose($fp);
-
-	### PULISCO IL BUFFER DI USCITA
-	ob_get_clean();//OKKIO FONDAMENTALE!!!!!
-
-	### HEADERS
-	header("HTTP/1.1 200 OK");
-	header("Path: $www_REG_path");
-	header("Content-Type: text/xml;charset=UTF-8");
-	header("Content-Length: ".(string)filesize($tmpQueryService_path."SOAPED_failure_VALIDATION_response"));
-	### CONTENUTO DEL FILE DI RISPOSTA
-	if($file = fopen($tmpQueryService_path."SOAPED_failure_VALIDATION_response",'rb'))
-	{
-   		while((!feof($file)) && (connection_status()==0))
-   		{
-     			print(fread($file, 1024*8));
-      			flush();//NOTA BENE!!!!!!!!!
-   		}
-
-   		fclose($file);
-	}
-	### SPEDISCO E PULISCO IL BUFFER DI USCITA
-	ob_end_flush();
-	### BLOCCO L'ESECUZIONE DELLO SCRIPT
-	exit;
-	}
-
-writeTimeFile($idfile."--Query: Il documento e' valido");
-
+if ($isValid){
+	writeTimeFile($idfile."--Query: Il documento e' valido");
+}
 
 $fp_SCHEMA_val = fopen($tmp_path.$idfile."-SCHEMA_validation-".$idfile,"w+");
 	fwrite($fp_SCHEMA_val,"VALIDAZIONE DA SCHEMA ==> OK <==");
@@ -155,16 +116,7 @@ for($u = 0;$u < count($SQLQuery_options_node_array);$u++)
    $returnType_a = $SQLQuery_options_node->get_attribute("returnType");
 	
 }//END OF for($u = 0;$u < count($SQLQuery_options_node_array);$u++)
-/*writeTimeFile($idfile."--Registry: dopo get_attribute");
-//SCRIVO returnComposedObjects
-$fp_returnComposedObjects = fopen($tmpQueryService_path."returnComposedObjects","wb+");
-	fwrite($fp_returnComposedObjects,$returnComposedObjects_a);
-fclose($fp_returnComposedObjects);
-writeTimeFile($idfile."--Registry: returnComposedObjects");
-//SCRIVO returnType
-$fp_returnType = fopen($tmpQueryService_path."returnType","wb+");
-	fwrite($fp_returnType,$returnType_a);
-fclose($fp_returnType);*/
+
 
 #################### RECUPERO IL TESTO DELLA QUERY
 $SQLQuery_node_array = $root->get_elements_by_tagname("SQLQuery");
@@ -183,14 +135,6 @@ for($i = 0;$i<count($SQLQuery_node_array);$i++)
 }//END OF for ($i = 0;$i<count($SQLQuery_node_array);$i++)
 
 //SCRIVO LA QUERY
-/*
-$fp_SQLQuery = fopen($tmpQueryService_path."SQLQuery_RICEVUTA","wb+");
-	fwrite($fp_SQLQuery,$SQLQuery);
-fclose($fp_SQLQuery);*/
-
-
-
-
 
 
 //Mi connetto al DB
@@ -200,54 +144,13 @@ $connessione=connectDB();
 
 
 ###### CONTROLLO SQL RICEVUTA
-include_once('reg_validation.php');
 $controllo_query_array = controllaQuery($SQLQuery);
 
 ###### CASO DI VALIDAZIONE SQL ===NON=== PASSATA
-if(!$controllo_query_array[0])
-{
-	#### STRINGA DI ERRORE
-	$failure_response = $controllo_query_array[1];
-	
-	### RESTITUISCE IL MESSAGGIO DI FAIL IN SOAP
-    	$SOAPED_failure_response = makeSoapedFailureResponse($failure_response,$logentry_query);
+if(!$controllo_query_array[0]){
+  writeTimeFile($idfile."--Query: SUPERATO IL VINCOLO DI VALIDAZIONE SU TIPO DI SQL + SCHEMAS");
+}
 
-	### SCRIVO LA RISPOSTA IN UN FILE
-	 $fp = fopen($tmpQueryService_path."SOAPED_failure_response","w+");
-           fwrite($fp,$SOAPED_failure_response);
-         fclose($fp);
-
-	### PULISCO IL BUFFER DI USCITA
-	ob_get_clean();//OKKIO FONDAMENTALE!!!!!
-
-	### HEADERS
-	header("HTTP/1.1 200 OK");
-	header("Path: $www_REG_path");
-	header("Content-Type: text/xml;charset=UTF-8");
-	header("Content-Length: ".(string)filesize($tmpQueryService_path."SOAPED_failure_response"));
-	### CONTENUTO DEL FILE DI RISPOSTA
-	if($file = fopen($tmpQueryService_path."SOAPED_failure_response",'rb'))
-	{
-   		while((!feof($file)) && (connection_status()==0))
-   		{
-     			print(fread($file,1024*8));
-      			flush();//NOTA BENE!!!!!!!!!
-   		}
-
-   		fclose($file);
-	}
-	### SPEDISCO E PULISCO IL BUFFER DI USCITA
-	ob_end_flush();
-	### BLOCCO L'ESECUZIONE DELLO SCRIPT
-	exit;
-
-}//END OF if(!$controllo_query_array[0])
-
-#### SE SONO QUI HO SUPERATO TUTTI I VINCOLI DI VALIDAZIONE ####
-
-$fp = fopen($tmpQueryService_path."POST_VALIDATION", "w+");
-      fwrite($fp,'SUPERATO IL VINCOLO DI VALIDAZIONE SU TIPO DI SQL + SCHEMAS');
-fclose($fp);
 
 ########################################################################
 ### ORA DEVO ESEGUIRE LA QUERY SUL DB DEL XDS_REGISTRY_QUERY REGISTRY 
@@ -256,23 +159,9 @@ fclose($fp);
 ###METTO A POSTO EVENTUALI STRINGHE DI COMANDO
 $SQLQuery_ESEGUITA=adjustQuery($SQLQuery);#### IMPORTANTE!!!
 ###SCRIVO LA QUERY CHE EFFETTIVAMENTE LANCIO A DB
-/*
-$fp_SQLQuery = fopen($tmpQueryService_path."SQLQuery_ESEGUITA","wb+");
-	fwrite($fp_SQLQuery,$SQLQuery_ESEGUITA);
-fclose($fp_SQLQuery);*/
 
 ###### ESEGUO LA QUERY
 $SQLResponse = query_select2($SQLQuery_ESEGUITA,$connessione);
-/*
-$fp_SQLResponse = fopen($tmpQueryService_path."SQLResponse","a+");
-fwrite($fp_SQLResponse,"RISPOSTA DAL DB:\n");
-for($uu=0;$uu<count($SQLResponse);$uu++)
-{
-	$value = $SQLResponse[$uu][0];
-	fwrite($fp_SQLResponse,"\n$value\n");
-
-}
-fclose($fp_SQLResponse);*/
 
 ####################################################
 
@@ -280,42 +169,23 @@ fclose($fp_SQLResponse);*/
 if(empty($SQLResponse))
 {
 	#### STRINGA DI ERRORE
-	$failure_response = "\n[EMPTY RESULT] - SQL QUERY\n[  ".avoidHtmlEntitiesInterpretation($SQLQuery)." ]\n DID NOT GIVE ANY RESULTS IN THIS REGISTRY\n";
+	$failure_response = "[EMPTY RESULT] - SQL QUERY[  ".avoidHtmlEntitiesInterpretation($SQLQuery)." ] DID NOT GIVE ANY RESULTS IN THIS REGISTRY";
 	
 	### RESTITUISCE IL MESSAGGIO DI SUCCESS IN SOAP
 	### ANCHE SE IL RISULTATO DELLA QUERY DA DB È VUOTO
-    	$SOAPED_failure_response = makeSoapedSuccessQueryResponse($logentry_query,$failure_response);
+    	$SOAPED_failure_response = makeSoapedSuccessQueryResponse($failure_response);
 
-	### SCRIVO LA RISPOSTA IN UN FILE
-	 $fp = fopen($tmpQueryService_path."SOAPED_NORESULTS_response","w+");
+	$file_input=$tmpQueryService_path.$idfile."-SOAPED_NORESULTS_response-".$idfile;
+	 $fp = fopen($file_input,"w+");
            fwrite($fp,$SOAPED_failure_response);
          fclose($fp);
 
-	### PULISCO IL BUFFER DI USCITA
-	ob_get_clean();//OKKIO FONDAMENTALE!!!!!
 
-	### HEADERS
-	header("HTTP/1.1 200 OK");
-	header("Path: $www_REG_path");
-	header("Content-Type: text/xml;charset=UTF-8");
-	header("Content-Length: ".(string)filesize($tmpQueryService_path."SOAPED_NORESULTS_response"));
-	### CONTENUTO DEL FILE DI RISPOSTA
-	if($file = fopen($tmpQueryService_path."SOAPED_NORESULTS_response",'rb'))
-	{
-   		while((!feof($file)) && (connection_status()==0))
-   		{
-     			print(fread($file,1024*8));
-      			flush();//NOTA BENE!!!!!!!!!
-   		}
-
-   		fclose($file);
-	}
-	### SPEDISCO E PULISCO IL BUFFER DI USCITA
-	ob_end_flush();
-	### BLOCCO L'ESECUZIONE DELLO SCRIPT
+	SendResponse($file_input);
 	exit;
 
 }//END OF if(empty($SQLResponse))
+
 
 ####### QUI SONO SICURO CHE LE QUERY DA ALMENO UN RISULTATO
 $ebXML_Response_string = "";
@@ -357,7 +227,24 @@ if($returnType_a=="ObjectRef" && $returnComposedObjects_a=="false")
 else if($returnType_a=="ObjectRef" && $returnComposedObjects_a=="true")
 {
 	##### ???????????
+	for($rr=0;$rr<count($SQLResponse);$rr++)
+	{
+		$ObjectRef_id = $SQLResponse[$rr][0];
 
+		$dom_ebXML_ObjectRef = domxml_new_doc("1.0");
+		$dom_ebXML_ObjectRef_root=$dom_ebXML_ObjectRef->create_element("ObjectRef");
+		$dom_ebXML_ObjectRef_root=$dom_ebXML_ObjectRef->append_child($dom_ebXML_ObjectRef_root);
+
+		#### SETTO I NAMESPACES
+		$dom_ebXML_ObjectRef_root->set_namespace($ns_rim3_path,$ns_rim3);
+		$dom_ebXML_ObjectRef_root->add_namespace($ns_q3_path,$ns_q3);
+
+		$dom_ebXML_ObjectRef_root->set_attribute("id",$ObjectRef_id);
+
+		#### METTO SU STRINGA
+		$ebXML_Response_string = $ebXML_Response_string.substr($dom_ebXML_ObjectRef->dump_mem(),21);
+		
+	}//END OF for($t=0;$t<count($SQLResponse);$t++)
 }//END OF if($returnType_a=="ObjectRef" && $returnComposedObjects_a=="true")
 
 else if($returnType_a=="LeafClass")
@@ -1865,7 +1752,7 @@ else if($returnType_a=="LeafClass")
 //$ebXML_Response_string = substr($dom_ebXML_Response->dump_mem(),21);
 
 ##### IMBUSTO PER LA SPEDIZIONE
-$ebXML_Response_SOAPED_string = makeSoapedSuccessQueryResponse($logentry_query,$ebXML_Response_string);
+$ebXML_Response_SOAPED_string = makeSoapedSuccessQueryResponse($ebXML_Response_string);
 
 #####################################################################
 #################### RISPONDO ALLA QUERY ############################

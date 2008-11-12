@@ -90,9 +90,9 @@ return false;
 <title>
 <?php 
 
-$v_maris_registry="2.0.2";
+$v_maris_registry="2.0.3";
 
-echo "MARIS XDS REGISTRY v$v_maris_registry SETUP"; //."   (".$_SESSION["idcode"].")"; 
+echo "MARIS XDS REGISTRY-A v$v_maris_registry SETUP"; //."   (".$_SESSION["idcode"].")"; 
 	?></title>
 
 </HEAD>
@@ -119,9 +119,9 @@ $stored_query_link="http://".$ip.str_replace('setup.php', 'storedquery.php',$scr
 
 
 
-echo '<table width="100%" border=0 cellpadding="10" cellspacing="0"><tr bgcolor="black"><td><img src="logo+scritta.jpg"></td></tr>';
+echo '<table width="100%" border=0 cellpadding="10" cellspacing="0"><tr bgcolor="black"><td><img src="./img/logo+scritta.jpg"></td></tr>';
 echo '<tr bgcolor="#FF8F10"><td>';
-echo "<h2>Registry v$v_maris_registry Setup</h2>";
+echo "<h2>Registry-a v$v_maris_registry Setup</h2>";
 
 echo "The link to the registry you have to set in your software (XDS Repository) is:";
 echo "<br><b>".$registry_link."</b><br><br>";
@@ -229,18 +229,28 @@ $REG_log= $res_REG_config[0][3];
 echo "<INPUT type=\"hidden\" name=\"registry_www\" value=\"$REG_www\" size=\"50\" maxlength=\"100\">";
 
 echo "<h3>Registry parameters</h3>";
-if($REG_cache=="A"){
-	echo "Delete tmp file: <select name=\"registry_cache\">
-  	<option value=\"A\" selected=\"selected\">ON</option>
+if($REG_cache=="O"){
+	echo "Save tmp files: <select name=\"registry_cache\">
+  	<option value=\"O\" selected=\"selected\">OFF</option>
+   	<option value=\"L\">LOW</option>
+	<option value=\"H\">HIGH</option>
+  	</select><br></br>";
+	}
+else if($REG_cache=="L"){
+	echo "Save tmp files: <select name=\"registry_cache\">
    	<option value=\"O\">OFF</option>
+  	<option value=\"L\" selected=\"selected\">LOW</option>
+	<option value=\"H\">HIGH</option>
   	</select><br></br>";
 	}
 else {
-	echo "Delete tmp file: <select name=\"registry_cache\">
-   	<option value=\"A\">ON</option>
-  	<option value=\"O\" selected=\"selected\">OFF</option>
+	echo "Save tmp files: <select name=\"registry_cache\">
+   	<option value=\"O\">OFF</option>
+	<option value=\"L\">LOW</option>
+  	<option value=\"H\" selected=\"selected\">HIGH</option>
   	</select><br></br>";
 	}
+
 
 echo "<h3>Registry Patient ID Control</h3>";
 echo "If you set \"<b>ON</b>\", when the Registry receives a document with an unknown PatientID, it rejects the submission.<br>";

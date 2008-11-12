@@ -369,7 +369,7 @@ CREATE TABLE IF NOT EXISTS `CONFIG` (
 -- 
 
 INSERT INTO `CONFIG` (`WWW`, `CACHE`, `PATIENTID`, `LOG`, `JAVA_PATH`) VALUES 
-('/MARIS_XDS/registry-b/', 'O', 'O', 'A', '/usr/lib/jvm/java-1.5.0-sun-1.5.0.13/bin/');
+('/MARIS_XDS/registry-a/', 'H', 'O', 'A', '');
 
 -- --------------------------------------------------------
 

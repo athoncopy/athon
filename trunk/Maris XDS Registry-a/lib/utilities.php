@@ -118,28 +118,6 @@ function unhtmlentities($string)
 	
 }//END OF function unhtmlentities($string)
 
-
-//== PER IMBUSTARE SOAP UNA STRINGA PASSATA ==//
-function makeSoapEnvelope($stringToSoap,$logentry)
-{
-	//$string_soap = '';
-		
-	$string_soap = "<SOAP-ENV:Envelope xmlns:SOAP-ENV=\"http://schemas.xmlsoap.org/soap/envelope/\">
-	<SOAP-ENV:Header>
-		<xdsheader SOAP-ENV:mustUnderstand=\"0\">
-			<logentry url=\"".$logentry."\"/>
-		</xdsheader>
-	</SOAP-ENV:Header>
-	<SOAP-ENV:Body>".$stringToSoap."</SOAP-ENV:Body>
-	</SOAP-ENV:Envelope>";
-		
-	######################
-	return $string_soap;
-	
-}//END OF function makeSoapEnvelope($stringToSoap)
-
-//== PER IMBUSTARE SOAP UNA STRINGA PASSATA ==//
-
 function makeSoapedFailureResponse($advertise,$errorcode)
 {
 	$response = "<SOAP-ENV:Envelope xmlns:SOAP-ENV=\"http://schemas.xmlsoap.org/soap/envelope/\">
@@ -159,7 +137,7 @@ function makeSoapedFailureResponse($advertise,$errorcode)
 }//END OF makeSoapedFailureResponse
 
 ########## COMPONE LA RISPOSTA DI SUCCESS DEL REGISTRY
-function makeSoapedSuccessResponse($logentry)
+function makeSoapedSuccessResponse()
 {
 	$success_response = "<SOAP-ENV:Envelope xmlns:SOAP-ENV=\"http://schemas.xmlsoap.org/soap/envelope/\">
 	<SOAP-ENV:Body>
@@ -172,11 +150,11 @@ function makeSoapedSuccessResponse($logentry)
 
 	return $success_response;
 
-}//END OF makeSoapedSuccessResponse($logentry)
+}//END OF makeSoapedSuccessResponse()
 
 #### PER LE RISPOSTE ALLE QUERY
 #### RICEVE IN INGRESSO <SQLQueryResult>      </SQLQueryResult>
-function makeSoapedSuccessQueryResponse($logentry,$QueryResult)
+function makeSoapedSuccessQueryResponse($QueryResult)
 {
 	$success_query_response = "<SOAP-ENV:Envelope xmlns:SOAP-ENV=\"http://schemas.xmlsoap.org/soap/envelope/\">
 	<SOAP-ENV:Body>
@@ -192,7 +170,7 @@ function makeSoapedSuccessQueryResponse($logentry,$QueryResult)
 
 	return $success_query_response;
 
-}//END OF makeSoapedSuccessQueryResponse($logentry,$AdhocQueryResponse)
+}//END OF makeSoapedSuccessQueryResponse($AdhocQueryResponse)
 
 
 #### PER LE RISPOSTE ALLE STORED QUERY
@@ -220,7 +198,7 @@ function makeSoapedSuccessStoredQueryResponse($action,$docid,$QueryResult)
 
 	return $success_query_response;
 
-}//END OF makeSoapedSuccessQueryResponse($logentry,$AdhocQueryResponse)
+}//END OF  makeSoapedSuccessStoredQueryResponse($action,$docid,$QueryResult))
 
 
 
@@ -250,7 +228,7 @@ function makeSoapedFailureStoredQueryResponse($failure_response,$errorcode,$acti
 
 	return $response;
 
-}//END OF makeSoapedFailureResponse
+}//END OF makeSoapedFailureStoredQueryResponse
 
 
 
