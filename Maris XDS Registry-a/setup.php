@@ -36,7 +36,7 @@ if ($user == $res_users[0][0] && crypt($password,'xds') == $res_users[0][1]){
 if (!$autenticato){
   header('WWW-Authenticate: Basic realm="Pagina di accesso"');
   header('HTTP/1.0 401 Unauthorized');
-  echo "<h1>Autentcation failed.</h1>";
+  echo "<h1>Authentication failed.</h1>";
 }
   else {
 
@@ -115,6 +115,12 @@ $query_link="http://registry.ip".str_replace('setup.php', 'query.php',$script);
 else {
 $query_link="http://".$ip.str_replace('setup.php', 'query.php',$script); 
 }
+if($ip=="127.0.0.1" || $ip=="localhost"){
+$stored_query_link="http://registry.ip".str_replace('setup.php', 'storedquery.php',$script); 
+}
+else {
+$stored_query_link="http://".$ip.str_replace('setup.php', 'storedquery.php',$script); 
+}
 
 
 echo '<table width="100%" border=0 cellpadding="10" cellspacing="0"><tr bgcolor="black"><td><img src="logo+scritta.jpg"></td></tr>';
@@ -123,8 +129,10 @@ echo "<h2>Setup Registry</h2>";
 
 echo "The link to the registry you have to set in your software (XDS Repository) is:";
 echo "<br><b>".$registry_link."</b><br><br>";
-echo "The link to the registry you have to set in your software (XDS Consumer) is:";
-echo "<br><b>".$query_link."</b>";
+echo "The link to the registry you have to set in your software for query (XDS Consumer) is:";
+echo "<br><b>".$query_link."</b><br><br>";
+echo "The link to the registry you have to set in your software for stored query (XDS Consumer) is:";
+echo "<br><b>".$stored_query_link."</b>";
 
 
 

@@ -34,11 +34,12 @@ function fill_Classification_tables($dom,$RegistryPackage_id_array)
 
 		##### tagname
 		$dom_ebXML_LeafRegistryObjectList_child_node_tagname=$dom_ebXML_LeafRegistryObjectList_child_node->node_name();
-
 		#### SOLO I NODI CLASSIFICATION
 		if($dom_ebXML_LeafRegistryObjectList_child_node_tagname=='Classification')
 		{
+			
 			$classification_node = $dom_ebXML_LeafRegistryObjectList_child_node;
+			
 			$DB_array_classification_attributes = array();
 
 			$value_id= $classification_node->get_attribute('id');
@@ -129,15 +130,17 @@ function fill_Classification_tables($dom,$RegistryPackage_id_array)
 			$DB_array_classification_attributes['classificationNode'] = $value_classificationNode;
 			$DB_array_classification_attributes['nodeRepresentation'] = $value_nodeRepresentation;
 
+			if($value_classificationNode!='urn:uuid:a54d6aa5-d40d-43f9-88c5-b4633d873bdd'){
 			##### SONO PRONTO A SCRIVERE NEL DB
 			$INSERT_INTO_Classification = "INSERT INTO Classification (id,accessControlPolicy,objectType,classificationNode,classificationScheme,classifiedObject,nodeRepresentation) VALUES ('".trim($DB_array_classification_attributes['id'])."','".trim($DB_array_classification_attributes['accessControlPolicy'])."','".trim($DB_array_classification_attributes['objectType'])."','".trim($DB_array_classification_attributes['classificationNode'])."','".trim($DB_array_classification_attributes['classificationScheme'])."','".trim($DB_array_classification_attributes['classifiedObject'])."','".trim($DB_array_classification_attributes['nodeRepresentation'])."')";
 			writeSQLQuery($INSERT_INTO_Classification);
-
+			
  			//$fp = fopen("tmpQuery/INSERT_INTO_Classification","w+");
      			//fwrite($fp,$INSERT_INTO_Classification);
  			//fclose($fp);
 			
 				$ris = query_exec($INSERT_INTO_Classification);
+			}
 
 			}//END OF if($dom_ebXML_LeafRegistryObjectList_child_node_tagname=='Classification')
 
