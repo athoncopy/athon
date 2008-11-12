@@ -3,7 +3,7 @@
 -- http://www.phpmyadmin.net
 -- 
 -- Host: localhost
--- Generato il: 31 Lug, 2007 at 10:09 
+-- Generato il: 06 Set, 2007 at 08:55 
 -- Versione MySQL: 5.0.41
 -- Versione PHP: 4.4.7
 
@@ -33,8 +33,7 @@ CREATE TABLE ATNA (
 -- Dump dei dati per la tabella 'ATNA'
 -- 
 
-INSERT INTO ATNA (ID, HOST, PORT, ACTIVE, DESCRIPTION) VALUES 
-(1, '172.18.8.67', '4000', 'O', 'ATNA NODE');
+INSERT INTO ATNA VALUES (1, '10.135.0.91', '4000', 'O', 'ATNA NODE');
 
 -- --------------------------------------------------------
 
@@ -60,22 +59,24 @@ CREATE TABLE AUDITABLEEVENT (
 -- --------------------------------------------------------
 
 -- 
--- Struttura della tabella 'CONFIG'
+-- Struttura della tabella `CONFIG`
 -- 
 
-CREATE TABLE CONFIG (
-  WWW varchar(100) NOT NULL default '',
-  LOG char(1) NOT NULL default '0',
+CREATE TABLE `CONFIG` (
+  `WWW` varchar(100) NOT NULL default '',
+  `LOG` char(1) NOT NULL default '0',
   `CACHE` char(1) NOT NULL default '0',
-  FILES char(1) NOT NULL default '0'
+  `FILES` char(1) NOT NULL default '0',
+  `JAVA_PATH` varchar(255) NOT NULL
 ) ENGINE=MyISAM DEFAULT CHARSET=latin1;
 
 -- 
--- Dump dei dati per la tabella 'CONFIG'
+-- Dump dei dati per la tabella `CONFIG`
 -- 
 
-INSERT INTO CONFIG (WWW, LOG, CACHE, FILES) VALUES 
-('/MARIS_XDS/xds-repository/', 'O', 'A', 'O');
+INSERT INTO `CONFIG` (`WWW`, `LOG`, `CACHE`, `FILES`, `JAVA_PATH`) VALUES 
+('/repository/', 'O', 'O', 'O', '/usr/lib/jvm/java-1.5.0-sun-1.5.0.11/bin/');
+
 
 -- --------------------------------------------------------
 
@@ -86,13 +87,15 @@ INSERT INTO CONFIG (WWW, LOG, CACHE, FILES) VALUES
 CREATE TABLE DOCUMENTS (
   KEY_PROG int(11) NOT NULL auto_increment,
   XDSDOCUMENTENTRY_UNIQUEID varchar(255) NOT NULL default '',
-  EXTRINSICOBJECT_ID varchar(255) NOT NULL default '',
-  FILE_SYSTEM_ID varchar(255) NOT NULL default '',
-  LENGTH int(11) NOT NULL default '0',
-  `HASH` varchar(200) NOT NULL default '',
   `DATA` datetime NOT NULL default '0000-00-00 00:00:00',
-  PRIMARY KEY  (KEY_PROG)
-) ENGINE=MyISAM  DEFAULT CHARSET=latin1;
+  URI varchar(128) NOT NULL,
+  PRIMARY KEY  (KEY_PROG),
+  KEY XDSDOCUMENTENTRY_UNIQUEID (XDSDOCUMENTENTRY_UNIQUEID)
+) ENGINE=MyISAM DEFAULT CHARSET=latin1;
+
+-- 
+-- Dump dei dati per la tabella 'DOCUMENTS'
+-- 
 
 
 -- --------------------------------------------------------
@@ -111,9 +114,8 @@ CREATE TABLE HTTP (
 -- Dump dei dati per la tabella 'HTTP'
 -- 
 
-INSERT INTO HTTP (HTTPD, ACTIVE) VALUES 
-('TLS', 'O'),
-('NORMAL', 'A');
+INSERT INTO HTTP VALUES ('TLS', 'O');
+INSERT INTO HTTP VALUES ('NORMAL', 'A');
 
 -- --------------------------------------------------------
 
@@ -133,10 +135,9 @@ CREATE TABLE KNOWN_SOUCES_IDS (
 -- Dump dei dati per la tabella 'KNOWN_SOUCES_IDS'
 -- 
 
-INSERT INTO KNOWN_SOUCES_IDS (ID, XDSSUBMISSIONSET_SOURCEID, SOURCE_DESCRIPTION) VALUES 
-(31, 'DCM4CHEE', 'DCM4CHEE'),
-(32, 'testkit', 'testkit'),
-(33, 'Script_source', 'Script_source');
+INSERT INTO KNOWN_SOUCES_IDS VALUES (31, 'DCM4CHEE', 'DCM4CHEE');
+INSERT INTO KNOWN_SOUCES_IDS VALUES (32, 'testkit', 'testkit');
+INSERT INTO KNOWN_SOUCES_IDS VALUES (33, 'Script_source', 'Script_source');
 
 -- --------------------------------------------------------
 
@@ -154,15 +155,14 @@ CREATE TABLE MIMETYPE (
 -- Dump dei dati per la tabella 'MIMETYPE'
 -- 
 
-INSERT INTO MIMETYPE (CODE, EXTENSION) VALUES 
-('application/pdf', 'pdf'),
-('text/x-cda-r2+xml', 'xml'),
-('text/xml', 'xml'),
-('application/x-hl7', 'hl7'),
-('application/dicom', 'dcm'),
-('text/plain', 'txt'),
-('multipart/related', 'mr'),
-('text/x-cdar2+xml', 'xml');
+INSERT INTO MIMETYPE VALUES ('application/pdf', 'pdf');
+INSERT INTO MIMETYPE VALUES ('text/x-cda-r2+xml', 'xml');
+INSERT INTO MIMETYPE VALUES ('text/xml', 'xml');
+INSERT INTO MIMETYPE VALUES ('application/x-hl7', 'hl7');
+INSERT INTO MIMETYPE VALUES ('application/dicom', 'dcm');
+INSERT INTO MIMETYPE VALUES ('text/plain', 'txt');
+INSERT INTO MIMETYPE VALUES ('multipart/related', 'mr');
+INSERT INTO MIMETYPE VALUES ('text/x-cdar2+xml', 'xml');
 
 -- --------------------------------------------------------
 
@@ -189,8 +189,7 @@ CREATE TABLE REGISTRY (
 -- Dump dei dati per la tabella 'REGISTRY'
 -- 
 
-INSERT INTO REGISTRY (ID, HOST, PORT, PATH, ACTIVE, HTTP, SERVICE, DESCRIPTION) VALUES 
-(1, '10.135.0.92', 80, '/MARIS_XDS/registry/registry.php', 'A', 'NORMAL', 'SUBMISSION', 'REGISTRY');
+INSERT INTO REGISTRY VALUES (1, '10.135.0.92', 80, '/registry/registry.php', 'A', 'NORMAL', 'SUBMISSION', 'REGISTRY');
 
 -- --------------------------------------------------------
 
@@ -214,21 +213,7 @@ CREATE TABLE REPOSITORY (
 -- Dump dei dati per la tabella 'REPOSITORY'
 -- 
 
-INSERT INTO REPOSITORY (ID, HOST, PORT, SERVICE, ACTIVE, HTTP) VALUES 
-(1, '10.135.0.92', 80, 'SUBMISSION', 'A', 'NORMAL');
-
--- --------------------------------------------------------
-
--- 
--- Struttura della tabella 'TOKEN'
--- 
-
-CREATE TABLE TOKEN (
-  TOKEN_ID int(11) NOT NULL auto_increment,
-  URI varchar(128) NOT NULL default '',
-  PRIMARY KEY  (TOKEN_ID)
-) ENGINE=MyISAM  DEFAULT CHARSET=latin1;
-
+INSERT INTO REPOSITORY VALUES (1, '10.135.0.92', 80, 'SUBMISSION', 'A', 'NORMAL');
 
 -- --------------------------------------------------------
 
@@ -246,5 +231,4 @@ CREATE TABLE USERS (
 -- Dump dei dati per la tabella 'USERS'
 -- 
 
-INSERT INTO USERS (LOGIN, PASSWORD) VALUES 
-('marisxds', 'xdSwGC7.aBWxk');
+INSERT INTO USERS VALUES ('marisxds', 'xdSwGC7.aBWxk');

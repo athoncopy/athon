@@ -7,7 +7,8 @@
 # See the LICENSE files for details
 # ------------------------------------------------------------------------------------
 
-function modifyMetadata($dom_ebXML,$ExtrinsicObject_node,$file_name,$document_URI,$allegato_STRING,$idfile,$document_token)
+//function modifyMetadata($dom_ebXML,$ExtrinsicObject_node,$file_name,$document_URI,$allegato_STRING,$idfile,$document_token)
+function modifyMetadata($dom_ebXML,$ExtrinsicObject_node,$file_name,$idfile,$document_URI,$document_token)
 {
 	#### ATTENZIONE NO include_once !!!
 	include("config/REP_configuration.php");
@@ -170,30 +171,17 @@ function modifyMetadata($dom_ebXML,$ExtrinsicObject_node,$file_name,$document_UR
 	$datetime = $today." ".$cur_hour;*/
 	
 	/*$insert_into_DOCUMENTS = "INSERT INTO DOCUMENTS (XDSDocumentEntry_uniqueId,ExtrinsicObject_id,file_system_id,size,hash,URI,TEXT,DATE) VALUES ('$ebxml_value','$ExtrinsicObject_id_attr','$file_name','$size','$hash','$Document_URI','".adjustString($allegato_STRING)."','$datetime')";*/
-	$datetime="CURRENT_TIMESTAMP";
-	$insert_into_DOCUMENTS = "INSERT INTO DOCUMENTS (XDSDOCUMENTENTRY_UNIQUEID,EXTRINSICOBJECT_ID,FILE_SYSTEM_ID,LENGTH,HASH,DATA) VALUES ('$ebxml_value','$ExtrinsicObject_id_attr','$file_name','$size','$hash',$datetime)";
 
-	$fp_insert_into_DOCUMENTS= fopen($tmp_path.$idfile."-insert_into_DOCUMENTS-".$idfile, "wb+");
-    	fwrite($fp_insert_into_DOCUMENTS,$insert_into_DOCUMENTS);
-	fclose($fp_insert_into_DOCUMENTS);
-	#### ESEGUO L'INSERIMENTO NELLA TABELLA DOCUMENTS 
-   	if($database=="MYSQL"){
-		include_once('./lib/functions_mysql.php');
-		}
-	else if($database=="ORACLE"){
-		include_once('./lib/functions_oracle.php');
-		}
-		$ris = query_execute($insert_into_DOCUMENTS); //FINO A QUA OK!!!
 	
 ##############################################################################
-
 	return $dom_ebXML;
 
 }//END OF modifyMetadata($dom_ebXML,$ExtrinsicObject_node,$file_name,$document_URI,$allegato_STRING)
 
 ###### MANTIENE IL METADATA INALTERATO (CASO DI HASH-SIZE-URI GIA PRESENTI)
 ###### INSERISCE NEL DB
-function mantainMetadata($ExtrinsicObject_node,$file_name,$document_URI,$allegato_STRING)
+//function mantainMetadata($ExtrinsicObject_node,$file_name,$document_URI,$allegato_STRING)
+function mantainMetadata($ExtrinsicObject_node,$file_name,$document_URI)
 {
 	include("config/REP_configuration.php");
 
@@ -348,21 +336,6 @@ function mantainMetadata($ExtrinsicObject_node,$file_name,$document_URI,$allegat
 	$datetime = $today." ".$cur_hour;
 
 	$insert_into_DOCUMENTS = "INSERT INTO DOCUMENTS (XDSDocumentEntry_uniqueId,ExtrinsicObject_id,file_system_id,size,hash,URI,TEXT,DATE) VALUES ('$ebxml_value','$ExtrinsicObject_id_attr','$file_name','$size','$hash','$Document_URI','".adjustString($allegato_STRING)."','$datetime')";*/
-	$datetime="CURRENT_TIMESTAMP";
-	$insert_into_DOCUMENTS = "INSERT INTO DOCUMENTS (XDSDOCUMENTENTRY_UNIQUEID,EXTRINSICOBJECT_ID,FILE_SYSTEM_ID,SIZE,HASH,DATA) VALUES ('$ebxml_value','$ExtrinsicObject_id_attr','$file_name','$size','$hash','$Document_URI','$datetime')";
-
-	$fp_insert_into_DOCUMENTS= fopen($tmp_path.$idfile."-insert_into_DOCUMENTS-".$idfile, "wb+");
-    	fwrite($fp_insert_into_DOCUMENTS,$insert_into_DOCUMENTS);
-	fclose($fp_insert_into_DOCUMENTS);
-
-	#### ESEGUO L'INSERIMENTO NELLA TABELLA DOCUMENTS 
-   	if($database=="MYSQL"){
-		include_once('./lib/functions_mysql.php');
-		}
-	else if($database=="ORACLE"){
-		include_once('./lib/functions_oracle.php');
-		}
-		$ris = query_execute($insert_into_DOCUMENTS); //FINO A QUA OK!!!
 
 }//END OF mantainMetadata($ExtrinsicObject_node,$file_name,$document_URI,$allegato_STRING)
 

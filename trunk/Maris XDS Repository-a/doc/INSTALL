@@ -44,7 +44,7 @@ Modify the config/config.php and set $database="ORACLE";
 
 
 
-3. Open your browser to http://localhost/install_path/setup.php and configure the repository service using user marisxds / passowrd marisxds
+3. Open your browser to http://localhost/install_path/setup.php and configure the repository service using user marisxds / password marisxds
 
 It easy to test this repository using xampp. We have tested with version 1.6.2, be carefull to change the php version to 4 and enable the dom function in php.ini file (extension=php_domxml.dll)
 In Repository Host and Registry Host DON'T use localhost or 127.0.0.1 but USE the local ip 10.x.x.x or 192.168.x.x

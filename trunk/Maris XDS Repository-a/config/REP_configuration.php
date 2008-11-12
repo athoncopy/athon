@@ -51,7 +51,7 @@ $relative_docs_path = "./Submitted_Documents/".date("Y")."/".date("m")."/".date(
 $relative_docs_path_2 = "Submitted_Documents/".date("Y")."/".date("m")."/".date("d")."/";//PER COMPORRE L'URI
 
 
-$select_config = "SELECT * FROM CONFIG";
+$select_config = "SELECT WWW,LOG,CACHE,FILES,JAVA_PATH FROM CONFIG";
 $res_config = query_select($select_config);
 
 //$www_REP_path = "/MARIS_xds3/xdsServices2/repository/";
@@ -80,6 +80,9 @@ $clean_cache = $res_config[0][2];
 if($res_config[0][3]=="A"){
 	$save_files = true;
 	}
+#### JAVA PATH
+$java_path = $res_config[0][4];
+
 
 #### MESSAGGI
 $service = "repository.php";
@@ -122,6 +125,8 @@ $ATNA_active = $res_ATNA[0][3];
 
 ##### LOGS ATNA
 $atna_path = "./atna_logs/";
+
+
 
 
 //-------------------------- TO REGISTRY CONNECTION INFOS --------------------------//
