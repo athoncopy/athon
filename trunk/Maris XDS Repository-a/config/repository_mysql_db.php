@@ -15,5 +15,5 @@
 # password
   $password_db = 'marco';
 # database name
-  $db_name = 'XDS_REP_ORACLE';
+  $db_name = 'MARIS_XDS_REPOSITORY';
 ?>

@@ -8,7 +8,7 @@
 # ------------------------------------------------------------------------------------
 
 ##### FILE DI CONFIGURAZIONE DEL REPOSITORY
-include_once('config.php');
+include_once('config/config.php');
 ### QUERY FOR HTTP kind of CONNECTION WITH REGISTRY (NORMAL or TLS)
 $http_con = "SELECT HTTPD FROM HTTP WHERE HTTP.ACTIVE = 'A'";
 if($database=="MYSQL"){
