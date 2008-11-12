@@ -1,4 +1,4 @@
-<?
+<?php
 # ------------------------------------------------------------------------------------
 # MARIS XDS REGISTRY
 # Copyright (C) 2007 - 2010  MARiS Project
@@ -7,13 +7,9 @@
 # See the LICENSE files for details
 # ------------------------------------------------------------------------------------
 
-#  inizialize the values for the MySQL connection
-# hostname
-  $ip_q = 'localhost';
-# user name
-  $user_db_q = 'marco';
-# password
-  $password_db_q = 'marco';
-# database name
-  $db_name_q = 'XDS_REG'; 
+$db = "(DESCRIPTION = (ADDRESS_LIST = (ADDRESS = (PROTOCOL = TCP)(HOST = 10.135.0.114)(PORT = 1521)) ) (CONNECT_DATA = (SID = XE) ) )";
+
+$user_db = 'xds-registry';
+
+$password_db = 'xds-registry';
 ?>
