@@ -11,7 +11,11 @@
 //BLOCCO IL BUFFER DI USCITA 
 ob_start();//OKKIO FONADAMENTALE!!!!!!!!!!
 //----------------------------------------------------//
-
+//Parte per calcolare i tempi di esecuzione
+$mtime = microtime();
+$mtime = explode(" ",$mtime);
+$mtime = $mtime[1] + $mtime[0];
+$starttime = $mtime;
 ##### CONFIGURAZIONE DEL REPOSITORY
 include("REGISTRY_CONFIGURATION/REG_configuration.php");
 #######################################
@@ -28,6 +32,10 @@ $_SESSION['idfile']=$idfile;
 $_SESSION['logActive']=$logActive;
 $_SESSION['log_path']=$log_path;
 $_SESSION['tmpQueryService_path']=$tmpQueryService_path;
+
+if(!is_dir($tmpQueryService_path)){
+mkdir($tmpQueryService_path, 0777,true);
+}
 
 //PULISCO LA CACHE TEMPORANEA
 //exec('rm -f '.$tmpQueryService_path."*");
@@ -1887,8 +1895,24 @@ $message_query ="<AuditMessage xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-inst
 
 
 
+//Parte per calcolare i tempi di esecuzione
+$mtime = microtime();
+$mtime = explode(" ",$mtime);
+$mtime = $mtime[1] + $mtime[0];
+$endtime = $mtime;
+$totaltime = number_format($endtime - $starttime,15);
+
+$STAT_QUERY="INSERT INTO STATS (REPOSITORY,DATA,EXECUTION_TIME,OPERATION) VALUES ('".$_SERVER['REMOTE_ADDR']."',CURRENT_TIMESTAMP,'$totaltime','QUERY')";
+$ris = query_exec2($STAT_QUERY,$connessione);
+writeSQLQueryService($ris.": ".$STAT_QUERY);
 
 
+
+unset($_SESSION['tmp_path']);
+unset($_SESSION['idfile']);
+unset($_SESSION['logActive']);
+unset($_SESSION['log_query_path']);
+unset($_SESSION['tmpQueryService_path']);
 
 ######################################################################
 #### METTO L'ebXML SU STRINGA
@@ -1913,10 +1937,5 @@ $ebXML_Response_SOAPED_string = makeSoapedSuccessStoredQueryResponse($Action,$Me
 //} // Fine for($SQcount=0;$SQcount<count($SQLStoredQuery);$SQcount++){
 ################## END OF REGISTRY RESPONSE TO QUERY ####################
 
-unset($_SESSION['tmp_path']);
-unset($_SESSION['idfile']);
-unset($_SESSION['logActive']);
-unset($_SESSION['log_query_path']);
-unset($_SESSION['tmpQueryService_path']);
 
 ?>
