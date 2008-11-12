@@ -1,13 +1,22 @@
 <?php
-include_once("./lib/log.php");
-/*
-* Created on 30-nov-2005
-* Biasio
-*/
+# ------------------------------------------------------------------------------------
+# MARIS XDS REGISTRY
+# Copyright (C) 2007 - 2010  MARiS Project
+# Dpt. Medical and Diagnostic Sciences, University of Padova - csaccavini@rad.unipd.it
+# This program is distributed under the terms and conditions of the GPL
+# See the LICENSE files for details
+# ------------------------------------------------------------------------------------
 
 #### INCLUDO LE LIBRERIE DI SCRITTURA SU DB DEL REGISTRY
-include_once("./lib/functions_QUERY_mysql.php");
-
+include_once('./config/config.php');
+if($database=="MYSQL"){
+include_once('./lib/functions_QUERY_mysql.php');
+}
+else if($database=="ORACLE"){
+include_once('./lib/functions_oracle.php');
+}
+writeSQLQuery('-------------------------------------------------------------------------------------');
+writeSQLQuery('reg_validation.php');
 //RICERCA ALL'INTERNO DELL'ebXML 
   // $tag = 'ExtrinsicObject' $id = 'uniqueId'  --->  XDSDocumentEntry.uniqueId
   // $tag = 'RegistryPackage' $id = 'uniqueId'  --->  XDSSubmissionSet.uniqueId 
@@ -16,7 +25,9 @@ include_once("./lib/functions_QUERY_mysql.php");
 //false = NON valido
 function validate_XDSSubmissionSetUniqueId($dom,$idfile)
 {
-	$fp_uniqueIdQuery = fopen("tmp/".$idfile."-SubmissionSetUniqueIdQuery-".$idfile,"w+");
+writeSQLQuery('---------------------------validate_XDSSubmissionSetUniqueId--------------------------------');
+
+	//$fp_uniqueIdQuery = fopen("tmp/".$idfile."-SubmissionSetUniqueIdQuery-".$idfile,"w+");
 		
     	//$ebxml_value = searchForIds($dom,'RegistryPackage','uniqueId');
     
@@ -93,11 +104,13 @@ function validate_XDSSubmissionSetUniqueId($dom,$idfile)
     	//QUERY AL DB
     	//$query = "SELECT * FROM SUBMISSIONS WHERE XDSSubmissionSet_uniqueId = '$ebxml_value'";
 	$query = "SELECT * FROM ExternalIdentifier WHERE  value = '$ebxml_value'";
-	 
-		fwrite($fp_uniqueIdQuery,$query);
-	fclose($fp_uniqueIdQuery);
-    	$res = query_select($query); //array bidimensionale
 
+		//fwrite($fp_uniqueIdQuery,$query);
+	//fclose($fp_uniqueIdQuery);
+
+
+    	$res = query_select($query); //array bidimensionale
+	writeSQLQuery($query);
     	$isEmpty_1 = (empty($res));
 
 	if(!$isEmpty_1)
@@ -112,10 +125,12 @@ function validate_XDSSubmissionSetUniqueId($dom,$idfile)
 
 }//end of validate_XDSSubmissionSetUniqueId($dom)
 
-function validate_XDSDocumentEntryPatientId($dom)
+function validate_XDSDocumentEntryPatientIdInsert($dom)
 {
+writeSQLQuery('-----------------------------validate_XDSDocumentEntryPatientIdInsert------------------------------');
 
-$log = new Log_REG("REG");
+//$log = new Log_REG("REG");
+//$log = new Log_REG();
 	/*
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 versione che non richiede la presenza del patientId nella tabella Patient
@@ -215,7 +230,7 @@ Per superare controllo su patientID
 
 	//QUERY AL DB
     	$query = "SELECT * FROM Patient WHERE PID3 = '$ebxml_value'";
-	 
+	writeSQLQuery($query);
 // 		fwrite($fp_patientIdQuery,$query);
 // 	fclose($fp_patientIdQuery);
     	
@@ -225,10 +240,11 @@ Per superare controllo su patientID
     	$isEmpty_2 = ((empty($res)) || $isEmpty_2);
     	if($isEmpty_2)###---> patientId non noto --> lo inserisco nella tabella Patient
 	{
-		//$log->writeTimeFile("Registry: patId SCONOSCIUTO");
-		$insertPatient= adjustQuery("INSERT INTO Patient (ID,PID3) VALUES ('','$ebxml_value')");
-		//$log->writeTimeFile($insertPatient);
+		writeTimeFile("Registry: patId SCONOSCIUTO");
+		$insertPatient= adjustQuery("INSERT INTO Patient (ID,PID3,InsertDate) VALUES ('','$ebxml_value',CURRENT_TIMESTAMP)");
 		query_exec($insertPatient);
+		writeSQLQuery($insertPatient);
+
 
 	}
 	
@@ -242,14 +258,15 @@ $isEmpty_2= false;
 }//end of validate_XDSDocumentEntryPatientId($dom)
 
 
-/************************************************************
+/*
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 validate_XDSDocumentEntryPatientId con effettivo controllo su patientId
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+*/
 
-
-function validate_XDSDocumentEntryPatientId($dom)
+function validate_XDSDocumentEntryPatientIdError($dom)
 {
+	writeSQLQuery('-----------------------------validate_XDSDocumentEntryPatientIdError------------------------------');
 	$ebxml_value = '';
 
 ##### RADICE DEL DOCUMENTO ebXML
@@ -338,7 +355,7 @@ function validate_XDSDocumentEntryPatientId($dom)
 
 	//QUERY AL DB
     	$query = "SELECT * FROM Patient WHERE  PID3 = '$ebxml_value'";
-	 
+	writeSQLQuery($query); 
 // 		fwrite($fp_patientIdQuery,$query);
 // 	fclose($fp_patientIdQuery);
     	
@@ -359,13 +376,13 @@ function validate_XDSDocumentEntryPatientId($dom)
 
 }//end of validate_XDSDocumentEntryPatientId($dom)
 
-***************************************************************/
 
 
 
 ##### XDSDocumentEntry.uniqueId
 function validate_XDSDocumentEntryUniqueId($dom)
 {
+	writeSQLQuery('----------------------------validate_XDSDocumentEntryUniqueId-------------------------------');
 	$ebxml_value = '';
 
 ##### RADICE DEL DOCUMENTO ebXML
@@ -379,7 +396,7 @@ function validate_XDSDocumentEntryUniqueId($dom)
 	$ExtrinsicObject_node_id_attr_array=array();
 	if(!empty($dom_ebXML_ExtrinsicObject_node_array))
 	{
-// 		$fp_uniqueIdQuery = fopen("tmp/DocumentEntryUniqueIdQuery","w+");
+
 
 	#### CICLO SU OGNI ExtrinsicObject ####
 	$ExtrinsicObject_node_id_attr_array=array();
@@ -480,9 +497,7 @@ function validate_XDSDocumentEntryUniqueId($dom)
 	{
 	//QUERY AL DB
     	$query = "SELECT * FROM ExternalIdentifier WHERE  value = '$ebxml_value'";
-	 
-// 		fwrite($fp_uniqueIdQuery,$query);
-// 	fclose($fp_uniqueIdQuery);
+	writeSQLQuery($query);
     	
 	### EFFETTUO LA QUERY ED OTTENGO IL RISULTATO
 	$res = query_select($query); //array bidimensionale
@@ -492,7 +507,7 @@ function validate_XDSDocumentEntryUniqueId($dom)
 	{
 	     ###DEVO CONFRONTARE L'HASH
 	     $query_1 = "SELECT * FROM Slot WHERE parent = '".$res[0]['registryObject']."' AND name = 'hash'";
-
+	     writeSQLQuery($query_1);
 		$fp_registryObjectQuery = fopen("tmp/registryObjectQuery","w+");
 		fwrite($fp_registryObjectQuery,$query_1);
 		fclose($fp_registryObjectQuery);
@@ -521,9 +536,10 @@ function validate_XDSDocumentEntryUniqueId($dom)
   
 }//end of validate_XDSDocumentEntryUniqueId($dom)
 
-function validate_XDSSubmissionSetPatientId($dom,$idfile)
+function validate_XDSSubmissionSetPatientIdError($dom,$idfile)
 {
-	$fp_patientIdQuery = fopen("tmp/".$idfile."-SubmissionSetPatientIdQuery-".$idfile,"w+");
+	writeSQLQuery('--------------------------validate_XDSSubmissionSetPatientId---------------------------------');
+	//$fp_patientIdQuery = fopen("tmp/".$idfile."-SubmissionSetPatientIdQuery-".$idfile,"w+");
 		
     	//$ebxml_value = searchForIds($dom,'RegistryPackage','uniqueId');
     
@@ -601,9 +617,9 @@ function validate_XDSSubmissionSetPatientId($dom,$idfile)
 
     	//QUERY AL DB
     	$query = "SELECT * FROM Patient WHERE  PID3 = '$ebxml_value'";
-	 
-		fwrite($fp_patientIdQuery,$query);
-	fclose($fp_patientIdQuery);
+	writeSQLQuery($query); 
+		//fwrite($fp_patientIdQuery,$query);
+	//fclose($fp_patientIdQuery);
     	$res = query_select($query); //array bidimensionale
 	 
     	$isEmpty_3 = (empty($res));
@@ -617,10 +633,115 @@ function validate_XDSSubmissionSetPatientId($dom,$idfile)
 
 }//end of validate_XDSSubmissionSetPatientId($dom)
 
+function validate_XDSSubmissionSetPatientIdInsert($dom,$idfile)
+{
+	writeSQLQuery('--------------------------validate_XDSSubmissionSetPatientId---------------------------------');
+	//$fp_patientIdQuery = fopen("tmp/".$idfile."-SubmissionSetPatientIdQuery-".$idfile,"w+");
+		
+    	//$ebxml_value = searchForIds($dom,'RegistryPackage','uniqueId');
+    
+	$ebxml_value = '';
+
+##### RADICE DEL DOCUMENTO ebXML
+	$root_ebXML = $dom->document_element();
+	$patientIdS=array();
+	##### ARRAY DEI NODI REGISTRYPACKAGE
+	$dom_ebXML_RegistryPackage_node_array=$root_ebXML->get_elements_by_tagname("RegistryPackage");
+
+	#### CICLO SU OGNI RegistryPackage ####
+	$isEmpty_3 = false;
+	$failure_3 = "";
+	for($index=0;$index<(count($dom_ebXML_RegistryPackage_node_array));$index++)
+	{
+	##### NODO REGISTRYPACKAGE RELATIVO AL DOCUMENTO NUMERO $index
+	$RegistryPackage_node = $dom_ebXML_RegistryPackage_node_array[$index];
+	
+	#### ARRAY DEI FIGLI DEL NODO REGISTRYPACKAGE ##############	
+	$RegistryPackage_child_nodes = $RegistryPackage_node->child_nodes();
+	#################################################################
+
+################# PROCESSO TUTTI I NODI FIGLI DI REGISTRYPACKAGE
+	for($k=0;$k<count($RegistryPackage_child_nodes);$k++)
+	{
+		#### SINGOLO NODO FIGLIO DI REGISTRYPACKAGE
+		$RegistryPackage_child_node=$RegistryPackage_child_nodes[$k];
+		#### NOME DEL NODO
+		$RegistryPackage_child_node_tagname = $RegistryPackage_child_node->node_name();
+
+		if($RegistryPackage_child_node_tagname=='ExternalIdentifier')
+		{
+			$externalidentifier_node = $RegistryPackage_child_node;
+			//$value_value= avoidHtmlEntitiesInterpretation($externalidentifier_node->get_attribute('value'));
+			$value_value=$externalidentifier_node->get_attribute('value');
+			
+			#### NODI FIGLI DI EXTERNALIDENTIFIER
+			$externalidentifier_child_nodes = $externalidentifier_node->child_nodes();
+		//print_r($name_node);
+			for($q = 0;$q < count($externalidentifier_child_nodes);$q++)
+			{
+				$externalidentifier_child_node = $externalidentifier_child_nodes[$q];
+				$externalidentifier_child_node_tagname = $externalidentifier_child_node->node_name();
+				if($externalidentifier_child_node_tagname=='Name')
+				{
+					$name_node=$externalidentifier_child_node;
+
+					$LocalizedString_nodes = $name_node->child_nodes();
+		//print_r($LocalizedString_nodes);
+			for($p = 0;$p < count($LocalizedString_nodes);$p++)
+			{
+				$LocalizedString_node = $LocalizedString_nodes[$p];//->node_name();
+				$LocalizedString_node_tagname = $LocalizedString_node->node_name();
+
+				if($LocalizedString_node_tagname == 'LocalizedString')
+				{
+					$LocalizedString_value =$LocalizedString_node->get_attribute('value');
+					if(strpos(strtolower(trim($LocalizedString_value)),strtolower('SubmissionSet.patientId')))
+					{
+						$ebxml_value = $value_value;
+					}
+					
+				}
+
+			}
+
+				}
+			}
+		}
+
+	}
+
+	}//END OF for($index=0;$index<(count($dom_ebXML_RegistryPackage_node_array));$index++)
+
+
+
+    	//QUERY AL DB
+    	$query = "SELECT * FROM Patient WHERE PID3 = '$ebxml_value'";
+	writeSQLQuery($query); 
+		//fwrite($fp_patientIdQuery,$query);
+	//fclose($fp_patientIdQuery);
+    	$res = query_select($query); //array bidimensionale
+	 
+    	$isEmpty_3 = (empty($res));
+	if($isEmpty_3)
+	{
+
+		writeTimeFile("Registry: patId SCONOSCIUTO");
+		$insertPatient= adjustQuery("INSERT INTO Patient (ID,PID3,InsertDate) VALUES ('','$ebxml_value',CURRENT_TIMESTAMP)");
+		query_exec($insertPatient);
+		writeSQLQuery($insertPatient);
+		//$failure_3="\nExternalIdentifier XDSSubmissionSet.patientId ".htmlentities($ebxml_value)." (urn:uuid:6b5aea1a-874d-4603-a4bc-96a0a7b38446) is required but not found\n";
+	}
+    	$ret = array($isEmpty_3,$failure_3,$ebxml_value);
+
+    	return $ret;
+
+}//end of validate_XDSSubmissionSetPatientId($dom)
+
 
 function validate_XDSFolderUniqueId($dom,$idfile)
 {
-	$fp_uniqueIdQuery = fopen("tmp/".$idfile."-FolderUniqueIdQuery-".$idfile,"w+");
+	writeSQLQuery('----------------------------validate_XDSFolderUniqueId-------------------------------');
+	//$fp_uniqueIdQuery = fopen("tmp/".$idfile."-FolderUniqueIdQuery-".$idfile,"w+");
 		
     	//$ebxml_value = searchForIds($dom,'RegistryPackage','uniqueId');
     
@@ -702,9 +823,9 @@ function validate_XDSFolderUniqueId($dom,$idfile)
 
     	### QUERY AL DB
     	$query = "SELECT * FROM ExternalIdentifier WHERE  value = '$ebxml_value'";
-	 
-		fwrite($fp_uniqueIdQuery,$query);
-	fclose($fp_uniqueIdQuery);
+	writeSQLQuery($query); 
+		//fwrite($fp_uniqueIdQuery,$query);
+	//fclose($fp_uniqueIdQuery);
     	$res = query_select($query); //array bidimensionale
 
     	$isEmpty_4 = (empty($res));
@@ -721,7 +842,8 @@ function validate_XDSFolderUniqueId($dom,$idfile)
 
 function validate_XDSFolderPatientId($dom,$XDSDocumentEntryPatientId_arr,$XDSSubmissionSetPatientId,$ExtrinsicObject_node_id,$idfile)
 {
-	$fp_patientIdQuery = fopen("tmp/".$idfile."-FolderPatientIdQuery-".$idfile,"w+");
+	writeSQLQuery('--------------------------validate_XDSFolderPatientId---------------------------------');
+	//$fp_patientIdQuery = fopen("tmp/".$idfile."-FolderPatientIdQuery-".$idfile,"w+");
 		
     	//$ebxml_value = searchForIds($dom,'RegistryPackage','uniqueId');
     
@@ -829,9 +951,10 @@ function validate_XDSFolderPatientId($dom,$XDSDocumentEntryPatientId_arr,$XDSSub
 
     		### QUERY AL DB
     		$query = "SELECT * FROM Patient WHERE  PID3 = '$ebxml_value'";
-	 
-		fwrite($fp_patientIdQuery,$query);
-		fclose($fp_patientIdQuery);
+	 	writeSQLQuery($query);
+
+		//fwrite($fp_patientIdQuery,$query);
+		//fclose($fp_patientIdQuery);
     		$res = query_select($query); //array bidimensionale
 
     		$isEmpty_8 = ((empty($res)) || $isEmpty_8);
@@ -852,6 +975,7 @@ function validate_XDSFolderPatientId($dom,$XDSDocumentEntryPatientId_arr,$XDSSub
 ### VERIFICA LA POSSIBILITA' DI AGGIUNGERE UN DOCUMENTO ADUN FOLDER VIA PATIENT IDs
 function verifyAddDocToFolder($dom,$XDSDocumentEntryPatientId_arr)
 {	
+	writeSQLQuery('----------------------------verifyAddDocToFolder-------------------------------');
 	#### DEVO CERCARE L'ASSOCIATION
 	##### RADICE DEL DOCUMENTO ebXML
 	$root_ebXML = $dom->document_element();
@@ -896,10 +1020,11 @@ function verifyAddDocToFolder($dom,$XDSDocumentEntryPatientId_arr)
 
 				$query_for_isFolderCreated="SELECT name FROM Slot WHERE Slot.parent = '$value_sourceObject'";
 				$ris_isFolderCreated=query_select($query_for_isFolderCreated);
+				writeSQLQuery($query_for_isFolderCreated);
 
-				$fp=fopen("tmp/query_for_isFolderCreated","w+");
-				fwrite($fp,$query_for_isFolderCreated);
-				fclose($fp);
+				//$fp=fopen("tmp/query_for_isFolderCreated","w+");
+				//fwrite($fp,$query_for_isFolderCreated);
+				//fclose($fp);
 
 				#### FOLDER NON ESISTENTE
 				if($ris_isFolderCreated[0]['name']!="lastUpdateTime")
@@ -915,6 +1040,7 @@ function verifyAddDocToFolder($dom,$XDSDocumentEntryPatientId_arr)
 						$patId=$XDSDocumentEntryPatientId_arr[$t];
 						$query_for_isAddAllowed="SELECT * FROM ExternalIdentifier WHERE ExternalIdentifier.registryObject = '$value_sourceObject' AND ExternalIdentifier.value = '$patId'";
 						$ris_isAddAllowed=query_select($query_for_isAddAllowed);
+						writeSQLQuery($query_for_isAddAllowed);
 
 						$fp=fopen("tmp/query_for_isAddAllowed","w+");
 						fwrite($fp,$query_for_isAddAllowed);
@@ -976,6 +1102,7 @@ function confrontaPatientIds($XDSSubmissionSetPatientId,$XDSDocumentEntryPatient
 ##### VALIDAZIONE DEL mimeType PER OGNI DOCUMENTO SOTTOMESSO
 function validate_ExtrinsicObject_mimeType($dom)
 {
+	writeSQLQuery('---------------------------validate_ExtrinsicObject_mimeType--------------------------------');
 ##### RADICE DEL DOCUMENTO ebXML
 	$root_ebXML = $dom->document_element();
 	
@@ -1009,9 +1136,8 @@ function validate_ExtrinsicObject_mimeType($dom)
 
 	### QUERY AL DB
     	$query = "SELECT * FROM mimeType WHERE code = '$ExtrinsicObject_node_mimeType_attr'";
-	 
-// 		fwrite($fp_mimeTypeQuery,$query);
-// 	fclose($fp_mimeTypeQuery);
+	writeSQLQuery($query); 
+
 
 	$res = query_select($query);
 
@@ -1034,6 +1160,7 @@ function validate_ExtrinsicObject_mimeType($dom)
 ##### SUPPORTO AL REPLACEMENT
 function validate_Replacement($dom,$DocumentEntryPatientId_array)
 {
+	writeSQLQuery('---------------------------validate_Replacement--------------------------------');
 	$ExtrinsicObject_node_id_attr_arr=array();
 	$Association_node_sourceObject_attr_arr=array();
 	$Association_node_targetObject_attr_arr=array();
@@ -1096,6 +1223,7 @@ function validate_Replacement($dom,$DocumentEntryPatientId_array)
 				$query_for_patId_coherence="SELECT value FROM ExternalIdentifier WHERE registryObject = '$Association_node_targetObject_attr' AND  identificationScheme = 'urn:uuid:58a6f841-87b3-4a3e-92fd-a8ffeff98427'";
 
 				$patId_res = query_select($query_for_patId_coherence);
+				writeSQLQuery($query_for_patId_coherence);
 
 				if(!empty($patId_res))//ECCEZIONE
 				{
@@ -1150,6 +1278,7 @@ if($performControls)
 	$Association_node_targetObject_attr=$Association_node_targetObject_attr_arr[$s];
 
 	$query = "SELECT * FROM ExtrinsicObject WHERE ExtrinsicObject.id = '$Association_node_targetObject_attr'";
+	writeSQLQuery($query);
 
 	$res = query_select($query);
 

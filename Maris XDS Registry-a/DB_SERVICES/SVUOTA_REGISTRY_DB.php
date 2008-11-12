@@ -1,6 +1,15 @@
 <?php
+# ------------------------------------------------------------------------------------
+# MARIS XDS REGISTRY
+# Copyright (C) 2007 - 2010  MARiS Project
+# Dpt. Medical and Diagnostic Sciences, University of Padova - csaccavini@rad.unipd.it
+# This program is distributed under the terms and conditions of the GPL
+# See the LICENSE files for details
+# ------------------------------------------------------------------------------------
 
 ######UTILITY DI SVUOTAMENTO DEL DB DEL REGISTRY
+include_once('../config/config.php');
+if($database=="MYSQL"){
 function query_exec($query) //ERA LA query_execute($query)
 {
 # IMPORT MYSQL PARAMETERS (NOTE: IT WORKS WITH ABSOLUTE PATH ONLY !!)
@@ -21,7 +30,33 @@ include('../config/registry_QUERY_mysql_db.php');
     $a = 1;
     return $a;
 
-}//END OF query_execute($query)
+}//END OF query_exec($query)
+}
+else if($database=="ORACLE"){
+function query_exec($query)
+{
+# IMPORT MYSQL PARAMETERS (NOTE: IT WORKS WITH ABSOLUTE PATH ONLY !!)
+include('../config/registry_oracle_db.php');
+# open connection to db
+//putenv("ORACLE_HOME=/usr/lib/oracle/xe/app/oracle/product/10.2.0");
+$conn = OCILogOn($user_db,$password_db,$db)
+or die( "Could not connect to Oracle database!") or die (ocierror());;
+
+# execute the EXEC query
+$statement = ociparse($conn, $query);
+$risultato = ociexecute($statement);
+
+
+# close connection
+ocilogoff($conn);
+
+    $a = 1;
+    return $a;
+
+}//END OF query_exec($query)
+}
+
+
 
 #### PARAMETRO DI AUTORIZZAZIONE
 
@@ -41,9 +76,10 @@ $query_Name = "TRUNCATE TABLE Name";
 
 $query_RegistryPackage = "TRUNCATE TABLE RegistryPackage";
 $query_Slot = "TRUNCATE TABLE Slot";
+$query_AuditableEvent = "TRUNCATE TABLE AuditableEvent";
 
 #### CREO L'ARRAY DEI COMANDI DA ESEGUIRE
-$svuota_array =array($query_Association,$query_Classification,$query_Counters,$query_Description,$query_ExternalIdentifier,$query_ExtrinsicObject,$query_Name,$query_RegistryPackage,$query_Slot);
+$svuota_array =array($query_Association,$query_Classification,$query_Counters,$query_Description,$query_ExternalIdentifier,$query_ExtrinsicObject,$query_Name,$query_RegistryPackage,$query_Slot,$query_AuditableEvent);
 
 ###### ESEGUO
 if($action=="database")
@@ -75,7 +111,7 @@ if($action=="tmp")
 
 $system=PHP_OS;
 
-$windows=substr_count(strtoupper($system),"WIN");
+$windows=substr_count(strtoupper($system),"WINDOWS");
 
 
 

@@ -1,5 +1,14 @@
 <?php
+# ------------------------------------------------------------------------------------
+# MARIS XDS REGISTRY
+# Copyright (C) 2007 - 2010  MARiS Project
+# Dpt. Medical and Diagnostic Sciences, University of Padova - csaccavini@rad.unipd.it
+# This program is distributed under the terms and conditions of the GPL
+# See the LICENSE files for details
+# ------------------------------------------------------------------------------------
 
+writeSQLQuery('-------------------------------------------------------------------------------------');
+writeSQLQuery('RegistryPackage_2.php');
 ##### METODO PRINCIPALE
 function fill_RegistryPackage_tables($dom,$language)
 {
@@ -49,7 +58,7 @@ function fill_RegistryPackage_tables($dom,$language)
         $value_expiration = $RegistryPackage_node->get_attribute('expiration');
 	if($value_expiration == '')
 	{
-		$value_expiration = "NOT DECLARED";
+		$value_expiration = "CURRENT_TIMESTAMP";
 	}
         $value_majorVersion = $RegistryPackage_node->get_attribute('majorVersion');
 	if($value_majorVersion == '')
@@ -89,14 +98,14 @@ function fill_RegistryPackage_tables($dom,$language)
 
 ####### QUI ORA POSSO RIEMPIRE IL DB
 $INSERT_INTO_RegistryPackage = "INSERT INTO RegistryPackage (id,accessControlPolicy,objectType,expiration,majorVersion,minorVersion,stability,status,userVersion) VALUES
-('".$DB_array_registrypackage_attributes['id']."','".$DB_array_registrypackage_attributes['accessControlPolicy']."','".$DB_array_registrypackage_attributes['objectType']."','".$DB_array_registrypackage_attributes['expiration']."','".$DB_array_registrypackage_attributes['majorVersion']."','".$DB_array_registrypackage_attributes['minorVersion']."','".$DB_array_registrypackage_attributes['stability']."','".$DB_array_registrypackage_attributes['status']."','".$DB_array_registrypackage_attributes['userVersion']."')";
+('".$DB_array_registrypackage_attributes['id']."','".$DB_array_registrypackage_attributes['accessControlPolicy']."','".$DB_array_registrypackage_attributes['objectType']."',".$DB_array_registrypackage_attributes['expiration'].",'".$DB_array_registrypackage_attributes['majorVersion']."','".$DB_array_registrypackage_attributes['minorVersion']."','".$DB_array_registrypackage_attributes['stability']."','".$DB_array_registrypackage_attributes['status']."','".$DB_array_registrypackage_attributes['userVersion']."')";
+writeSQLQuery($INSERT_INTO_RegistryPackage);
 			
-	$fp_INSERT_INTO_RegistryPackage = fopen("tmpQuery/INSERT_INTO_RegistryPackage","w+");
-		fwrite($fp_INSERT_INTO_RegistryPackage,$INSERT_INTO_RegistryPackage);
-	fclose($fp_INSERT_INTO_RegistryPackage);
+	//$fp_INSERT_INTO_RegistryPackage = fopen("tmpQuery/INSERT_INTO_RegistryPackage","w+");
+	//	fwrite($fp_INSERT_INTO_RegistryPackage,$INSERT_INTO_RegistryPackage);
+	//fclose($fp_INSERT_INTO_RegistryPackage);
 	
-	//require("lib/functions_QUERY_mysql.php");
-		$ris = query_exec($INSERT_INTO_RegistryPackage);
+	$ris = query_exec($INSERT_INTO_RegistryPackage);
 
 ############## FINE RECUPERO TUTTI GLI ATTRIBUTI DEL NODO REGISTRYPACKAGE
 
@@ -160,12 +169,12 @@ $INSERT_INTO_RegistryPackage = "INSERT INTO RegistryPackage (id,accessControlPol
 		//print_r($DB_array_name);
 		##### SONO PRONTO A SCRIVERE NEL DB
         	$INSERT_INTO_Name = "INSERT INTO Name (charset,lang,value,parent) VALUES ('".trim($DB_array_name['charset'])."','".trim($DB_array_name['lang'])."','".trim(adjustString($DB_array_name['value']))."','".trim($DB_array_name['parent'])."')";
+		writeSQLQuery($INSERT_INTO_Name);
 
-		$fp_INSERT_INTO_Name = fopen("tmpQuery/INSERT_INTO_Name","w+");
-		fwrite($fp_INSERT_INTO_Name,$INSERT_INTO_Name);
-		fclose($fp_INSERT_INTO_Name);
+		//$fp_INSERT_INTO_Name = fopen("tmpQuery/INSERT_INTO_Name","w+");
+		//fwrite($fp_INSERT_INTO_Name,$INSERT_INTO_Name);
+		//fclose($fp_INSERT_INTO_Name);
 	
-		//include_once("lib/functions_QUERY_mysql.php");
 			$ris = query_exec($INSERT_INTO_Name);
 
 		}//END OF if($RegistryPackage_child_node_tagname == 'Name')
@@ -222,13 +231,13 @@ $INSERT_INTO_RegistryPackage = "INSERT INTO RegistryPackage (id,accessControlPol
 
 		##### SONO PRONTO A SCRIVERE NEL DB
         	$INSERT_INTO_Description = "INSERT INTO Description (charset,lang,value,parent) VALUES ('".trim($DB_array_description['charset'])."','".trim($DB_array_description['lang'])."','".trim(adjustString($DB_array_description['value']))."','".trim($DB_array_description['parent'])."')";
+		writeSQLQuery($INSERT_INTO_Description);
 
-		$fp_INSERT_INTO_Description = fopen("tmpQuery/INSERT_INTO_Description","w+");
-		fwrite($fp_INSERT_INTO_Description,$INSERT_INTO_Description);
-		fclose($fp_INSERT_INTO_Description);
+		//$fp_INSERT_INTO_Description = fopen("tmpQuery/INSERT_INTO_Description","w+");
+		//fwrite($fp_INSERT_INTO_Description,$INSERT_INTO_Description);
+		//fclose($fp_INSERT_INTO_Description);
 	
-		//include_once("lib/functions_QUERY_mysql.php");
-			$ris = query_exec($INSERT_INTO_Description);
+		$ris = query_exec($INSERT_INTO_Description);
 
 		}//END OF if($RegistryPackage_child_node_tagname == 'Description')
 ######### NODO DESCRIPTION
@@ -277,13 +286,13 @@ $INSERT_INTO_RegistryPackage = "INSERT INTO RegistryPackage (id,accessControlPol
 					//print_r($DB_array_slot_attributes);
 					  ##### SONO PRONTO A SCRIVERE NEL DB
 					  $INSERT_INTO_Slot = "INSERT INTO Slot (name,slotType,value,parent) VALUES ('".trim($DB_array_slot_attributes['name'])."','".trim($DB_array_slot_attributes['slotType'])."','".trim(adjustString($DB_array_slot_attributes['value']))."','".trim($DB_array_slot_attributes['parent'])."')";
+					  writeSQLQuery($INSERT_INTO_Slot);
 
-		$fp_INSERT_INTO_Slot = fopen("tmpQuery/INSERT_INTO_Slot","a+");
-			fwrite($fp_INSERT_INTO_Slot,"SL Q".$q."    ".$INSERT_INTO_Slot."\n");
-		fclose($fp_INSERT_INTO_Slot);
+		//$fp_INSERT_INTO_Slot = fopen("tmpQuery/INSERT_INTO_Slot","a+");
+			//fwrite($fp_INSERT_INTO_Slot,"SL Q".$q."    ".$INSERT_INTO_Slot."\n");
+		//fclose($fp_INSERT_INTO_Slot);
 	
-		//include_once("lib/functions_QUERY_mysql.php");
-			$ris = query_exec($INSERT_INTO_Slot);
+		$ris = query_exec($INSERT_INTO_Slot);
 						
 					}//END OF if(count($valuelist_child_nodes)==3)
 				else  //CASO NUMERO VALUE > 1
@@ -299,13 +308,14 @@ $INSERT_INTO_RegistryPackage = "INSERT INTO RegistryPackage (id,accessControlPol
 					//print_r($DB_array_slot_attributes);
 					   ##### SONO PRONTO A SCRIVERE NEL DB
 					  $INSERT_INTO_Slot = "INSERT INTO Slot (name,slotType,value,parent) VALUES ('".trim($DB_array_slot_attributes['name'])."','".trim($DB_array_slot_attributes['slotType'])."','".trim(adjustString($DB_array_slot_attributes['value']))."','".trim($DB_array_slot_attributes['parent'])."')";
+					  writeSQLQuery($INSERT_INTO_Slot);
 
-		$fp_INSERT_INTO_Slot = fopen("tmpQuery/INSERT_INTO_Slot","a+");
-			fwrite($fp_INSERT_INTO_Slot,"SL R".$r."    ".$INSERT_INTO_Slot."\n");
-		fclose($fp_INSERT_INTO_Slot);
+
+		//$fp_INSERT_INTO_Slot = fopen("tmpQuery/INSERT_INTO_Slot","a+");
+			//fwrite($fp_INSERT_INTO_Slot,"SL R".$r."    ".$INSERT_INTO_Slot."\n");
+		//fclose($fp_INSERT_INTO_Slot);
 	
-		//include_once("lib/functions_QUERY_mysql.php");
-			$ris = query_exec($INSERT_INTO_Slot);
+		$ris = query_exec($INSERT_INTO_Slot);
 					}
 				}
 
@@ -342,41 +352,46 @@ $INSERT_INTO_RegistryPackage = "INSERT INTO RegistryPackage (id,accessControlPol
 			$value_classificationScheme= $classification_node->get_attribute('classificationScheme');
 			if($value_classificationNode == '')
 			{
-				$queryForName_value="SELECT  Name_value FROM ClassificationScheme WHERE ClassificationScheme.id = '$value_classificationScheme'";
+				$queryForName_value="SELECT Name_value FROM ClassificationScheme WHERE ClassificationScheme.id = '$value_classificationScheme'";
+				writeSQLQuery($queryForName_value);
 
 				$risName_value=query_select($queryForName_value);
-				$name_value=$risName_value[0]['Name_value'];
+				$name_value=$risName_value[0][0];
 				$name_value=substr($name_value,0,strpos($name_value,'.'));
 
 				$queryForClassificationNode="SELECT id FROM ClassificationNode WHERE ClassificationNode.code = '$name_value'";
+				writeSQLQuery($queryForClassificationNode);
 				$ris_code=query_select($queryForClassificationNode);
 
-				$value_classificationNode=$ris_code[0]['id'];
+				$value_classificationNode=$ris_code[0][0];
 			}
 			if($value_classificationScheme == '')
 			{
 			$queryForClassificationNode="SELECT code FROM ClassificationNode WHERE ClassificationNode.id = '$value_classificationNode'";
+			writeSQLQuery($queryForClassificationNode);
 
 			$ris_classificationNode = query_select($queryForClassificationNode);
-			$code_classificationNode = $ris_classificationNode[0]['code'];
+			$code_classificationNode = $ris_classificationNode[0][0];
 			#### FOLDER
 			if($code_classificationNode=="XDSFolder")
 			{
 				$queryForClassificationScheme="SELECT id FROM ClassificationScheme WHERE ClassificationScheme. Name_value = 'XDSFolder.codeList'";
+				writeSQLQuery($queryForClassificationScheme);
 
 				$ris_ClassificationScheme=query_select($queryForClassificationScheme);
 
-				$value_classificationScheme=$ris_ClassificationScheme[0]['id'];
+				$value_classificationScheme=$ris_ClassificationScheme[0][0];
 				
 			}//END OF if($code_classificationNode=="XDSFolder")
 			#### SUBMISSIONSET
 			else if($code_classificationNode=="XDSSubmissionSet")
 			{
 				$queryForClassificationScheme="SELECT id FROM ClassificationScheme WHERE ClassificationScheme. Name_value = 'XDSSubmissionSet.contentTypeCode'";
+				writeSQLQuery($queryForClassificationScheme);
 
 				$ris_ClassificationScheme=query_select($queryForClassificationScheme);
 
-				$value_classificationScheme=$ris_ClassificationScheme[0]['id'];
+				$value_classificationScheme=$ris_ClassificationScheme[0][0];
 
 			}//END OF if($code_classificationNode=="XDSSubmissionSet")
 			}//END OF if($value_classificationScheme == '')
@@ -403,13 +418,13 @@ $INSERT_INTO_RegistryPackage = "INSERT INTO RegistryPackage (id,accessControlPol
 			//print_r($DB_array_classification_attributes);
 			##### SONO PRONTO A SCRIVERE NEL DB
 			$INSERT_INTO_Classification = "INSERT INTO Classification (id,accessControlPolicy,objectType,classificationNode,classificationScheme,classifiedObject,nodeRepresentation) VALUES ('".trim($DB_array_classification_attributes['id'])."','".trim($DB_array_classification_attributes['accessControlPolicy'])."','".trim($DB_array_classification_attributes['objectType'])."','".trim($DB_array_classification_attributes['classificationNode'])."','".trim($DB_array_classification_attributes['classificationScheme'])."','".trim($DB_array_classification_attributes['classifiedObject'])."','".trim($DB_array_classification_attributes['nodeRepresentation'])."')";
+			writeSQLQuery($INSERT_INTO_Classification);
 
-			$fp = fopen("tmpQuery/INSERT_INTO_Classification","w+");
-    			fwrite($fp,$INSERT_INTO_Classification);
-			fclose($fp);
+			//$fp = fopen("tmpQuery/INSERT_INTO_Classification","w+");
+    			//fwrite($fp,$INSERT_INTO_Classification);
+			//fclose($fp);
 			
-			//include_once("lib/functions_QUERY_mysql.php");
-				$ris = query_exec($INSERT_INTO_Classification);
+			$ris = query_exec($INSERT_INTO_Classification);
 
 		#### NODI FIGLI DI CLASSIFICATION
 		$classification_child_nodes = $classification_node->child_nodes();
@@ -460,13 +475,13 @@ $INSERT_INTO_RegistryPackage = "INSERT INTO RegistryPackage (id,accessControlPol
 		//print_r($DB_array_name);
 		##### SONO PRONTO A SCRIVERE NEL DB
         	$INSERT_INTO_Name = "INSERT INTO Name (charset,lang,value,parent) VALUES ('".trim($DB_array_name['charset'])."','".trim($DB_array_name['lang'])."','".trim(adjustString($DB_array_name['value']))."','".trim($DB_array_name['parent'])."')";
+		writeSQLQuery($INSERT_INTO_Name);
 
-		$fp_INSERT_INTO_Name = fopen("tmpQuery/INSERT_INTO_Name","w+");
-		fwrite($fp_INSERT_INTO_Name,$INSERT_INTO_Name);
-		fclose($fp_INSERT_INTO_Name);
+		//$fp_INSERT_INTO_Name = fopen("tmpQuery/INSERT_INTO_Name","w+");
+		//fwrite($fp_INSERT_INTO_Name,$INSERT_INTO_Name);
+		//fclose($fp_INSERT_INTO_Name);
 	
-		//include_once("lib/functions_QUERY_mysql.php");
-			$ris = query_exec($INSERT_INTO_Name);
+		$ris = query_exec($INSERT_INTO_Name);
 
 		}//END OF if($classification_child_node_tagname=='Name')
 
@@ -518,12 +533,12 @@ $INSERT_INTO_RegistryPackage = "INSERT INTO RegistryPackage (id,accessControlPol
 					//print_r($DB_array_slot_attributes);
 					  ##### SONO PRONTO A SCRIVERE NEL DB
 					  $INSERT_INTO_Slot = "INSERT INTO Slot (name,slotType,value,parent) VALUES ('".trim($DB_array_slot_attributes['name'])."','".trim($DB_array_slot_attributes['slotType'])."','".trim(adjustString($DB_array_slot_attributes['value']))."','".trim($DB_array_slot_attributes['parent'])."')";
+					  writeSQLQuery($INSERT_INTO_Slot);
 
-			$fp_INSERT_INTO_Slot = fopen("tmpQuery/INSERT_INTO_Slot","w+");
-			fwrite($fp_INSERT_INTO_Slot,$INSERT_INTO_Slot);
-			fclose($fp_INSERT_INTO_Slot);
+			//$fp_INSERT_INTO_Slot = fopen("tmpQuery/INSERT_INTO_Slot","w+");
+			//fwrite($fp_INSERT_INTO_Slot,$INSERT_INTO_Slot);
+			//fclose($fp_INSERT_INTO_Slot);
 	
-			//include_once("lib/functions_QUERY_mysql.php");
 			$ris = query_exec($INSERT_INTO_Slot);
 						
 					}//END OF if(count($valuelist_child_nodes)==3)
@@ -540,12 +555,12 @@ $INSERT_INTO_RegistryPackage = "INSERT INTO RegistryPackage (id,accessControlPol
 					//print_r($DB_array_slot_attributes);
 					   ##### SONO PRONTO A SCRIVERE NEL DB
 					  $INSERT_INTO_Slot = "INSERT INTO Slot (name,slotType,value,parent) VALUES ('".trim($DB_array_slot_attributes['name'])."','".trim($DB_array_slot_attributes['slotType'])."','".trim(adjustString($DB_array_slot_attributes['value']))."','".trim($DB_array_slot_attributes['parent'])."')";
+					  writeSQLQuery($INSERT_INTO_Slot);
 
-			$fp_INSERT_INTO_Slot = fopen("tmpQuery/INSERT_INTO_Slot","w+");
-			fwrite($fp_INSERT_INTO_Slot,$INSERT_INTO_Slot);
-			fclose($fp_INSERT_INTO_Slot);
+			//$fp_INSERT_INTO_Slot = fopen("tmpQuery/INSERT_INTO_Slot","w+");
+			//fwrite($fp_INSERT_INTO_Slot,$INSERT_INTO_Slot);
+			//fclose($fp_INSERT_INTO_Slot);
 	
-			//include_once("lib/functions_QUERY_mysql.php");
 			$ris = query_exec($INSERT_INTO_Slot);
 					}
 				}
@@ -595,12 +610,13 @@ $INSERT_INTO_RegistryPackage = "INSERT INTO RegistryPackage (id,accessControlPol
 			#### DALL'identificationScheme RICONOSCO IL TIPO DI REGISTRYPACKAGE
 			$queryForName_value="SELECT Name_value FROM ClassificationScheme WHERE ClassificationScheme.id = '$value_identificationScheme'";
 			$risName_value=query_select($queryForName_value);
-			$name_value=$risName_value[0]['Name_value'];
+			$name_value=$risName_value[0][0];
 			$name_value=substr($name_value,0,strpos($name_value,'.'));
 
 			$query_for_objectType="SELECT id FROM ClassificationNode WHERE ClassificationNode.code = '$name_value'";
+			writeSQLQuery($query_for_objectType);
 			$objectType_arr = query_select($query_for_objectType);
-			$objectType=$objectType_arr[0]['id'];
+			$objectType=$objectType_arr[0][0];
 
 			#### CASO DI FOLDER
 			if($name_value=='XDSFolder' && $lastUpdateTime)// && $ExternalIdentifier_count==1)
@@ -608,6 +624,7 @@ $INSERT_INTO_RegistryPackage = "INSERT INTO RegistryPackage (id,accessControlPol
 				$datetime="00000000000000";
 
 				$insert_lastUpdateTime_Slot="INSERT INTO Slot (name,slotType,value,parent) VALUES ('lastUpdateTime','NULL','$datetime','$value_parent')";
+				writeSQLQuery($insert_lastUpdateTime_Slot);
 
 				$ris=query_exec($insert_lastUpdateTime_Slot);
 				$lastUpdateTime=false;
@@ -617,6 +634,7 @@ $INSERT_INTO_RegistryPackage = "INSERT INTO RegistryPackage (id,accessControlPol
 			####UPDATE DELL'OBJECTTYPE
 			$update_objectType="UPDATE RegistryPackage SET RegistryPackage.objectType = '$objectType' WHERE RegistryPackage.id = '$value_RegistryPackage_id'";
 			$ris=query_exec($update_objectType);
+			writeSQLQuery($update_objectType);
 
 			//$value_value= avoidHtmlEntitiesInterpretation($externalidentifier_node->get_attribute('value'));
 			$value_value=$externalidentifier_node->get_attribute('value');
@@ -635,17 +653,17 @@ $INSERT_INTO_RegistryPackage = "INSERT INTO RegistryPackage (id,accessControlPol
 			//print_r($DB_array_externalidentifier_attributes);
 			##### SONO PRONTO A SCRIVERE NEL DB
 			$INSERT_INTO_ExternalIdentifier = "INSERT INTO ExternalIdentifier (id,accessControlPolicy,objectType,registryObject,identificationScheme,value) VALUES ('".trim($DB_array_externalidentifier_attributes['id'])."','".trim($DB_array_externalidentifier_attributes['accessControlPolicy'])."','".trim($DB_array_externalidentifier_attributes['objectType'])."','".trim($DB_array_externalidentifier_attributes['registryObject'])."','".trim($DB_array_externalidentifier_attributes['identificationScheme'])."','".trim(adjustString($DB_array_externalidentifier_attributes['value']))."')";
+			writeSQLQuery($INSERT_INTO_ExternalIdentifier);
 
-			$fp = fopen("tmpQuery/INSERT_INTO_ExternalIdentifier","w+");
-    			fwrite($fp,$INSERT_INTO_ExternalIdentifier);
-			fclose($fp);
+			//$fp = fopen("tmpQuery/INSERT_INTO_ExternalIdentifier","w+");
+    			//fwrite($fp,$INSERT_INTO_ExternalIdentifier);
+			//fclose($fp);
 			
 			$atna_value_index=trim($DB_array_externalidentifier_attributes['identificationScheme']);
 			$atna_value[$atna_value_index]=trim(adjustString($DB_array_externalidentifier_attributes['value']));
 			
 			
-			//include_once("lib/functions_QUERY_mysql.php");
-				$ris = query_exec($INSERT_INTO_ExternalIdentifier);
+			$ris = query_exec($INSERT_INTO_ExternalIdentifier);
 
 			#### NODI FIGLI DI EXTERNALIDENTIFIER
 			$externalidentifier_child_nodes = $externalidentifier_node->child_nodes();
@@ -697,13 +715,13 @@ $INSERT_INTO_RegistryPackage = "INSERT INTO RegistryPackage (id,accessControlPol
 		//print_r($DB_array_name);
 		##### SONO PRONTO A SCRIVERE NEL DB
         	$INSERT_INTO_Name = "INSERT INTO Name (charset,lang,value,parent) VALUES ('".trim($DB_array_name['charset'])."','".trim($DB_array_name['lang'])."','".trim(adjustString($DB_array_name['value']))."','".trim($DB_array_name['parent'])."')";
+		writeSQLQuery($INSERT_INTO_Name);
 
-		$fp_INSERT_INTO_Name = fopen("tmpQuery/INSERT_INTO_Name","w+");
-		fwrite($fp_INSERT_INTO_Name,$INSERT_INTO_Name);
-		fclose($fp_INSERT_INTO_Name);
+		//$fp_INSERT_INTO_Name = fopen("tmpQuery/INSERT_INTO_Name","w+");
+		//fwrite($fp_INSERT_INTO_Name,$INSERT_INTO_Name);
+		//fclose($fp_INSERT_INTO_Name);
 	
-		//include_once("lib/functions_QUERY_mysql.php");
-			$ris = query_exec($INSERT_INTO_Name);	
+		$ris = query_exec($INSERT_INTO_Name);	
 			
 		}//END OF if($RegistryPackage_child_node_tagname=='ExternalIdentifier')
 

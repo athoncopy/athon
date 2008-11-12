@@ -1,27 +1,12 @@
 <?php
 
-/*
- * Created on 29-nov-2005
- * Biasio - Castellini
- */
-
-/*
- * DA PAGG 126-127 VOL 2 TCHFRW
- *
-Document Registry with the aid of
-the Registry Adaptor shall do the following:
-
-1 - Accept all valid SubmitObjectsRequests.
-2 - Perform validations
-3 - Update the registry with the contained metadata
-4 - Return a RegistryResponse message given the status of the operation.
-
-5 - If the registry rejects the metadata, then, the following occurs:
-  5a - An error is returne2565 d
-  5b - The error status includes an error message
-  5c - The request is rolled back
-
-*/
+# ------------------------------------------------------------------------------------
+# MARIS XDS REGISTRY
+# Copyright (C) 2007 - 2010  MARiS Project
+# Dpt. Medical and Diagnostic Sciences, University of Padova - csaccavini@rad.unipd.it
+# This program is distributed under the terms and conditions of the GPL
+# See the LICENSE files for details
+# ------------------------------------------------------------------------------------
 
 //BLOCCO IL BUFFER DI USCITA
 ob_start();//OKKIO FONADAMENTALE!!!!!!!!!!
@@ -34,11 +19,20 @@ include($lib_path."utilities.php");
 
 $idfile = idrandom_file();
 
+$_SESSION['tmp_path']=$tmp_path;
+$_SESSION['idfile']=$idfile;
+$_SESSION['logActive']=$logActive;
+$_SESSION['log_path']=$log_path;
 
 include_once("./lib/log.php");
-$log = new Log_REG("REG");
+//$log = new Log_REG("REG");
+/*$log = new Log_REG();
 $log->set_tmp_path($tmp_path);
 $log->set_idfile($idfile);
+$log->setLogActive($logActive);
+$log->setCurrentLogPath($log_path);*/
+
+
 
 //PULISCO LA CACHE TEMPORANEA
 /*if($clean_cache=="A"){
@@ -46,7 +40,7 @@ $log->set_idfile($idfile);
 	exec('rm -f '.$tmpQuery_path."*");
 	}*/
 
-$log->writeTimeFile($idfile."--Registry: Rimuovo la cache temporanea");
+writeTimeFile($idfile."--Registry: Rimuovo la cache temporanea");
 
 
 //RECUPERO GLI HEADERS RICEVUTI DA APACHE
@@ -72,7 +66,7 @@ $ebxml_imbustato_soap_STRING = file_get_contents($tmp_path.$idfile."-ebxml_imbus
 ### GESTISCO IL CASO DI ATTACHMENT
 $content_type = stristr($headers["Content-Type"],'boundary');
 
-$log->writeTimeFile($idfile."--Registry: Analizzo caso in cui ci sia solo boundary");
+writeTimeFile($idfile."--Registry: Analizzo caso in cui ci sia solo boundary");
 
 #### SOLO CASO DI DICHIARAZ. BOUNDARY
 if($content_type)
@@ -98,7 +92,7 @@ if($content_type)
 	$boundary = "--".substr($pre_boundary,0,strlen($pre_boundary)-1);
 	###################################################################
 
-	$log->writeTimeFile($idfile."--Registry: Scrivo il boundary");
+	writeTimeFile($idfile."--Registry: Scrivo il boundary");
 
 	//BOUNDARY
 	$fp_bo = fopen($tmp_path."boundary","wb+");
@@ -147,7 +141,7 @@ include_once('payload.php');
 $isPayloadNotEmpty = controllaPayload($dom_ebxml_imbustato_soap);
 
 
-$log->writeTimeFile($idfile."--Registry: Controllo il payload");
+writeTimeFile($idfile."--Registry: Controllo il payload");
 
 ##### GESTISCO IL CASO DI DEL PAYLOAD VUOTO
 if(!$isPayloadNotEmpty)
@@ -195,7 +189,7 @@ if(!$isPayloadNotEmpty)
 ### ====>>>> POSSO RECUPERARE L'ebXML
 
 
-$log->writeTimeFile($idfile."--Registry: Inizio ad analizzare il documento");
+writeTimeFile($idfile."--Registry: Inizio ad analizzare il documento");
 
 $root_SOAP_ebXML = $dom_ebxml_imbustato_soap->document_element();
 $dom_SOAP_ebXML_node_array = $root_SOAP_ebXML->get_elements_by_tagname("SubmitObjectsRequest");
@@ -237,7 +231,7 @@ $error_message = "";
 ### SE NON SI SONO VERIFICATI ERRORI NELLA CHIAMATA AL METODO
 
 
-//$log->writeTimeFile($idfile."--Registry: Valido il documento");
+writeTimeFile($idfile."--Registry: Valido il documento");
 
 if($error==0)
 {
@@ -291,7 +285,7 @@ if(!$isValid)
 	ob_end_flush();
 	### BLOCCO L'ESECUZIONE DELLO SCRIPT
 
-//$log->writeTimeFile($idfile."--Registry: Documento non valido");
+writeTimeFile($idfile."--Registry: Documento non valido");
 
 	exit;
 
@@ -322,43 +316,59 @@ include_once('reg_validation.php');
 ############# CHECK OF ExtrinsicObject mimeType
 $ExtrinsicObject_mimeType_array = validate_ExtrinsicObject_mimeType($dom_ebXML);
 
-//$log->writeTimeFile($idfile."--Registry: Ho validato mimetype");
+writeTimeFile($idfile."--Registry: Ho validato mimetype");
 
 ############# CHECK OF XDSDocumentEntry.patientId
-$DocumentEntryPatientId_valid_array = validate_XDSDocumentEntryPatientId($dom_ebXML);
+if($control_PatientID=="A"){
+	$DocumentEntryPatientId_valid_array = validate_XDSDocumentEntryPatientIdError($dom_ebXML);
+	}
+else {
+	$DocumentEntryPatientId_valid_array = validate_XDSDocumentEntryPatientIdInsert($dom_ebXML);
+	}
 
-//$log->writeTimeFile($idfile."--Registry: Ho validato XDSDocumentEntryPatientId");
+writeTimeFile($idfile."--Registry: Ho validato XDSDocumentEntryPatientId");
 
 ############# SUPPORT DOCUMENT REPLACEMENT
 $Replacement_valid_array = validate_Replacement($dom_ebXML,$DocumentEntryPatientId_valid_array[2]);
 
-//$log->writeTimeFile($idfile."--Registry: Ho validato XDSDocumentEntryPatientId Replacement");
+writeTimeFile($idfile."--Registry: Ho validato XDSDocumentEntryPatientId Replacement");
 
 ############# CHECK OF XDSDocumentEntry.uniqueId
 $DocumentEntryUniqueId_valid_array = validate_XDSDocumentEntryUniqueId($dom_ebXML);
 
-//$log->writeTimeFile($idfile."--Registry: Ho validato XDSDocumentEntry.uniqueId");
+writeTimeFile($idfile."--Registry: Ho validato XDSDocumentEntry.uniqueId");
+
+
+//$SubmissionSetPatientId_valid_array = validate_XDSSubmissionSetPatientId($dom_ebXML,$idfile);
 
 ############# CHECK OF XDSSubmissionSet.patientId
-$SubmissionSetPatientId_valid_array = validate_XDSSubmissionSetPatientId($dom_ebXML,$idfile);
+if($control_PatientID=="A"){
+	$SubmissionSetPatientId_valid_array = validate_XDSSubmissionSetPatientIdError($dom_ebXML);
+	}
+else {
+	$SubmissionSetPatientId_valid_array = validate_XDSSubmissionSetPatientIdInsert($dom_ebXML);
+	}
 
-//$log->writeTimeFile($idfile."--Registry: Ho validato XDSSubmissionSetPatientId");
+writeTimeFile($idfile."--Registry: Ho validato XDSSubmissionSetPatientId");
 
 ############ CHECK OF XDSSubmissionSet.uniqueID
 $SubmissionSetUniqueId_valid_array = validate_XDSSubmissionSetUniqueId($dom_ebXML,$idfile);
 
-//$log->writeTimeFile($idfile."--Registry: Ho validato XDSSubmissionSetUniqueId");
+writeTimeFile($idfile."--Registry: Ho validato XDSSubmissionSetUniqueId");
 
 ############ CHECK OF XDSFolder.uniqueID
 $FolderUniqueId_valid_array = validate_XDSFolderUniqueId($dom_ebXML,$idfile);
 
-//$log->writeTimeFile($idfile."--Registry: Ho validato XDSFolderUniqueId");
+writeTimeFile($idfile."--Registry: Ho validato XDSFolderUniqueId");
 
 ########### CHECK OF HASH + SIZE + URI
 $hsu = arePresent_HASH_SIZE_URI($dom_ebXML);
 
-//$log->writeTimeFile($idfile."--Registry: Verifico se presente HASH_SIZE_URI");
+writeTimeFile($idfile."--Registry: Verifico se presente HASH_SIZE_URI");
 
+writeTimeFile($idfile."--Registry: Verifico se presente HASH_SIZE_URI".$XDSSubmissionSetPatientId);
+
+writeTimeFile($idfile."--Registry: Verifico se presente HASH_SIZE_URI".$XDSSubmissionSetPatientId);
 #### RECUPERO TUTTE LE INFORMAZIONI DELLA VALIDAZIONE
 $XDSSubmissionSetPatientId = $SubmissionSetPatientId_valid_array[2];
 $XDSDocumentEntryPatientId_arr = $DocumentEntryPatientId_valid_array[2];
@@ -367,7 +377,7 @@ $ExtrinsicObject_node_id_attr_array=$DocumentEntryPatientId_valid_array[3];
 ############ CHECK OF XDSFolder.patientID
 $FolderPatientId_valid_array = validate_XDSFolderPatientId($dom_ebXML,$XDSDocumentEntryPatientId_arr,$XDSSubmissionSetPatientId,$DocumentEntryPatientId_valid_array[3],$idfile);
 
-//$log->writeTimeFile($idfile."--Registry: Ho validato XDSFolder.patientID");
+writeTimeFile($idfile."--Registry: Ho validato XDSFolder.patientID");
 
 #### CONFRONTO XDSDocumentEntry.patientId vs XDSSubmissionSet.patientId
 $conf_PatientIds_arr=array();
@@ -377,7 +387,7 @@ if(!(empty($XDSDocumentEntryPatientId_arr) && empty($ExtrinsicObject_node_id_att
 
 }//END OF IF
 
-//$log->writeTimeFile($idfile."--Registry: CONFRONTO XDSDocumentEntry.patientId vs XDSSubmissionSet.patientId");
+writeTimeFile($idfile."--Registry: CONFRONTO XDSDocumentEntry.patientId vs XDSSubmissionSet.patientId");
 
 
 
@@ -387,7 +397,7 @@ $isAddAllowed_array = verifyAddDocToFolder($dom_ebXML,$XDSDocumentEntryPatientId
 
 $bool_array=array(!$Replacement_valid_array[0],!$Replacement_valid_array[2],!$Replacement_valid_array[4],$conf_PatientIds_arr[0],$DocumentEntryPatientId_valid_array[0],!$DocumentEntryUniqueId_valid_array[0],$SubmissionSetPatientId_valid_array[0],!$SubmissionSetUniqueId_valid_array[0],!$FolderUniqueId_valid_array[0],$ExtrinsicObject_mimeType_array[0],$FolderPatientId_valid_array[0],!$FolderPatientId_valid_array[2],!$FolderPatientId_valid_array[4],!$isAddAllowed_array[0],!$isAddAllowed_array[2],!$hsu[0],!$hsu[2],!$hsu[4]);
 
-$fp = fopen($tmp_path.$idfile."-BOOLEANS-".$idfile,"w+");
+/*$fp = fopen($tmp_path.$idfile."-BOOLEANS-".$idfile,"w+");
 $ii=0;
 while($ii<count($bool_array))
 {
@@ -399,7 +409,7 @@ while($ii<count($bool_array))
 	$ii=$ii+1;
 
 }//END OF while($ii<count($bool_array))
-fclose($fp);
+fclose($fp);*/
 
 ###### CASO DI VALIDAZIONE ===NON=== PASSATA
 if(!$Replacement_valid_array[0] || !$Replacement_valid_array[2] || !$Replacement_valid_array[4] || $conf_PatientIds_arr[0] || $DocumentEntryPatientId_valid_array[0] || !$DocumentEntryUniqueId_valid_array[0] || $SubmissionSetPatientId_valid_array[0] || !$SubmissionSetUniqueId_valid_array[0] || !$FolderUniqueId_valid_array[0]|| $ExtrinsicObject_mimeType_array[0] || $FolderPatientId_valid_array[0] || !$FolderPatientId_valid_array[2] || !$FolderPatientId_valid_array[4] || !$isAddAllowed_array[0] || !$isAddAllowed_array[2] || !$hsu[0] || !$hsu[2] || !$hsu[4])
@@ -452,7 +462,7 @@ fclose($fp);
 
 ######################################################
 ###### POSSO RIEMPIRE IL DATABASE DEL REGISTRY #######
-//$log->writeTimeFile($idfile."--Registry: Inizio a riempire il Database");
+writeTimeFile($idfile."--Registry: Inizio a riempire il Database");
 
 
 	### 1 - ExtrinsicObject
@@ -464,26 +474,26 @@ fclose($fp);
 		$language=$RETURN_from_ExtrinsicObject_id_array[1];
 		
 
-//$log->writeTimeFile($idfile."--Registry: Inserito nel Database ExtrinsicObject");
+writeTimeFile($idfile."--Registry: Inserito nel Database ExtrinsicObject");
 
 	### 2 - RegistryPackage
 	include_once('RegistryPackage_2.php');
 		$RegistryPackage_id_array2=fill_RegistryPackage_tables($dom_ebXML,$language);
 		$RegistryPackage_id_array=$RegistryPackage_id_array2[0];
 
-//$log->writeTimeFile($idfile."--Registry: Inserito nel Database RegistryPackage");
+writeTimeFile($idfile."--Registry: Inserito nel Database RegistryPackage");
 
 	### 3 - Classification
 	include_once('Classification_2.php');
 		fill_Classification_tables($dom_ebXML,$RegistryPackage_id_array);
 
-//$log->writeTimeFile($idfile."--Registry: Inserito nel Database Classification");
+writeTimeFile($idfile."--Registry: Inserito nel Database Classification");
 
 	### 4 - Association
 	include_once('Association_2.php');
 		fill_Association_tables($dom_ebXML,$RegistryPackage_id_array,$ExtrinsicObject_id_array,$idfile);
 
-//$log->writeTimeFile($idfile."--Registry: Inserito nel Database Association");
+writeTimeFile($idfile."--Registry: Inserito nel Database Association");
 
 ####### FINE RIEMPIMENTO DATABASE DEL REGISTRY ########
 #######################################################
@@ -499,7 +509,7 @@ $fp_registry_response = fopen($tmp_path.$idfile."-registry_response.xml","wb+");
 	fwrite($fp_registry_response,$registry_response);
 fclose($fp_registry_response);
 
-//$log->writeTimeFile($idfile."--Registry: Scrivo la risposta positiva in un file");
+writeTimeFile($idfile."--Registry: Scrivo la risposta positiva in un file");
 
 //PULISCO IL BUFFER DI USCITA
 ob_get_clean();//OKKIO FONDAMENTALE!!!!!
@@ -533,7 +543,7 @@ if($file = fopen($tmp_path.$idfile."-registry_response.xml",'rb'))
 
 
 //=============  END OF REGISTRY RESPONSE  =============//
-//$log->writeTimeFile($idfile."--Registry: Spedisco la risposta");
+writeTimeFile($idfile."--Registry: Spedisco la risposta");
 
 //=======================================//
 #### SPEDISCO E PULISCO IL BUFFER DI USCITA
@@ -636,6 +646,11 @@ include_once("reg_atna.php");
 
 
 	$java_call_result = exec("$java_atna_import");
+
+	//$INSERT_atna_import = "INSERT INTO AuditableEvent (eventType,registryObject,timeStamp,Source) VALUES ('Import','".$SUID."',CURRENT_TIMESTAMP,'".$ip_source."')";
+
+	$ris_import = query_exec($INSERT_atna_import);
+
 	} // Fine for($index_doc=0;$index_doc<count($DocumentEntryUniqueId_valid_array[3]);$index_doc++)
 
 
@@ -667,14 +682,20 @@ include_once("reg_atna.php");
 
 
 	$java_call_result = exec("$java_atna_import");
+
+	//$INSERT_atna_import_folder = "INSERT INTO AuditableEvent (eventType,registryObject,time_Stamp,Source) VALUES ('Import','".$SUID."',CURRENT_TIMESTAMP,'".$ip_source."')";
+
+	$ris_import_folder = query_exec($INSERT_atna_import_folder);
 	} // Fine for($index_doc=0;$index_doc<count($FolderUniqueId_valid_array[2]);$index_doc++)
 
 
 
 } // Fine if($ATNA_active=='A')
 
-
-
+unset($_SESSION['tmp_path']);
+unset($_SESSION['idfile']);
+unset($_SESSION['logActive']);
+unset($_SESSION['log_path']);
 
 // Clean tmp folder
 $system=PHP_OS;

@@ -1,13 +1,18 @@
 <?php
+
+# ------------------------------------------------------------------------------------
+# MARIS XDS REGISTRY
+# Copyright (C) 2007 - 2010  MARiS Project
+# Dpt. Medical and Diagnostic Sciences, University of Padova - csaccavini@rad.unipd.it
+# This program is distributed under the terms and conditions of the GPL
+# See the LICENSE files for details
+# ------------------------------------------------------------------------------------
+
 ##### CLASSE PER LA CREAZIONE DEI LOGs #####
-class Log_REG
+/*class Log_REG
 {
 	#### VARIABILI INTERNE
 	var $current_log_path;
-	var $default_current_log_path;
-	var $current_files_log_path;
-	var $default_current_files_log_path;
-	var $cur_num;
 
 	var $isActive;
 	var $isCleanCacheActive;
@@ -60,47 +65,7 @@ class Log_REG
 
 	}//END OF setCurrentLogPath($current)
 	### DEFAULT
-	###  /usr/tmp/REPOSITORY_log.out
-	### /usr/tmp/REGISTRY_log.out
-	function setDefaultCurrentLogPath($default_current) ##UNICO FILE DI LOG
-	{
-		$this->default_current_log_path = $default_current;
 
-	}//END OF setDefaultCurrentLogPath($current)
-
-	#### SETTA IL PATH DI SCRITTURA DEI FILES DI LOG SEPARATI
-	function setCurrentFileSLogPath($currentf)
-	{
-		$this->current_files_log_path = $currentf;
-
-	}//END OF setCurrentFileSLogPath($currentf)
-	#### DEFAULT
-	### /usr/tmp/
-	function setDefaultCurrentFileSLogPath($default_currentf)
-	{
-		$this->default_current_files_log_path = $default_currentf;
-
-	}//END OF setDefaultCurrentFileSLogPath($currentf)
-
-	### PER SETTARE IL NUMERO DI SESSIONE (RANDOM)
-	function setCurrentNumFile()
-	{
-		$stringa5 = "";
-      		for($i=0; $i<12; $i++)
-         	{
-         		$lettera = chr(rand(48,122)); // carattere casuale
-         		while (!ereg("[a-z0-9]", $lettera))
-            		{
-            			$lettera = chr(rand(48,122));// genera un'altra
-            		}
-         		$stringa5 .= $lettera; // accoda alla stringa
-
-         	}//END OF for($i=0; $i<12; $i++)
-
-		#### NELLA FORMA    __if60igcqyc0f
-		$this->cur_num = "__$stringa5";
-
-	}//EOND OF setCurrentNumFile()
 
 	#### PER SETTARE ATTIVO O MENO IL LOGGING
 	function setLogActive($active)
@@ -118,64 +83,15 @@ class Log_REG
 	#### METODO DI LOGGING
 	## INPUT: $log_text   TESTO DI LOG
 	## INPUT: $hour	1->SI ORA	0->NO ORA
-	function writeLogFile($log_text,$hour)
-	{
-		### CASO DI LOGGING ATTIVO
-		if($this->isActive=="A")
-		{
-			### CONTROLLO CHE IL PATH SIA SETTATO
-			if($this->current_log_path=='')
-			{
-				$this->current_log_path = $this->default_current_log_path;
-			}
-			### APERTURA DEL FILE IN FORMA TAIL ED IN SOLA SCRITTURA
-			$handler_log = fopen($this->current_log_path,'ab');
-
-			#### RECUPERO DATA E ORA ATTUALI
-			$today = date("d-M-Y");
-			$cur_hour = date("H:i:s");
-
-			#### FORMA:  [gg-MMM-AAAA hh:mm:ss] -
-			$datetime = "\n[$today $cur_hour] -";
-
-			## CASO DI DATO TIPO ARRAY
-			if(is_array($log_text))
-			{
-				$txt = "";
-				### IMPOSTA L'ARRAY NELLA FORMA [etichetta] = valore
-				foreach($log_text as $element => $value) 
-				{
-   					$txt = $txt."$element = $value\n";
-				}//END OF foreach
-				$log_text = $txt;
-			}//END OF if(is_array($log_text))
-
-			### SCRIVO IL LOG
-			if($hour)### CASO DI SI ORA
-			{
-				fwrite($handler_log,"$datetime $log_text \n");
-			}
-			else ###CASO DI NO ORA
-			{
-				fwrite($handler_log,"$log_text \n");
-			}
-			#### CHIUDO L'HANDLER
-			fclose($handler_log);
-
-		}//END OF if($isActive=="A")
-
-		else {return;}
-
-	}//END OF makeLog($log_text)
 
 	function writeTimeFile($tempotxt)
 	{
-		### CASO DI LOGGING ATTIVO
-
+			### CASO DI LOGGING ATTIVO
+			if ($this->isActive=='A'){
 			### CONTROLLO CHE IL PATH SIA SETTATO
 			
 			### APERTURA DEL FILE IN FORMA TAIL ED IN SOLA SCRITTURA
-			$handler_log_time = //fopen($this->tmp_path."time_of_operation",'ab+');
+			$handler_log_time = fopen($this->current_log_path."time_of_operation",'ab+');
 
 			#### RECUPERO DATA E ORA ATTUALI
 			$today_t = date("d-M-Y");
@@ -203,158 +119,109 @@ class Log_REG
 
 			#### CHIUDO L'HANDLER
 			fclose($handler_log_time);
-
+		}
 	}//END OF makeLog($log_text)
+
 ########################################
 
-/*
-	#### SCRIVE I LOGS IN FILES SEPARATI
-	#### NON MODIFICARE IN SCRITTURA $log_text  !!!!
-	function writeLogFileS($log_text,$file_name,$mandatory)
-	{
-		$pathToFile = '';
 
-		### CONTROLLO CHE IL PATH SIA SETTATO
-		if($this->current_files_log_path=='')
-		{
-			$this->current_files_log_path = $this->default_current_files_log_path;
+
+}//END OF CLASS Log*/
+
+function writeSQLQuery($tempotxt)
+	{
+			### CASO DI LOGGING ATTIVO
+			if ($_SESSION['logActive']=='A'){
+			### CONTROLLO CHE IL PATH SIA SETTATO
+			### APERTURA DEL FILE IN FORMA TAIL ED IN SOLA SCRITTURA
+			$handler_log_time = fopen($_SESSION['log_path']."log-".$_SESSION['idfile']."-"."SQLSubmission",'ab+');
+
+			#### RECUPERO DATA E ORA ATTUALI
+			$today_t = date("d-M-Y");
+			$cur_hour_t = date("H:i:s");
+
+			#### FORMA:  [gg-MMM-AAAA hh:mm:ss] -
+			$datetime_t = "\n[$today_t $cur_hour_t] -";
+
+			//$log_tempo = $tempotxt;
+			## CASO DI DATO TIPO ARRAY
+			if(is_array($tempotxt))
+			{
+				$txt = "";
+				### IMPOSTA L'ARRAY NELLA FORMA [etichetta] = valore
+				foreach($log_text as $element => $value) 
+				{
+   					$txt = $txt."$element = $value\n";
+				}//END OF foreach
+				$tempotxt = $txt;
+			}//END OF if(is_array($log_text))			
+
+			### SCRIVO IL LOG
+
+			fwrite($handler_log_time,"$tempotxt\n");
+
+			#### CHIUDO L'HANDLER
+			fclose($handler_log_time);
 		}
+	}//END OF makeLog($log_text)
 
-		### CASO DI LOGGING NON ATTIVO
-		#### SCRIVE SOLO I FILES OBBLIGATORI IN BASE A M=mandatory
-		//if($this->isActive!="A" && $mandatory=="M")
-		if($this->isActive!="A")
-		{
-			### PATH COMPLETO AL FILE (CON NOME + ID SESSIONE)
-			$pathToFile = $this->current_files_log_path.$file_name;
-
-			### APERTURA DEL FILE IN FORMA TAIL ED IN SOLA SCRITTURA
-			$handler_log = fopen($pathToFile,"wb+");
-
-			#### RECUPERO DATA E ORA ATTUALI
-			$today = date("d-M-Y");
-			$cur_hour = date("H:i:s");
-
-			#### FORMA:  [gg-MMM-AAAA hh:mm:ss] -
-			$datetime = "\n[$today $cur_hour] -";
-
-			## CASO DI DATO TIPO ARRAY
-			if(is_array($log_text))
-			{
-				$txt = "";
-				### IMPOSTA L'ARRAY NELLA FORMA [etichetta] = valore
-				foreach($log_text as $element => $value) 
-				{
-   					$txt = $txt."$element = $value\n";
-				}//END OF foreach
-				$log_text = $txt;
-			}//END OF if(is_array($log_text))
-
-			fwrite($handler_log,$log_text );
-
-			#### CHIUDO L'HANDLER
-			fclose($handler_log);
-		
-		}//END OF if($this->isActive!="A" && $mandatory=="M")
-
-		### CASO DI LOGGING ATTIVO+CACHE NON RIPULITA
-		if($this->isActive=="A" && $this->isCleanCacheActive=="O")
-		{
-			
-			### PATH COMPLETO AL FILE (CON NOME + ID SESSIONE)
-			//$pathToFile = $this->current_files_log_path.$file_name.$this->cur_num;
-			
-
-			### PATH COMPLETO AL FILE (CON NOME + ID SESSIONE)
-			$pathToFile = $this->current_files_log_path.$file_name;
-
-			### APERTURA DEL FILE IN FORMA TAIL ED IN SOLA SCRITTURA
-			$handler_log = fopen($pathToFile,"wb+");
-
-			#### RECUPERO DATA E ORA ATTUALI
-			$today = date("d-M-Y");
-			$cur_hour = date("H:i:s");
-
-			#### FORMA:  [gg-MMM-AAAA hh:mm:ss] -
-			$datetime = "\n[$today $cur_hour] -";
-
-			## CASO DI DATO TIPO ARRAY
-			if(is_array($log_text))
-			{
-				$txt = "";
-				### IMPOSTA L'ARRAY NELLA FORMA [etichetta] = valore
-				foreach($log_text as $element => $value) 
-				{
-   					$txt = $txt."$element = $value\n";
-				}//END OF foreach
-				$log_text = $txt;
-			}//END OF if(is_array($log_text))
-
-			fwrite($handler_log,$log_text );
-
-			#### CHIUDO L'HANDLER
-			fclose($handler_log);
-
-		}//END OF if($this->isActive=="A" && $this->isCleanCacheActive=="O")
-
-		else if($this->isActive=="A" && $this->isCleanCacheActive=="A")
-		{
-			### PATH COMPLETO AL FILE (CON NOME + ID SESSIONE)
-			$pathToFile = $this->current_files_log_path.$file_name;
-
-			### APERTURA DEL FILE IN FORMA TAIL ED IN SOLA SCRITTURA
-			$handler_log = fopen($pathToFile,"wb+");
-
-			#### RECUPERO DATA E ORA ATTUALI
-			$today = date("d-M-Y");
-			$cur_hour = date("H:i:s");
-
-			#### FORMA:  [gg-MMM-AAAA hh:mm:ss] -
-			$datetime = "\n[$today $cur_hour] -";
-
-			## CASO DI DATO TIPO ARRAY
-			if(is_array($log_text))
-			{
-				$txt = "";
-				### IMPOSTA L'ARRAY NELLA FORMA [etichetta] = valore
-				foreach($log_text as $element => $value) 
-				{
-   					$txt = $txt."$element = $value\n";
-				}//END OF foreach
-				$log_text = $txt;
-			}//END OF if(is_array($log_text))
-
-			fwrite($handler_log,$log_text );
-
-			#### CHIUDO L'HANDLER
-			fclose($handler_log);
-		
-		}//END OF else if($this->isActive=="A" && $this->isCleanCacheActive=="A")
-
-		#### RITORNO IL PATH AL FILE SCRITTO
-		return $pathToFile;
-
-	}//END OF writeLogInFiles($log_text)
-*/
-
-	function writeLogFileS($log_text,$file_name,$mandatory)
+function writeSQLQueryService($tempotxt)
 	{
-		$pathToFile = '';
+			### CASO DI LOGGING ATTIVO
+			if ($_SESSION['logActive']=='A'){
+			### CONTROLLO CHE IL PATH SIA SETTATO
+			### APERTURA DEL FILE IN FORMA TAIL ED IN SOLA SCRITTURA
+			$handler_log_time = fopen($_SESSION['log_path']."log-".$_SESSION['idfile']."-"."SQLQueryService",'ab+');
 
-		### CONTROLLO CHE IL PATH SIA SETTATO
-		if($this->current_files_log_path=='')
-		{
-			$this->current_files_log_path = $this->default_current_files_log_path;
+			#### RECUPERO DATA E ORA ATTUALI
+			$today_t = date("d-M-Y");
+			$cur_hour_t = date("H:i:s");
+
+			#### FORMA:  [gg-MMM-AAAA hh:mm:ss] -
+			$datetime_t = "\n[$today_t $cur_hour_t] -";
+
+			//$log_tempo = $tempotxt;
+			## CASO DI DATO TIPO ARRAY
+			if(is_array($tempotxt))
+			{
+				$txt = "";
+				### IMPOSTA L'ARRAY NELLA FORMA [etichetta] = valore
+				foreach($log_text as $element => $value) 
+				{
+   					$txt = $txt."$element = $value\n";
+				}//END OF foreach
+				$tempotxt = $txt;
+			}//END OF if(is_array($log_text))			
+
+			### SCRIVO IL LOG
+
+			fwrite($handler_log_time,"$tempotxt\n");
+
+			#### CHIUDO L'HANDLER
+			fclose($handler_log_time);
 		}
+	}//END OF makeLog($log_text)
 
-			### PATH COMPLETO AL FILE 
-			$pathToFile = $this->current_files_log_path.$file_name;
 
+function writeTimeFile($tempotxt)
+	{
+			### CASO DI LOGGING ATTIVO
+			if ($_SESSION['logActive']=='A'){
+			### CONTROLLO CHE IL PATH SIA SETTATO
+			
 			### APERTURA DEL FILE IN FORMA TAIL ED IN SOLA SCRITTURA
-			$handler_log = fopen($pathToFile,"wb+");
+			$handler_log_time = fopen($_SESSION['log_path']."time_of_operation",'ab+');
 
+			#### RECUPERO DATA E ORA ATTUALI
+			$today_t = date("d-M-Y");
+			$cur_hour_t = date("H:i:s");
+
+			#### FORMA:  [gg-MMM-AAAA hh:mm:ss] -
+			$datetime_t = "\n[$today_t $cur_hour_t] -";
+
+			//$log_tempo = $tempotxt;
 			## CASO DI DATO TIPO ARRAY
-			if(is_array($log_text))
+			if(is_array($tempotxt))
 			{
 				$txt = "";
 				### IMPOSTA L'ARRAY NELLA FORMA [etichetta] = valore
@@ -362,29 +229,16 @@ class Log_REG
 				{
    					$txt = $txt."$element = $value\n";
 				}//END OF foreach
-				$log_text = $txt;
-			}//END OF if(is_array($log_text))
+				$tempotxt = $txt;
+			}//END OF if(is_array($log_text))			
 
-			fwrite($handler_log,$log_text );
+			### SCRIVO IL LOG
+
+			fwrite($handler_log_time,"$datetime_t $tempotxt");
 
 			#### CHIUDO L'HANDLER
-			fclose($handler_log);
-		
-		
-		#### RITORNO IL PATH AL FILE SCRITTO
-		return $pathToFile;
+			fclose($handler_log_time);
+		}
+	}//END OF makeLog($log_text)
 
-	}//END OF writeLogInFiles($log_text)
-
-
-	#### SCRIVE I LOGS NEL DATABASE DI LOG
-	function writeLogDatabase($log_text)
-	{
-		
-
-	}//END OF writeLogDatabase
-
-
-
-}//END OF CLASS Log
 ?>

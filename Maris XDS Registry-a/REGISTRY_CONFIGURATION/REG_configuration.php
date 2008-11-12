@@ -1,4 +1,11 @@
 <?php
+# ------------------------------------------------------------------------------------
+# MARIS XDS REGISTRY
+# Copyright (C) 2007 - 2010  MARiS Project
+# Dpt. Medical and Diagnostic Sciences, University of Padova - csaccavini@rad.unipd.it
+# This program is distributed under the terms and conditions of the GPL
+# See the LICENSE files for details
+# ------------------------------------------------------------------------------------
 
 ##### FILE DI CONFIGURAZIONE DEL REGISTRY
 
@@ -7,7 +14,13 @@
 ### QUERY FOR HTTP kind of CONNECTION WITH REGISTRY (NORMAL or TLS)
 $http_con = "SELECT HTTPD FROM HTTP WHERE HTTP.ACTIVE = 'A'";
 
+include_once('./config/config.php');
+if($database=="MYSQL"){
 include_once('./lib/functions_QUERY_mysql.php');
+}
+else if($database=="ORACLE"){
+include_once('./lib/functions_oracle.php');
+}
 	$res_http = query_select($http_con);
 
 ##### OTTENGO LE INFORMAZIONI SUL PROTOCOLLO
@@ -20,7 +33,7 @@ $normal_protocol = "http://";
 ############### SERVIZIO DI SUBMISSION
 $get_reg_info="SELECT * FROM REGISTRY WHERE REGISTRY.SERVICE = 'SUBMISSION' AND REGISTRY.ACTIVE = 'A' AND REGISTRY.HTTP IN ($http_con)";
 
-include_once('./lib/functions_QUERY_mysql.php');
+//include_once('./lib/functions_QUERY_mysql.php');
 	$res_reg_info = query_select($get_reg_info);
 
 ###### OTTENGO LE INFORMAZIONI DI QUESTO REGISTRY (SUBMISSION)
@@ -30,7 +43,7 @@ $reg_port = $res_reg_info[0][2];
 ################ SERVIZIO DI QUERY
 $get_QUERY_info="SELECT * FROM REGISTRY WHERE REGISTRY.SERVICE = 'QUERY' AND REGISTRY.ACTIVE = 'A' AND REGISTRY.HTTP IN ($http_con)";
 
-include_once('./lib/functions_QUERY_mysql.php');
+//include_once('./lib/functions_QUERY_mysql.php');
 	$res_QUERY_info = query_select($get_QUERY_info);
 
 ###### OTTENGO LE INFORMAZIONI DI QUESTO REGISTRY (QUERY)
@@ -83,7 +96,7 @@ $path_to_ATNA_jar = "./atna/java/";
 
 ###### A CHI SPEDIRE I MESSAGGI ATNA
 $get_ATNA_node = "SELECT * FROM ATNA";
-include_once('./lib/functions_QUERY_mysql.php');
+//include_once('./lib/functions_QUERY_mysql.php');
 	$res_ATNA_info = query_select($get_ATNA_node);
 
 $ATNA_host = $res_ATNA_info[0][1];
@@ -100,13 +113,23 @@ $atna_path = "./atna_logs/";
 $clean_cache = $res_config[0][1];	### A=attiva O=non attivo
 
 
+##### CONTROL PATIENT ID
+### A=controlla il PatientID e se non presente nel database ritorna un errore 
+## O=controlla il PatientID e se non presente lo inserisce nel database
+$control_PatientID = $res_config[0][2];	
+
+
+##### LOG
+
+$logActive = $res_config[0][3];
+$log_path = "./log/";
 
 
 ####### NAV
 
 $get_NAV="SELECT * FROM NAV";
 
-include_once('./lib/functions_QUERY_mysql.php');
+//include_once('./lib/functions_QUERY_mysql.php');
 	$res_NAV = query_select($get_NAV);
 
 
@@ -114,4 +137,8 @@ include_once('./lib/functions_QUERY_mysql.php');
 $NAV = $res_NAV[0][0];    ### A=attiva O=non attivo
 $NAV_from = $res_NAV[0][1];
 $NAV_to = $res_NAV[0][2];
+
+
+
+
 ?>

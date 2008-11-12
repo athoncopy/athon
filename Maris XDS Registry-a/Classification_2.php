@@ -1,5 +1,14 @@
 <?php
+# ------------------------------------------------------------------------------------
+# MARIS XDS REGISTRY
+# Copyright (C) 2007 - 2010  MARiS Project
+# Dpt. Medical and Diagnostic Sciences, University of Padova - csaccavini@rad.unipd.it
+# This program is distributed under the terms and conditions of the GPL
+# See the LICENSE files for details
+# ------------------------------------------------------------------------------------
 
+writeSQLQuery('-------------------------------------------------------------------------------------');
+writeSQLQuery('Classification_2.php');
 ##### METODO PRINCIPALE
 function fill_Classification_tables($dom,$RegistryPackage_id_array)
 {
@@ -61,42 +70,47 @@ function fill_Classification_tables($dom,$RegistryPackage_id_array)
 
 			if($value_classificationNode == '')
 			{
-				$queryForName_value="SELECT  Name_value FROM ClassificationScheme WHERE ClassificationScheme.id = '$value_classificationScheme'";
+				$queryForName_value="SELECT Name_value FROM ClassificationScheme WHERE ClassificationScheme.id = '$value_classificationScheme'";
+				writeSQLQuery($queryForName_value);
 
 				$risName_value=query_select($queryForName_value);
-				$name_value=$risName_value[0]['Name_value'];
+				$name_value=$risName_value[0][0];
 				$name_value=substr($name_value,0,strpos($name_value,'.'));
 
 				$queryForClassificationNode="SELECT id FROM ClassificationNode WHERE ClassificationNode.code = '$name_value'";
 				$ris_code=query_select($queryForClassificationNode);
+				writeSQLQuery($queryForClassificationNode);
 
-				$value_classificationNode=$ris_code[0]['id'];
+				$value_classificationNode=$ris_code[0][0];
 			}
 			if($value_classificationScheme == '')
 			{
 			$queryForClassificationNode="SELECT code FROM ClassificationNode WHERE ClassificationNode.id = '$value_classificationNode'";
+			writeSQLQuery($queryForClassificationNode);
 
 			$ris_classificationNode = query_select($queryForClassificationNode);
-			$code_classificationNode = $ris_classificationNode[0]['code'];
+			$code_classificationNode = $ris_classificationNode[0][0];
 			#### FOLDER
 			if($code_classificationNode=="XDSFolder")
 			{
-				$queryForClassificationScheme="SELECT id FROM ClassificationScheme WHERE ClassificationScheme. Name_value = 'XDSFolder.codeList'";
+				$queryForClassificationScheme="SELECT id FROM ClassificationScheme WHERE ClassificationScheme.Name_value = 'XDSFolder.codeList'";
+				writeSQLQuery($queryForClassificationScheme);
 
 				$ris_ClassificationScheme=query_select($queryForClassificationScheme);
 
-				$value_classificationScheme=$ris_ClassificationScheme[0]['id'];
+				$value_classificationScheme=$ris_ClassificationScheme[0][0];
 				//$value_nodeRepresentation = "Radiology";
 				
 			}//END OF if($code_classificationNode=="XDSFolder")
 			#### SUBMISSIONSET
 			else if($code_classificationNode=="XDSSubmissionSet")
 			{
-				$queryForClassificationScheme="SELECT id FROM ClassificationScheme WHERE ClassificationScheme. Name_value = 'XDSSubmissionSet.contentTypeCode'";
+				$queryForClassificationScheme="SELECT id FROM ClassificationScheme WHERE ClassificationScheme.Name_value = 'XDSSubmissionSet.contentTypeCode'";
+				writeSQLQuery($queryForClassificationScheme);
 
 				$ris_ClassificationScheme=query_select($queryForClassificationScheme);
 
-				$value_classificationScheme=$ris_ClassificationScheme[0]['id'];
+				$value_classificationScheme=$ris_ClassificationScheme[0][0];
 
 			}//END OF if($code_classificationNode=="XDSSubmissionSet")
 			}//END OF if($value_classificationScheme == '')
@@ -117,12 +131,12 @@ function fill_Classification_tables($dom,$RegistryPackage_id_array)
 
 			##### SONO PRONTO A SCRIVERE NEL DB
 			$INSERT_INTO_Classification = "INSERT INTO Classification (id,accessControlPolicy,objectType,classificationNode,classificationScheme,classifiedObject,nodeRepresentation) VALUES ('".trim($DB_array_classification_attributes['id'])."','".trim($DB_array_classification_attributes['accessControlPolicy'])."','".trim($DB_array_classification_attributes['objectType'])."','".trim($DB_array_classification_attributes['classificationNode'])."','".trim($DB_array_classification_attributes['classificationScheme'])."','".trim($DB_array_classification_attributes['classifiedObject'])."','".trim($DB_array_classification_attributes['nodeRepresentation'])."')";
+			writeSQLQuery($INSERT_INTO_Classification);
 
- 			$fp = fopen("tmpQuery/INSERT_INTO_Classification","w+");
-     			fwrite($fp,$INSERT_INTO_Classification);
- 			fclose($fp);
+ 			//$fp = fopen("tmpQuery/INSERT_INTO_Classification","w+");
+     			//fwrite($fp,$INSERT_INTO_Classification);
+ 			//fclose($fp);
 			
-			//include_once("lib/functions_QUERY_mysql.php");
 				$ris = query_exec($INSERT_INTO_Classification);
 
 			}//END OF if($dom_ebXML_LeafRegistryObjectList_child_node_tagname=='Classification')
