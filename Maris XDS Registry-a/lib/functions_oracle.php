@@ -14,7 +14,7 @@ function query_exec($query)
 include('./config/registry_oracle_db.php');
 # open connection to db
 //putenv("ORACLE_HOME=/usr/lib/oracle/xe/app/oracle/product/10.2.0");
-$conn = OCILogOn($user_db,$password_db,$db)
+$conn = oci_connect($user_db,$password_db,$db)
 or die( "Could not connect to Oracle database!") or die (ocierror());;
 
 # execute the EXEC query
@@ -23,12 +23,48 @@ $risultato = ociexecute($statement);
 
 
 # close connection
-ocilogoff($conn);
+oci_close($conn);
 
     $a = 1;
     return $a;
 
 }//END OF query_exec($query)
+
+
+function query_exec2($query,$conn)
+{
+# execute the EXEC query
+$statement = ociparse($conn, $query);
+$risultato = ociexecute($statement);
+
+    if($risultato){
+   	$a = 1;
+    	return $a;
+    }
+    // Se non riesce ad eseguire la query prova a riconnettersi
+    else {
+	include('./config/registry_oracle_db.php');
+	$conn = oci_connect($user_db,$password_db,$db)
+	or die( "Could not connect to Oracle database!") or die (ocierror());;
+
+	$statement = ociparse($conn, $query);
+	$risultato = ociexecute($statement);
+	
+	if($risultato){
+   	 	$a = 1;
+    		return $a;
+		}
+	// Se non riesce nemmeno adesso ritorna un errore
+	else {
+		
+		return "FALSE";
+	}
+     }
+	
+	
+
+}//END OF query_exec2($query)
+
 
 #### IF YOU WANT TO MAKE a SELECT command
 ####  RETURN: A BIDIMENSIONAL ARRAY $rec[..][..]
@@ -63,7 +99,48 @@ while (OCIFetchInto ($statement, $row, OCI_NUM+OCI_ASSOC)) {
 //OCIFetchInto ($statement, $row, OCI_ASSOC);
 return $rec;
 # close connection
-ora_logoff($conn);
+oci_close($conn);
+}
+
+function query_select2($query,$conn)
+{
+
+$statement = ociparse($conn, $query);
+$risultato = ociexecute($statement);
+
+if($risultato){
+	while (OCIFetchInto ($statement, $row, OCI_NUM+OCI_ASSOC)) {
+    		$rec[]=$row;
+	}
+	return $rec;
+}
+// Se non riesce ad eseguire la query prova a riconnettersi
+else {
+	include('./config/registry_oracle_db.php');
+	$conn = oci_connect($user_db,$password_db,$db)
+	or die( "Could not connect to Oracle database!") or die (ocierror());;
+
+	$statement = ociparse($conn, $query);
+	$risultato = ociexecute($statement);
+	
+	if($risultato){
+		while (OCIFetchInto ($statement, $row, OCI_NUM+OCI_ASSOC)) {
+    		$rec[]=$row;
+		}
+	return $rec;
+	}
+	
+	// Se non riesce nemmeno adesso ritorna un errore
+	else {
+		
+	return "FALSE";
+	}
+
+}
+
+
+
+
 }
 
 
@@ -78,7 +155,7 @@ use the function query_execute().
 include('./config/registry_oracle_db.php');
 //putenv("ORACLE_HOME=/usr/lib/oracle/xe/app/oracle/product/10.2.0");
 # open connection to db
-$conn = OCILogOn($user_db,$password_db,$db)
+$conn = oci_connect($user_db,$password_db,$db)
 or die( "Could not connect to Oracle database!") or die (ocierror());;
    //$rec=array();
 # execute the EXEC query
@@ -98,7 +175,27 @@ while (OCIFetchInto ($statement, $row)) {
 //OCIFetchInto ($statement, $row, OCI_ASSOC);
 return $rec;
 # close connection
-ora_logoff($conn);
+oci_close($conn);
 }
+
+
+function connectDB(){
+
+include('./config/registry_oracle_db.php');
+//putenv("ORACLE_HOME=/usr/lib/oracle/xe/app/oracle/product/10.2.0");
+# open connection to db
+$conn = oci_connect($user_db,$password_db,$db)
+or die( "Could not connect to Oracle database!") or die (ocierror());;
+
+return $conn;
+}
+
+
+function disconnectDB($conn){
+
+oci_close($conn);
+
+}
+
 //-----------------------------------------------------------------------------------//
 ?>

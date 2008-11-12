@@ -10,7 +10,7 @@
 writeSQLQuery('-------------------------------------------------------------------------------------');
 writeSQLQuery('Association_2');
 ##### METODO PRINCIPALE
-function fill_Association_tables($dom,$RegistryPackage_id_array,$ExtrinsicObject_id_array,$idfile)
+function fill_Association_tables($dom,$RegistryPackage_id_array,$ExtrinsicObject_id_array,$connessione)
 {
 //$log = new Log_REG("REG");
 //$log = new Log_REG();
@@ -39,6 +39,7 @@ function fill_Association_tables($dom,$RegistryPackage_id_array,$ExtrinsicObject
 		##### tagname
 		$dom_ebXML_LeafRegistryObjectList_child_node_tagname=$dom_ebXML_LeafRegistryObjectList_child_node->node_name();
 
+
 		#### SOLO I NODI ASSOCIATION
 		if($dom_ebXML_LeafRegistryObjectList_child_node_tagname=='Association')
 		{
@@ -46,7 +47,7 @@ function fill_Association_tables($dom,$RegistryPackage_id_array,$ExtrinsicObject
 			$DB_array_association_attributes = array();
 
 			$value_id= $association_node->get_attribute('id');
-			if($value_id == '')
+			if($value_id == ''  || isSimbolic($value_id))
 			{
 				$value_id = "urn:uuid:".idrandom();
 			}
@@ -69,6 +70,7 @@ function fill_Association_tables($dom,$RegistryPackage_id_array,$ExtrinsicObject
 				$value_associationType = "NOT DECLARED";
 			}
 			$value_sourceObject= $association_node->get_attribute('sourceObject');
+			writeSQLQuery('Valore fuori dall if '.$value_sourceObject);
 			if(isSimbolic($value_sourceObject))
 			{
 				$value_sourceObject_1=$ExtrinsicObject_id_array[$value_sourceObject];
@@ -80,6 +82,7 @@ function fill_Association_tables($dom,$RegistryPackage_id_array,$ExtrinsicObject
 				else{
 				        $value_sourceObject=$value_sourceObject_2;
 			    	     }
+				writeSQLQuery('Valore dentro all if '.$value_sourceObject);
 			}//END OF if(isSimbolic($value_sourceObject))
 			$value_targetObject= $association_node->get_attribute('targetObject');
 			if(isSimbolic($value_targetObject))
@@ -123,8 +126,8 @@ function fill_Association_tables($dom,$RegistryPackage_id_array,$ExtrinsicObject
 			//fclose($fp);
 
 
-			$ris = query_exec($INSERT_INTO_Association);
-			writeSQLQuery($INSERT_INTO_Association);
+			$ris = query_exec2($INSERT_INTO_Association,$connessione);
+			writeSQLQuery($ris.": ".$INSERT_INTO_Association);
 
 
 			#### NODI FIGLI DI ASSOCIATION
@@ -172,51 +175,25 @@ function fill_Association_tables($dom,$RegistryPackage_id_array,$ExtrinsicObject
 				if($slot_child_node_tagname=='ValueList')
 				{
 					$valuelist_node = $slot_child_node;
-				//print_r($valuelist_node);
 					$valuelist_child_nodes = $valuelist_node->child_nodes();
-				//print_r($valuelist_child_nodes);
 					## UN SOLO VALUE
-					if(count($valuelist_child_nodes)==3)
+
+					for($r=0;$r<count($valuelist_child_nodes);$r++)
 					{
-					  $value_node = $valuelist_child_nodes[1];
-					  $value_value = $value_node->get_content();
-					  $DB_array_slot_attributes['value'] = $value_value;
-					//print_r($DB_array_slot_attributes);
-					  ##### SONO PRONTO A SCRIVERE NEL DB
-					  $INSERT_INTO_Slot = "INSERT INTO Slot (name,slotType,value,parent) VALUES ('".trim($DB_array_slot_attributes['name'])."','".trim($DB_array_slot_attributes['slotType'])."','".trim(adjustString($DB_array_slot_attributes['value']))."','".trim($DB_array_slot_attributes['parent'])."')";
-
-		//$fp_INSERT_INTO_Slot = fopen("tmpQuery/INSERT_INTO_Slot","a+");
-			//fwrite($fp_INSERT_INTO_Slot,"AS Q".$q."    ".$INSERT_INTO_Slot."\n");
-		//fclose($fp_INSERT_INTO_Slot);
+						$value_node=$valuelist_child_nodes[$r];
+						$value_node_tagname=$value_node->node_name();
+						if($value_node_tagname=='Value')
+						{
+					  	   $value_value = $value_node->get_content();
+					  	   $DB_array_slot_attributes['value'] = $value_value;
+						   ##### SONO PRONTO A SCRIVERE NEL DB
+		 				   $INSERT_INTO_Slot = "INSERT INTO Slot (name,slotType,value,parent) VALUES ('".trim($DB_array_slot_attributes['name'])."','".trim($DB_array_slot_attributes['slotType'])."','".trim(adjustString($DB_array_slot_attributes['value']))."','".trim($DB_array_slot_attributes['parent'])."')";
 	
-
-			$ris = query_exec($INSERT_INTO_Slot);
-			writeSQLQuery($INSERT_INTO_Slot);			
-					}//END OF if(count($valuelist_child_nodes)==3)
-				else  //CASO NUMERO VALUE > 1
-				{
-				for($r=0;$r<count($valuelist_child_nodes);$r++)
-				{
-					$value_node=$valuelist_child_nodes[$r];
-					$value_node_tagname=$value_node->node_name();
-					if($value_node_tagname=='Value')
-					{
-					  $value_value = $value_node->get_content();
-					  $DB_array_slot_attributes['value'] = $value_value;
-					//print_r($DB_array_slot_attributes);
-					   ##### SONO PRONTO A SCRIVERE NEL DB
-					  $INSERT_INTO_Slot = "INSERT INTO Slot (name,slotType,value,parent) VALUES ('".trim($DB_array_slot_attributes['name'])."','".trim($DB_array_slot_attributes['slotType'])."','".trim(adjustString($DB_array_slot_attributes['value']))."','".trim($DB_array_slot_attributes['parent'])."')";
-
-		//$fp_INSERT_INTO_Slot = fopen("tmpQuery/INSERT_INTO_Slot","a+");
-			//fwrite($fp_INSERT_INTO_Slot,"SL R".$r."    ".$INSERT_INTO_Slot."\n");
-		//fclose($fp_INSERT_INTO_Slot);
-	
-			$ris = query_exec($INSERT_INTO_Slot);
-			writeSQLQuery($INSERT_INTO_Slot);
+					  	   $ris = query_exec2($INSERT_INTO_Slot,$connessione);
+					  	   writeSQLQuery($ris.": ".$INSERT_INTO_Slot);
+						}
 					}
-				}
 
-				}//FINE ELSE
 			}
 		}
 
@@ -232,12 +209,9 @@ function fill_Association_tables($dom,$RegistryPackage_id_array,$ExtrinsicObject
 		{
 		    $query_UPDATE_targetObject="UPDATE ExtrinsicObject SET status = 'Deprecated' WHERE ExtrinsicObject.id = '$value_targetObject'";
 
-		    //$fp_query_UPDATE_targetObject=fopen("tmp/query_RPLC_targetObject","w+");
-		    //fwrite($fp_query_UPDATE_targetObject,$query_UPDATE_targetObject);
-		    //fclose($fp_query_UPDATE_targetObject);
+		    $ex = query_exec2($query_UPDATE_targetObject,$connessione);
+		    writeSQLQuery($ex.": ".$query_UPDATE_targetObject);
 
-		    $ex = query_exec($query_UPDATE_targetObject);
-		    writeSQLQuery($query_UPDATE_targetObject);
 		}//END OF if($value_associationType=="RPLC")
 
 		##### CASO XFRM_RPLC Accept Document Replace with Transformation
@@ -249,8 +223,8 @@ function fill_Association_tables($dom,$RegistryPackage_id_array,$ExtrinsicObject
 		    //fwrite($fp_query_UPDATE_targetObject,$query_UPDATE_targetObject);
 		    //fclose($fp_query_UPDATE_targetObject);
 
-		    $ex = query_exec($query_UPDATE_targetObject);
-			writeSQLQuery($query_UPDATE_targetObject);
+		    $ex = query_exec2($query_UPDATE_targetObject,$connessione);
+			writeSQLQuery($ex.": ".$query_UPDATE_targetObject);
 		}//END OF if($value_associationType=="XFRM_RPLC")
 
 		##### CASO XFRM Accept Document Transformation
@@ -258,12 +232,8 @@ function fill_Association_tables($dom,$RegistryPackage_id_array,$ExtrinsicObject
 		{
 		    $query_UPDATE_targetObject="UPDATE ExtrinsicObject SET status = 'Approved' WHERE ExtrinsicObject.id = '$value_targetObject'";
 
-		    //$fp_query_UPDATE_targetObject=fopen("tmp/query_XFRM_targetObject","w+");
-		    //fwrite($fp_query_UPDATE_targetObject,$query_UPDATE_targetObject);
-		    //fclose($fp_query_UPDATE_targetObject);
-
-		    $ex = query_exec($query_UPDATE_targetObject);
-			writeSQLQuery($query_UPDATE_targetObject);
+		    $ex = query_exec2($query_UPDATE_targetObject,$connessione);
+			writeSQLQuery($ex.": ".$query_UPDATE_targetObject);
 		}//END OF if($value_associationType=="XFRM")
 
 		##### CASO APND Accept Document Addendum
@@ -271,11 +241,8 @@ function fill_Association_tables($dom,$RegistryPackage_id_array,$ExtrinsicObject
 		{
 		    $query_UPDATE_targetObject="UPDATE ExtrinsicObject SET status = 'Approved' WHERE ExtrinsicObject.id = '$value_targetObject'";
 
-		   // $fp_query_UPDATE_targetObject=fopen("tmp/query_APND_targetObject","w+");
-		   // fwrite($fp_query_UPDATE_targetObject,$query_UPDATE_targetObject);
-		    //fclose($fp_query_UPDATE_targetObject);
 
-		    $ex = query_exec($query_UPDATE_targetObject);
+		    $ex = query_exec2($query_UPDATE_targetObject,$connessione);
 		    writeTimeFile("Registry: update status".$query_UPDATE_targetObject);
 		}//END OF if($value_associationType=="APND")
 
@@ -291,12 +258,9 @@ function fill_Association_tables($dom,$RegistryPackage_id_array,$ExtrinsicObject
 				#### APPURIAMO DI ESSERE NEL CASO FOLDER
 				$query_folder="SELECT * FROM Slot WHERE Slot.name = 'lastUpdateTime' AND Slot.parent = '$value_sourceObject'";
 				
-				//$fp=fopen("tmp/query_folder","w+");
-				//fwrite($fp,$query_folder);
-				//fclose($fp);
 
-				$ris_folder=query_select($query_folder);
-				writeSQLQuery($query_folder);
+				$ris_folder=query_select2($query_folder,$connessione);
+				writeSQLQuery($ris_folder.": ".$query_folder);
 				if(!empty($ris_folder[0]))
 				{
 					#### ricavo data-ora correnti
@@ -306,14 +270,10 @@ function fill_Association_tables($dom,$RegistryPackage_id_array,$ExtrinsicObject
 					$datetime = "CURRENT_TIMESTAMP";
 
 					####UPDATE DI lastUpdateTime
-					$update_lastUpdateTime="UPDATE Slot SET Slot.value = '$datetime' WHERE Slot.name = 'lastUpdateTime' AND Slot.parent = '$value_sourceObject'";
+					$update_lastUpdateTime="UPDATE Slot SET Slot.value = $datetime WHERE Slot.name = 'lastUpdateTime' AND Slot.parent = '$value_sourceObject'";
 
-					//$fp_update_lastUpdateTime=fopen("tmp/update_lastUpdateTime_FOLDER","w+");
-		    			//fwrite($fp_update_lastUpdateTime,$update_lastUpdateTime);
-		    			//fclose($fp_update_lastUpdateTime);
-
-					$ex = query_exec($update_lastUpdateTime);
-					writeSQLQuery($update_lastUpdateTime);
+					$ex = query_exec2($update_lastUpdateTime,$connessione);
+					writeSQLQuery($ex.": ".$update_lastUpdateTime);
 				}//END OF if(!empty($ris_folder))
 
 			}//END OF if(!isSimbolic($value_sourceObject))
@@ -345,7 +305,7 @@ function fill_Association_tables($dom,$RegistryPackage_id_array,$ExtrinsicObject
 					$slot_node_childs_2=$slot_node_child->child_nodes();
 					for($z=0;$z<count($slot_node_childs_2);$z++)
 					{
-					$slot_node_child_2=$slot_node_childs_2[$y];
+					$slot_node_child_2=$slot_node_childs_2[$z];
 					$slot_node_child_2_tagname=$slot_node_child_2->node_name();
 					if($slot_node_child_2_tagname=="Value")
 					{
@@ -355,31 +315,25 @@ function fill_Association_tables($dom,$RegistryPackage_id_array,$ExtrinsicObject
 					}//END OF if($slot_node_child_tagname=="ValueList")
 				}
 			
-				####UPDATE DI SubmissionSetStatus
+				####UPDATE DI SubmissionSetStatus Non va fatta ????? Deve rimanere Approved
 				$update_RegistryPackageStatus="UPDATE RegistryPackage SET RegistryPackage.status = '$update_value' WHERE  RegistryPackage.id = '$value_sourceObject'";
-				writeSQLQuery($update_RegistryPackageStatus);
+				//writeSQLQuery($ris.": ".$update_RegistryPackageStatus);
 				
 				$selectIdAssociation="SELECT id FROM Association WHERE Association.sourceObject = '$value_sourceObject'";
-				writeSQLQuery($selectIdAssociation);
 				
-				$ris_selectIdAssociation=query_select($selectIdAssociation);
+				
+				$ris_selectIdAssociation=query_select2($selectIdAssociation,$connessione);
+				writeSQLQuery($ris_selectIdAssociation.": ".$selectIdAssociation);
 				
 				$countID=count($ris_selectIdAssociation);
 				for($risId=0;$risId<$countID;$risId++){
 				//$update_SubmissionSetStatus="UPDATE Slot SET Slot.value = '$update_value' WHERE name ='$slot_node_name' AND  Slot.parent IN (SELECT id FROM Association WHERE Association.sourceObject = '$value_sourceObject')";
 				$update_SubmissionSetStatus="UPDATE Slot SET Slot.value = '$update_value' WHERE name ='$slot_node_name' AND  Slot.parent ='".$ris_selectIdAssociation[$risId][0]."'";
 				//writeTimeFile("Registry: update Slot  ".$update_SubmissionSetStatus);
-				$ex = query_exec($update_SubmissionSetStatus);
+				$ex = query_exec2($update_SubmissionSetStatus,$connessione);
 
-				writeSQLQuery($update_SubmissionSetStatus);
+				writeSQLQuery($ex.": ".$update_SubmissionSetStatus);
 				}
-				//$fp_update_RegistryPackageStatus=fopen("tmp/".$idfile."-update_RegistryPackageStatus-".$idfile,"w+");
-		    		//fwrite($fp_update_RegistryPackageStatus,$update_RegistryPackageStatus);
-				//fclose($fp_update_RegistryPackageStatus);
-
-				//$fp_update_SubmissionSetStatus=fopen("tmp/".$idfile."-update_SubmissionSetStatus-".$idfile,"w+");
-		    		//fwrite($fp_update_SubmissionSetStatus,$update_SubmissionSetStatus);
-				//fclose($fp_update_SubmissionSetStatus);
 
 								
 				}//END OF if($slot_node_tagname=="Slot")

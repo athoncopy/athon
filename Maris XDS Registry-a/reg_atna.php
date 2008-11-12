@@ -13,9 +13,11 @@
 function createImportEvent($eventOutcomeIndicator,$ip_registry,$ip_source,$SUID,$pid,$pna,$idName)
 {
 	include("REGISTRY_CONFIGURATION/REG_configuration.php");
-
+	//$path_to_IMPORT = "./atna/message/DataImport.xml";
 	##### OGGETTO DOM SUL FILE DI STRUTTURA
 	$string_IMPORT = file_get_contents($path_to_IMPORT);
+
+
 	$dom_IMPORT = domxml_open_mem($string_IMPORT);
 
 	##### IMPORT DOM ROOT
@@ -123,9 +125,10 @@ function createImportEvent($eventOutcomeIndicator,$ip_registry,$ip_source,$SUID,
 	fclose($fp_IMPORT);
 
 	##### COMPONGO L'ARRAY DA RITORNARE
-	$ret = array($IMPORT_STRING_2,$filename);
+	//$ret = array($IMPORT_STRING_2,$filename);
 
-	return $ret;
+	//return $ret;
+	return $IMPORT_STRING_2;
 
 }//END OF createImportEvent
 
@@ -239,15 +242,15 @@ function createExportEvent($eventOutcomeIndicator,$ip_registry,$ip_consumer,$SUI
 	$EXPORT_STRING_2 = stristr($EXPORT_STRING, '<AuditMessage>');
 
 	###### SCRIVO IL FILE NEI LOG
-	$filename = "DataExport.xml";
+	/*$filename = "DataExport.xml";
 	$fp_EXPORT = fopen($atna_path.$filename,"w+");
     		fwrite($fp_EXPORT,$EXPORT_STRING_2);
-	fclose($fp_EXPORT);
+	fclose($fp_EXPORT);*/
 
 	##### COMPONGO L'ARRAY DA RITORNARE
-	$ret = array($EXPORT_STRING_2,$filename);
+	//$ret = array($EXPORT_STRING_2,$filename);
 
-	return $ret;
+	return $EXPORT_STRING_2;
 
 }//END OF createExportEvent
 
@@ -338,14 +341,14 @@ for($f=0;$f<count($ParticipantObjectIdentification_childs);$f++)
 
 	###### SCRIVO IL FILE NEI LOG
 	$filename = "Query.xml";
-	$fp_QUERY = fopen($atna_path.$filename,"w+");
+	/*$fp_QUERY = fopen($atna_path.$filename,"w+");
     		fwrite($fp_QUERY,$QUERY_STRING_2);
-	fclose($fp_QUERY);
+	fclose($fp_QUERY);*/
 
 	##### COMPONGO L'ARRAY DA RITORNARE
-	$ret = array($QUERY_STRING_2,$filename);
+	//$ret = array($QUERY_STRING_2,$filename);
 
-	return $ret;
+	return $QUERY_STRING_2;
  
 
 }//END OF createQueryEvent

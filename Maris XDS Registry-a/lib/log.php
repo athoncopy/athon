@@ -158,7 +158,7 @@ function writeSQLQuery($tempotxt)
 
 			### SCRIVO IL LOG
 
-			fwrite($handler_log_time,"$tempotxt\n");
+			fwrite($handler_log_time,"$datetime_t $tempotxt\n");
 
 			#### CHIUDO L'HANDLER
 			fclose($handler_log_time);
@@ -176,6 +176,7 @@ function writeSQLQueryService($tempotxt)
 			#### RECUPERO DATA E ORA ATTUALI
 			$today_t = date("d-M-Y");
 			$cur_hour_t = date("H:i:s");
+			$microtime = microtime();
 
 			#### FORMA:  [gg-MMM-AAAA hh:mm:ss] -
 			$datetime_t = "\n[$today_t $cur_hour_t] -";
@@ -195,7 +196,7 @@ function writeSQLQueryService($tempotxt)
 
 			### SCRIVO IL LOG
 
-			fwrite($handler_log_time,"$tempotxt\n");
+			fwrite($handler_log_time,"$datetime_t $tempotxt\n");
 
 			#### CHIUDO L'HANDLER
 			fclose($handler_log_time);

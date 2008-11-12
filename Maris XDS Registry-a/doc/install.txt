@@ -11,7 +11,7 @@
 * PHP 5.x
 * Apache 1.3 or 2.0
 
-# --- MARiS XDS-Registry INSTALL v2.0.1
+# --- MARiS XDS-Registry INSTALL v2.0.2
 
 1. Create the database
 MySQL case

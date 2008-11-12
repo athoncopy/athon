@@ -41,6 +41,54 @@ while($tmp = mysql_fetch_array($risultato, MYSQL_BOTH))//INDICIZZA L'ARRAY DI RI
 
 }//END OF query_select($query)
 
+
+function query_select2($query,$connessione)
+{
+   $risultato = mysql_query($query);
+
+# put the result recordset into $rec
+   $i = 0;
+if ($risultato){
+	$rec=array();
+	while($tmp = mysql_fetch_array($risultato, MYSQL_BOTH))//INDICIZZA L'ARRAY DI RITORNO
+  	{
+  	 $rec[]=$tmp;
+  	 $i = $i +1;
+  	}
+  return $rec;
+}
+
+// Se non riesce ad eseguire la query prova a riconnettersi
+else {
+	include('./config/registry_mysql_db.php');
+    	$connessione = mysql_connect($ip_q,$user_db_q,$password_db_q)
+        or die("Connessione non riuscita: " . mysql_error());
+	# open  db
+   	mysql_select_db($db_name_q);
+	# execute the SELECT query
+   	$risultato = mysql_query($query);
+	
+	if ($risultato){
+		$rec=array();
+		while($tmp = mysql_fetch_array($risultato, MYSQL_BOTH))//INDICIZZA L'ARRAY DI RITORNO
+  		{
+  	 	$rec[]=$tmp;
+  		$i = $i +1;
+  		}
+  	return $rec;
+	}
+	
+	// Se non riesce nemmeno adesso ritorna un errore
+	else {
+		
+	return "FALSE";
+	}
+
+}
+# close connection
+}//END OF query_select2($query)
+
+
 //IF YOU WANT TO MAKE a SELECT command
 //RETURN: A BIDIMENSIONAL ARRAY $rec[..][..]
 function query($query) //ERA LA query_select($query)
@@ -99,5 +147,64 @@ include('./config/registry_mysql_db.php');
     return $a;
 
 }//END OF query_execute($query)
+
+
+//IF YOU WANT TO MAKE an INSERT or an UPDATE
+function query_exec2($query,$connessione) //ERA LA query_execute($query)
+{
+# execute the SELECT query
+   $risultato = mysql_query($query);
+	if($risultato){
+    		$a = 1;
+    		return $a;
+	}
+	// Se non riesce ad eseguire la query prova a riconnettersi
+	else {
+		include('./config/registry_mysql_db.php');
+    		$connessione = mysql_connect($ip_q,$user_db_q,$password_db_q)
+        	or die("Connessione non riuscita: " . mysql_error());
+
+		# open  db
+   		mysql_select_db($db_name_q);
+
+		# execute the SELECT query
+  		$risultato = mysql_query($query);
+	
+		if($risultato){
+   	 		$a = 1;
+    			return $a;
+		}
+	// Se non riesce nemmeno adesso ritorna un errore
+		else {
+			return "FALSE";
+		}
+     	}
+
+}//END OF query_execute($query)
+
+
+
+function connectDB(){
+
+# IMPORT MYSQL PARAMETERS (NOTE: IT WORKS WITH ABSOLUTE PATH ONLY !!)
+include('./config/registry_mysql_db.php');
+
+# open connection to db
+    $connessione = mysql_connect($ip_q,$user_db_q,$password_db_q)
+        or die("Connessione non riuscita: " . mysql_error());
+
+# open  db
+   mysql_select_db($db_name_q);
+
+return $connessione;
+}
+
+
+function disconnectDB($conn){
+
+    mysql_close();
+
+}
+
 
 ?>

@@ -10,11 +10,11 @@
 
 require('./config/config.php');
 require('./lib/functions_'.$database.'.php');
-
+$connessione=connectDB();
 $autenticato = false;
 
 $users = "SELECT * FROM USERS";
-$res_users = query_select($users);
+$res_users = query_select2($users,$connessione);
 
 if (isset($_SERVER['PHP_AUTH_USER']) && 
     isset($_SERVER['PHP_AUTH_PW']))
@@ -86,6 +86,15 @@ return false;
 //  End -->
 </script>
 
+
+<title>
+<?php 
+
+$v_maris_registry="2.0.2";
+
+echo "MARIS XDS REGISTRY v$v_maris_registry SETUP"; //."   (".$_SESSION["idcode"].")"; 
+	?></title>
+
 </HEAD>
 
 
@@ -99,37 +108,28 @@ $root = $_SERVER['DOCUMENT_ROOT'];
 
 if($ip=="127.0.0.1" || $ip=="localhost"){
 $registry_link="http://registry.ip".str_replace('setup.php', 'registry.php',$script); 
-}
-else {
-$registry_link="http://".$ip.str_replace('setup.php', 'registry.php',$script); 
-}
-
-if($ip=="127.0.0.1" || $ip=="localhost"){
 $query_link="http://registry.ip".str_replace('setup.php', 'query.php',$script); 
-}
-else {
-$query_link="http://".$ip.str_replace('setup.php', 'query.php',$script); 
-}
-
-if($ip=="127.0.0.1" || $ip=="localhost"){
 $stored_query_link="http://registry.ip".str_replace('setup.php', 'storedquery.php',$script); 
 }
 else {
+$registry_link="http://".$ip.str_replace('setup.php', 'registry.php',$script); 
+$query_link="http://".$ip.str_replace('setup.php', 'query.php',$script); 
 $stored_query_link="http://".$ip.str_replace('setup.php', 'storedquery.php',$script); 
 }
 
 
+
 echo '<table width="100%" border=0 cellpadding="10" cellspacing="0"><tr bgcolor="black"><td><img src="logo+scritta.jpg"></td></tr>';
 echo '<tr bgcolor="#FF8F10"><td>';
-echo "<h2>Setup Registry</h2>";
+echo "<h2>Registry v$v_maris_registry Setup</h2>";
 
 echo "The link to the registry you have to set in your software (XDS Repository) is:";
 echo "<br><b>".$registry_link."</b><br><br>";
 echo "The link to the registry you have to set in your software for query (XDS Consumer) is:";
 echo "<br><b>".$query_link."</b><br><br>";
 
-//echo "The link to the registry you have to set in your software for stored query (XDS Consumer) is:";
-//echo "<br><b>".$stored_query_link."</b>";
+echo "The link to the registry you have to set in your software for stored query (XDS Consumer) is:";
+echo "<br><b>".$stored_query_link."</b>";
 
 
 
@@ -139,7 +139,7 @@ echo "<br><b>".$query_link."</b><br><br>";
 
 $get_HTTP="SELECT * FROM HTTP";
 
-$res_REG_HTTP = query_select($get_HTTP);
+$res_REG_HTTP = query_select2($get_HTTP,$connessione);
 echo "<FORM action=\"updatesetup.php\" method=\"POST\">";
 $REG_HTTP = $res_REG_HTTP[0][0];
 echo "<h3>Registry connection</h3>";
@@ -165,7 +165,7 @@ else {
 echo "<h3>Registry parameters SUBMISSION</h3>";
 $get_REG="SELECT * FROM REGISTRY WHERE ACTIVE = 'A'";
 
-$res_REG = query_select($get_REG);
+$res_REG = query_select2($get_REG,$connessione);
 
 $REG_host_submission = $res_REG[0][1];
 $REG_port_submission = $res_REG[0][2];
@@ -218,13 +218,13 @@ else if($REG_http_query=="TLS"){
 	}
 */
 $get_REG_config="SELECT WWW,CACHE,PATIENTID,LOG,JAVA_PATH FROM CONFIG";
-$res_REG_config = query_select($get_REG_config);
+$res_REG_config = query_select2($get_REG_config,$connessione);
 
 $REG_www = str_replace('setup.php','',$script);
 $REG_cache = $res_REG_config[0][1];
 $REG_PatientID = $res_REG_config[0][2];
 $REG_log= $res_REG_config[0][3];
-$REG_java = $res_REG_config[0][4];
+//$REG_java = $res_REG_config[0][4];
 
 echo "<INPUT type=\"hidden\" name=\"registry_www\" value=\"$REG_www\" size=\"50\" maxlength=\"100\">";
 
@@ -276,7 +276,7 @@ else {
 $get_ATNA="SELECT * FROM ATNA";
 
 
-$res_REG_ATNA = query_select($get_ATNA);
+$res_REG_ATNA = query_select2($get_ATNA,$connessione);
 
 $REG_ATNA_host = $res_REG_ATNA[0][1];
 $REG_ATNA_port = $res_REG_ATNA[0][2];
@@ -304,7 +304,7 @@ echo "Registry Port: <INPUT type=\"text\" name=\"registry_port_atna\" value=\"$R
 #################### NAV ####################
 
 $get_REG_NAV="SELECT * FROM NAV";
-$res_REG_NAV = query_select($get_REG_NAV);
+$res_REG_NAV = query_select2($get_REG_NAV,$connessione);
 
 $REG_NAV = $res_REG_NAV[0][0];
 $REG_NAV_from = $res_REG_NAV[0][1];
@@ -329,11 +329,11 @@ echo "NAV e-mail to: <INPUT type=\"text\" name=\"registry_nav_to\" value=\"$REG_
 
 
 #################### JAVA_PATH ###################
-
+/*
 echo "<h3>JAVA HOME</h3>";
 echo "JAVA_HOME could be /usr/lib/jvm/jre/bin/ or /usr/lib/jvm/java-xxx/bin/ or C:\\\\Programmi\\Java\\jre.xxx\\bin\\<br>";
 echo "<INPUT type=\"text\" name=\"registry_java_home\" value=\"$REG_java\" size=\"50\" maxlength=\"100\"><br></br>";
-
+*/
 
 echo "<INPUT type=\"Submit\" value=\"Update\"><br></br>";
 
@@ -363,7 +363,7 @@ echo "</FORM>";
 
 $get_USER="SELECT * FROM USERS";
 
-$res_USER = query_select($get_USER);
+$res_USER = query_select2($get_USER,$connessione);
 
 $USER_login = $res_USER[0][0];
 
@@ -384,4 +384,8 @@ echo "</FORM>";
 echo "</td></tr>";
 echo '<tr bgcolor="black"><td><br><br></td></tr></table>';
 }
+
+disconnectDB($connessione);
+
+
 ?>
