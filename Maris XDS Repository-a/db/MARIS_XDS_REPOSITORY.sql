@@ -76,7 +76,7 @@ CREATE TABLE IF NOT EXISTS `CONFIG` (
 -- 
 
 INSERT INTO `CONFIG` (`WWW`, `LOG`, `CACHE`, `FILES`, `JAVA_PATH`) VALUES 
-('/MARIS_XDS/repository-b/', 'A', 'O', 'A', '/usr/lib/jvm/java-1.5.0-sun-1.5.0.13/bin/');
+('/repository/', 'A', 'O', 'A', '/usr/lib/jvm/java-1.5.0-sun-1.5.0.13/bin/');
 
 -- --------------------------------------------------------
 

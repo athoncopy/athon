@@ -123,7 +123,9 @@ $log->writeLogFile($body,0);
 $log->writeLogFileS($body,$idfile."-body-".$idfile,"N");*/
 
 if(stripos($headers["Content-Type"],"boundary")){
-if (preg_match('(boundary="[A-Za-z0-9_]+")',$headers["Content-Type"])) {
+writeTimeFile($idfile."--Repository: Il boundary e' presente");
+//if (preg_match('(boundary="[A-Za-z0-9_]+")',$headers["Content-Type"])) {
+if (preg_match('(boundary="[^\t\n\r\f\v";]+")',$headers["Content-Type"])) {
 writeTimeFile($idfile."--Repository: Ho trovato il boundary di tipo boundary=\"bvdwetrct637crtv\"");
 
 $content_type = stristr($headers["Content-Type"],'boundary');
@@ -137,7 +139,7 @@ $boundary = substr($pre_boundary,0,$fine_boundary-1);
 writeTimeFile($idfile."--Repository: Il boundary ".$boundary);
 }
 
-else if (preg_match('(boundary=[A-Za-z0-9_]+[;])',$headers["Content-Type"])) {
+else if (preg_match('(boundary=[^\t\n\r\f\v";]+[;])',$headers["Content-Type"])) {
 writeTimeFile($idfile."--Repository: Ho trovato il boundary di tipo boundary=bvdwetrct637crtv;");
 $content_type = stristr($headers["Content-Type"],'boundary');
 $pre_boundary = substr($content_type,strpos($content_type,'=')+1);
@@ -159,9 +161,9 @@ $MTOM=false;
 }
 //Caso MTOM
 else {
-writeTimeFile($idfile."--Repository: Probabilmente siamo nel caso MTOM");
+writeTimeFile($idfile."--Repository: non e' dichiarato il boundary");
 $MTOM=true;
-$boundary = "--boundary_per_MTOM";
+//$boundary = "--boundary_per_MTOM";
 }
 
 
@@ -248,14 +250,26 @@ if($boundary != "--")
 {
 //////////////////nuovo/////////////////////////
 #### PRIMA OCCORRENZA DELL'ENVELOPE SOAP
-if(strstr(strtoupper($input),"SOAP-ENV")){
+if (preg_match('([^\t\n\r\f\v";][:]*+ENVELOPE)',strtoupper($input))) {
+writeTimeFile($idfile."--Repository: Ho trovato SOAPENV:ENVELOPE");
+
+preg_match('(<([^\t\n\r\f\v";<]+:)?(ENVELOPE))',strtoupper($input),$matches);
+
+$presoap=$matches[1];
+writeTimeFile($idfile."--Repository: Ho trovato $presoap");
+$body = substr($input,strpos(strtoupper($input),"<".$presoap."ENVELOPE"));
+}
+
+
+/*if(strstr(strtoupper($input),"SOAP-ENV")){
 $body = substr($input,strpos(strtoupper($input),"<SOAP-ENV:ENVELOPE"));
+
 writeTimeFile($idfile."--Repository: trovato SOAP-ENV:ENVELOPE");
 }
 else if(strstr(strtoupper($input),"SOAPENV")){
 $body = substr($input,strpos(strtoupper($input),"<SOAPENV:ENVELOPE"));
 writeTimeFile($idfile."--Repository: trovato SOAPENV:ENVELOPE");
-}
+}*/
 
 $log->writeLogFile("RECEIVED:",1);
 $log->writeLogFile($body,0);
@@ -768,45 +782,6 @@ writeTimeFile($idfile."--Repository: In Content-ID non e formattato bene");
 	}//END OF else if(!$mod)
  #########################################################
 
-	/*
-	$update_into_DOCUMENTS = "INSERT INTO DOCUMENTS (XDSDOCUMENTENTRY_UNIQUEID,EXTRINSICOBJECT_ID,FILE_SYSTEM_ID,LENGTH,HASH,DATA) VALUES ('$ebxml_value','$ExtrinsicObject_id_attr','$file_name','$size','$hash',$datetime)";
-
-	$fp_insert_into_DOCUMENTS= fopen($tmp_path.$idfile."-update_into_DOCUMENTS-".$idfile, "wb+");
-    	fwrite($fp_insert_into_DOCUMENTS,$insert_into_DOCUMENTS);
-	fclose($fp_insert_into_DOCUMENTS);*
-
-
-	$ris = query_execute($insert_into_DOCUMENTS); //FINO A QUA OK!!!
-
-
-	#### ESEGUO L'INSERIMENTO NELLA TABELLA DOCUMENTS 
-   	/*if($database=="MYSQL"){
-		include_once('./lib/functions_mysql.php');
-		}
-	else if($database=="ORACLE"){
-		include_once('./lib/functions_oracle.php');
-		}*/
-
-
-	/*
-	$document_URI2 = $relative_docs_path_2.$file_name;
-		
-	$selectTOKEN="SELECT KEY_PROG FROM DOCUMENTS WHERE XDSDOCUMENTENTRY_UNIQUEID = '".$UniqueId."'";
-	writeTimeFile($idfile."--Repository: uniqueid".$selectTOKEN);
-	//$selectTOKEN= "SELECT MAX(TOKEN_ID) AS TOKEN_ID FROM TOKEN";
-		$res_token = query_select($selectTOKEN);
-		$next_token = $res_token[0][0];
-
-	$document_token = $www_REP_path."getDocument.php?token=".$next_token;
-	writeTimeFile($idfile."--Repository: document_token".$document_token);
-
-	$insertTOKEN= "INSERT INTO TOKEN (TOKEN_ID,URI) VALUES ('$next_token','$document_URI2')";
-	writeTimeFile($idfile."--Repository: token".$insertTOKEN);
-
-	$ris_token = query_execute($insertTOKEN);*/
-
-
-
 
 }//END OF for($o = 0 ; $o < (count($ExtrinsicObject_array)) ; $o++)
 
@@ -820,19 +795,6 @@ $log->writeLogFile($submissionToForward,0);
 
 if($save_files)
 $file_written3 = $log->writeLogFileS($submissionToForward,$idfile."-ebxmlToForward-".$idfile,"N");
-
-// include("./http_connections/http_client.php");
-// include("./http_connections/http_client_TLS.php");
-//
-// #### CREO IL CLIENT PER LA CONNESSIONE HTTP CON IL REGISTRY
-// if($http=="NORMAL")
-// {
-// 	$client = new HTTP_Client($reg_host,$reg_port,30);
-// }
-// else if($http=="TLS")
-// {
-// 	$client = new HTTP_Client_TLS();
-// }
 
 ## 1- elimino la stringa <?amp;xml version="1.0"?amp;>  dall'ebxmlToForward
 $ebxmlToForward_string = substr($submissionToForward,21);
@@ -861,16 +823,18 @@ $log->writeLogFile($post_data,0);
 //File da scrivere!!!!
 $file_forwarded_written = $log->writeLogFileS($post_data,$idfile."-forwarded-".$idfile,"N");
 ## 4- SPEDISCO IL MESSAGGIO AL REGISTRY E RICAVO LA RESPONSE
-include("./http_connections/http_client.php");
-include("./http_connections/http_client_TLS.php");
+
+
 
 #### CREO IL CLIENT PER LA CONNESSIONE HTTP CON IL REGISTRY
 if($http=="NORMAL")
 {
+	include("./http_connections/http_client.php");
 	$client = new HTTP_Client($reg_host,$reg_port,30);
 }
 else if($http=="TLS")
 {
+	include("./http_connections/http_client_TLS.php");
 	$client = new HTTP_Client_TLS();
 }
 ### SETTAGGI COMUNI

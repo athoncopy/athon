@@ -84,11 +84,6 @@ function makeSoapEnvelope($stringToSoap)
 function makeSoapedFailureResponse($advertise,$logentry)
 {
 	$response = "<SOAP-ENV:Envelope xmlns:SOAP-ENV=\"http://schemas.xmlsoap.org/soap/envelope/\">
-	<SOAP-ENV:Header>
-		<xdsheader SOAP-ENV:mustUnderstand=\"0\"> 
-	      		<logentry url = $logentry/>
-	      </xdsheader>
-	</SOAP-ENV:Header>
 	<SOAP-ENV:Body>
 	      <RegistryResponse status=\"Failure\" xmlns=\"urn:oasis:names:tc:ebxml-regrep:registry:xsd:2.1\">
 	      		<RegistryErrorList>

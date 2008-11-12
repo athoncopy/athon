@@ -20,6 +20,8 @@ $token=$_GET["token"];
 $get_token="SELECT URI FROM DOCUMENTS WHERE KEY_PROG=$token";
 $uri_token=query_select($get_token);
 
+
+// Da verificare se si possono usare funzioni php al posto di java
 if($ATNA_active=='A'){
 include_once("rep_atna.php");
 

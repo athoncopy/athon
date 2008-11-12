@@ -9,7 +9,7 @@
 
 #### IF YOU WANT TO MAKE an INSERT or an UPDATE
 include_once('../config/config.php');
-if($database=="MYSQL"){
+if($database=="mysql"){
 function query_execute($query)
 {
 # IMPORT MYSQL PARAMETERS (NOTE: IT WORKS WITH ABSOLUTE PATH ONLY !!)
@@ -29,7 +29,7 @@ function query_execute($query)
 
 }//END OF query_execute($query)
 }
-else if($database=="ORACLE"){
+else if($database=="oracle"){
 function query_execute($query)
 {
 # IMPORT MYSQL PARAMETERS (NOTE: IT WORKS WITH ABSOLUTE PATH ONLY !!)
