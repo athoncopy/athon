@@ -15,5 +15,5 @@
 # password
   $password_db_q = 'xds';
 # database name
-  $db_name_q = 'XDS_REGISTRY'; 
+  $db_name_q = 'MARIS_XDS_REGISTRY'; 
 ?>

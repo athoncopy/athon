@@ -1,105 +1,105 @@
 -- phpMyAdmin SQL Dump
--- version 2.10.1
+-- version 2.10.3deb1
 -- http://www.phpmyadmin.net
 -- 
 -- Host: localhost
--- Generato il: 31 Lug, 2007 at 03:30 
--- Versione MySQL: 5.0.41
--- Versione PHP: 4.4.7
+-- Generato il: 21 Nov, 2007 at 11:51 AM
+-- Versione MySQL: 5.0.45
+-- Versione PHP: 5.2.3-1ubuntu6
 
 SET SQL_MODE="NO_AUTO_VALUE_ON_ZERO";
 
 -- 
--- Database: 'XDS_REG'
+-- Database: `MARIS_XDS_REGISTRY`
 -- 
 
 -- --------------------------------------------------------
 
 -- 
--- Struttura della tabella 'Association'
+-- Struttura della tabella `Association`
 -- 
 
-CREATE TABLE Association (
-  key_prog bigint(20) NOT NULL auto_increment,
-  accessControlPolicy varchar(64) default NULL,
-  id varchar(128) NOT NULL default '',
-  objectType varchar(32) default 'Association',
-  associationType varchar(128) NOT NULL default '',
-  sourceObject varchar(64) NOT NULL default '',
-  targetObject varchar(128) NOT NULL default '',
-  isConfirmedBySourceOwner tinyint(1) NOT NULL default '0',
-  isConfirmedByTargetOwner tinyint(1) NOT NULL default '0',
-  PRIMARY KEY  (key_prog,id),
-  KEY targetObject (targetObject),
-  KEY sourceObject (sourceObject)
-) ENGINE=MyISAM DEFAULT CHARSET=latin1;
+CREATE TABLE IF NOT EXISTS `Association` (
+  `key_prog` bigint(20) NOT NULL auto_increment,
+  `accessControlPolicy` varchar(64) default NULL,
+  `id` varchar(128) NOT NULL default '',
+  `objectType` varchar(32) default 'Association',
+  `associationType` varchar(128) NOT NULL default '',
+  `sourceObject` varchar(64) NOT NULL default '',
+  `targetObject` varchar(128) NOT NULL default '',
+  `isConfirmedBySourceOwner` tinyint(1) NOT NULL default '0',
+  `isConfirmedByTargetOwner` tinyint(1) NOT NULL default '0',
+  PRIMARY KEY  (`key_prog`,`id`),
+  KEY `targetObject` (`targetObject`),
+  KEY `sourceObject` (`sourceObject`)
+) ENGINE=MyISAM DEFAULT CHARSET=latin1 AUTO_INCREMENT=1 ;
 
 -- 
--- Dump dei dati per la tabella 'Association'
+-- Dump dei dati per la tabella `Association`
 -- 
 
 
 -- --------------------------------------------------------
 
 -- 
--- Struttura della tabella 'ATNA'
+-- Struttura della tabella `ATNA`
 -- 
 
-CREATE TABLE ATNA (
-  ID int(11) NOT NULL auto_increment,
-  host varchar(100) NOT NULL default '',
-  port varchar(20) NOT NULL default '',
-  ACTIVE char(1) NOT NULL default 'A',
-  DESCRIPTION varchar(255) NOT NULL default '',
-  PRIMARY KEY  (ID),
-  KEY ACTIVE (ACTIVE)
-) ENGINE=MyISAM  DEFAULT CHARSET=latin1;
+CREATE TABLE IF NOT EXISTS `ATNA` (
+  `ID` int(11) NOT NULL auto_increment,
+  `host` varchar(100) NOT NULL default '',
+  `port` varchar(20) NOT NULL default '',
+  `ACTIVE` char(1) NOT NULL default 'A',
+  `DESCRIPTION` varchar(255) NOT NULL default '',
+  PRIMARY KEY  (`ID`),
+  KEY `ACTIVE` (`ACTIVE`)
+) ENGINE=MyISAM  DEFAULT CHARSET=latin1 AUTO_INCREMENT=2 ;
 
 -- 
--- Dump dei dati per la tabella 'ATNA'
+-- Dump dei dati per la tabella `ATNA`
 -- 
 
-INSERT INTO ATNA (ID, host, port, ACTIVE, DESCRIPTION) VALUES 
+INSERT INTO `ATNA` (`ID`, `host`, `port`, `ACTIVE`, `DESCRIPTION`) VALUES 
 (1, '172.18.8.67', '4000', 'O', 'ATNA REGISTRY');
 
 -- --------------------------------------------------------
 
 -- 
--- Struttura della tabella 'AuditableEvent'
+-- Struttura della tabella `AuditableEvent`
 -- 
 
-CREATE TABLE AuditableEvent (
-  id int(64) NOT NULL auto_increment,
-  objectType varchar(32) default 'AuditableEvent',
-  eventType varchar(128) NOT NULL default '',
-  registryObject varchar(64) NOT NULL default '',
+CREATE TABLE IF NOT EXISTS `AuditableEvent` (
+  `id` int(64) NOT NULL auto_increment,
+  `objectType` varchar(32) default 'AuditableEvent',
+  `eventType` varchar(128) NOT NULL default '',
+  `registryObject` varchar(64) NOT NULL default '',
   `timeStamp` timestamp NOT NULL default CURRENT_TIMESTAMP on update CURRENT_TIMESTAMP,
   `Source` varchar(64) NOT NULL default '',
-  PRIMARY KEY  (id)
-) ENGINE=MyISAM DEFAULT CHARSET=latin1;
+  PRIMARY KEY  (`id`)
+) ENGINE=MyISAM DEFAULT CHARSET=latin1 AUTO_INCREMENT=1 ;
 
 -- 
--- Dump dei dati per la tabella 'AuditableEvent'
+-- Dump dei dati per la tabella `AuditableEvent`
 -- 
 
 
 -- --------------------------------------------------------
 
 -- 
--- Struttura della tabella 'classCode'
+-- Struttura della tabella `classCode`
 -- 
 
-CREATE TABLE classCode (
+CREATE TABLE IF NOT EXISTS `classCode` (
   `code` varchar(255) NOT NULL default '',
-  display varchar(255) NOT NULL default '',
-  codingScheme varchar(255) NOT NULL default ''
+  `display` varchar(255) NOT NULL default '',
+  `codingScheme` varchar(255) NOT NULL default ''
 ) ENGINE=MyISAM DEFAULT CHARSET=latin1;
 
 -- 
--- Dump dei dati per la tabella 'classCode'
+-- Dump dei dati per la tabella `classCode`
 -- 
 
-INSERT INTO classCode (code, display, codingScheme) VALUES 
+INSERT INTO `classCode` (`code`, `display`, `codingScheme`) VALUES 
 ('Communication', 'Communication', 'Connect-a-thon classCodes'),
 ('Evaluation and management', 'Evaluation and management', 'Connect-a-thon classCodes'),
 ('Conference', 'Conference', 'Connect-a-thon classCodes'),
@@ -132,49 +132,49 @@ INSERT INTO classCode (code, display, codingScheme) VALUES
 -- --------------------------------------------------------
 
 -- 
--- Struttura della tabella 'Classification'
+-- Struttura della tabella `Classification`
 -- 
 
-CREATE TABLE Classification (
-  key_prog bigint(20) NOT NULL auto_increment,
-  accessControlPolicy varchar(64) default NULL,
-  id varchar(128) NOT NULL default '',
-  objectType varchar(32) default 'Classification',
-  classificationNode varchar(64) default NULL,
-  classificationScheme varchar(128) default NULL,
-  classifiedObject varchar(128) NOT NULL default '',
-  nodeRepresentation varchar(128) NOT NULL default 'Radiology',
-  PRIMARY KEY  (key_prog),
-  KEY classifiedObject (classifiedObject,nodeRepresentation)
-) ENGINE=MyISAM DEFAULT CHARSET=latin1;
+CREATE TABLE IF NOT EXISTS `Classification` (
+  `key_prog` bigint(20) NOT NULL auto_increment,
+  `accessControlPolicy` varchar(64) default NULL,
+  `id` varchar(128) NOT NULL default '',
+  `objectType` varchar(32) default 'Classification',
+  `classificationNode` varchar(64) default NULL,
+  `classificationScheme` varchar(128) default NULL,
+  `classifiedObject` varchar(128) NOT NULL default '',
+  `nodeRepresentation` varchar(128) NOT NULL default 'Radiology',
+  PRIMARY KEY  (`key_prog`),
+  KEY `classifiedObject` (`classifiedObject`,`nodeRepresentation`)
+) ENGINE=MyISAM DEFAULT CHARSET=latin1 AUTO_INCREMENT=1 ;
 
 -- 
--- Dump dei dati per la tabella 'Classification'
+-- Dump dei dati per la tabella `Classification`
 -- 
 
 
 -- --------------------------------------------------------
 
 -- 
--- Struttura della tabella 'ClassificationNode'
+-- Struttura della tabella `ClassificationNode`
 -- 
 
-CREATE TABLE ClassificationNode (
-  accessControlPolicy varchar(64) default NULL,
-  id varchar(64) NOT NULL default '',
-  objectType varchar(32) default 'ClassificationNode',
+CREATE TABLE IF NOT EXISTS `ClassificationNode` (
+  `accessControlPolicy` varchar(64) default NULL,
+  `id` varchar(64) NOT NULL default '',
+  `objectType` varchar(32) default 'ClassificationNode',
   `code` varchar(64) default NULL,
-  parent varchar(64) default NULL,
-  path varchar(255) default NULL,
-  Name_value text NOT NULL,
-  PRIMARY KEY  (id)
+  `parent` varchar(64) default NULL,
+  `path` varchar(255) default NULL,
+  `Name_value` text NOT NULL,
+  PRIMARY KEY  (`id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=latin1;
 
 -- 
--- Dump dei dati per la tabella 'ClassificationNode'
+-- Dump dei dati per la tabella `ClassificationNode`
 -- 
 
-INSERT INTO ClassificationNode (accessControlPolicy, id, objectType, code, parent, path, Name_value) VALUES 
+INSERT INTO `ClassificationNode` (`accessControlPolicy`, `id`, `objectType`, `code`, `parent`, `path`, `Name_value`) VALUES 
 (NULL, 'urn:uuid:415715f1-fc0b-47c4-90e5-c180b7b82db6', 'ClassificationNode', 'XDS', 'urn:uuid:3188a449-18ac-41fb-be9f-99a1adca02cb', '/urn:uuid:3188a449-18ac-41fb-be9f-99a1adca02cb/XDS', 'XDS object type'),
 (NULL, 'urn:uuid:7edca82f-054d-47f2-a032-9b2a5b5186c1', 'ClassificationNode', 'XDSDocumentEntry', 'urn:uuid:415715f1-fc0b-47c4-90e5-c180b7b82db6', '/urn:uuid:3188a449-18ac-41fb-be9f-99a1adca02cb/XDS/XDSDocumentEntry', 'XDSDocumentEntry'),
 (NULL, 'urn:uuid:a54d6aa5-d40d-43f9-88c5-b4633d873bdd', 'ClassificationNode', 'XDSSubmissionSet', 'urn:uuid:415715f1-fc0b-47c4-90e5-c180b7b82db6', '/urn:uuid:3188a449-18ac-41fb-be9f-99a1adca02cb/XDS/XDSSubmissionSet', 'XDSSubmissionSet'),
@@ -190,32 +190,32 @@ INSERT INTO ClassificationNode (accessControlPolicy, id, objectType, code, paren
 -- --------------------------------------------------------
 
 -- 
--- Struttura della tabella 'ClassificationScheme'
+-- Struttura della tabella `ClassificationScheme`
 -- 
 
-CREATE TABLE ClassificationScheme (
-  accessControlPolicy varchar(64) default NULL,
-  id varchar(64) NOT NULL default '',
-  objectType varchar(32) default 'ClassificationScheme',
-  expiration timestamp NOT NULL default CURRENT_TIMESTAMP on update CURRENT_TIMESTAMP,
-  majorVersion int(11) NOT NULL default '1',
-  minorVersion int(11) NOT NULL default '0',
-  stability varchar(128) default NULL,
+CREATE TABLE IF NOT EXISTS `ClassificationScheme` (
+  `accessControlPolicy` varchar(64) default NULL,
+  `id` varchar(64) NOT NULL default '',
+  `objectType` varchar(32) default 'ClassificationScheme',
+  `expiration` timestamp NOT NULL default CURRENT_TIMESTAMP on update CURRENT_TIMESTAMP,
+  `majorVersion` int(11) NOT NULL default '1',
+  `minorVersion` int(11) NOT NULL default '0',
+  `stability` varchar(128) default NULL,
   `status` varchar(128) NOT NULL default '',
-  userVersion varchar(64) default NULL,
-  isInternal tinyint(1) NOT NULL default '0',
-  nodeType varchar(32) NOT NULL default 'UniqueCode',
-  Name_value varchar(255) NOT NULL default '',
-  Description_value text NOT NULL,
-  PRIMARY KEY  (id),
-  KEY Name_value (Name_value)
+  `userVersion` varchar(64) default NULL,
+  `isInternal` tinyint(1) NOT NULL default '0',
+  `nodeType` varchar(32) NOT NULL default 'UniqueCode',
+  `Name_value` varchar(255) NOT NULL default '',
+  `Description_value` text NOT NULL,
+  PRIMARY KEY  (`id`),
+  KEY `Name_value` (`Name_value`)
 ) ENGINE=MyISAM DEFAULT CHARSET=latin1;
 
 -- 
--- Dump dei dati per la tabella 'ClassificationScheme'
+-- Dump dei dati per la tabella `ClassificationScheme`
 -- 
 
-INSERT INTO ClassificationScheme (accessControlPolicy, id, objectType, expiration, majorVersion, minorVersion, stability, status, userVersion, isInternal, nodeType, Name_value, Description_value) VALUES 
+INSERT INTO `ClassificationScheme` (`accessControlPolicy`, `id`, `objectType`, `expiration`, `majorVersion`, `minorVersion`, `stability`, `status`, `userVersion`, `isInternal`, `nodeType`, `Name_value`, `Description_value`) VALUES 
 (NULL, 'urn:uuid:554ac39e-e3fe-47fe-b233-965d2a147832', 'ClassificationScheme', '2007-05-15 14:38:58', 1, 0, NULL, '', NULL, 1, 'EmbeddedPath', 'XDSSubmissionSet.sourceId', ''),
 (NULL, 'urn:uuid:6b5aea1a-874d-4603-a4bc-96a0a7b38446', 'ClassificationScheme', '2007-05-15 14:38:58', 1, 0, NULL, '', NULL, 1, 'EmbeddedPath', 'XDSSubmissionSet.patientId', ''),
 (NULL, 'urn:uuid:58a6f841-87b3-4a3e-92fd-a8ffeff98427', 'ClassificationScheme', '2007-05-15 14:38:58', 1, 0, NULL, '', NULL, 1, 'EmbeddedPath', 'XDSDocumentEntry.patientId', ''),
@@ -238,21 +238,21 @@ INSERT INTO ClassificationScheme (accessControlPolicy, id, objectType, expiratio
 -- --------------------------------------------------------
 
 -- 
--- Struttura della tabella 'classScheme'
+-- Struttura della tabella `classScheme`
 -- 
 
-CREATE TABLE classScheme (
-  class_Scheme varchar(255) NOT NULL default '',
+CREATE TABLE IF NOT EXISTS `classScheme` (
+  `class_Scheme` varchar(255) NOT NULL default '',
   `name` varchar(255) NOT NULL default '',
-  PRIMARY KEY  (class_Scheme),
+  PRIMARY KEY  (`class_Scheme`),
   KEY `name` (`name`)
 ) ENGINE=MyISAM DEFAULT CHARSET=latin1;
 
 -- 
--- Dump dei dati per la tabella 'classScheme'
+-- Dump dei dati per la tabella `classScheme`
 -- 
 
-INSERT INTO classScheme (class_Scheme, name) VALUES 
+INSERT INTO `classScheme` (`class_Scheme`, `name`) VALUES 
 ('urn:uuid:aa543740-bdda-424e-8c96-df4873be8500', 'contentTypeCode'),
 ('urn:uuid:41a5887f-8865-4c09-adf7-e362475b143a', 'classCode'),
 ('urn:uuid:f4f85eac-e6cb-4883-b524-f2705394840f', 'confidentialityCode'),
@@ -266,20 +266,20 @@ INSERT INTO classScheme (class_Scheme, name) VALUES
 -- --------------------------------------------------------
 
 -- 
--- Struttura della tabella 'codeList'
+-- Struttura della tabella `codeList`
 -- 
 
-CREATE TABLE codeList (
+CREATE TABLE IF NOT EXISTS `codeList` (
   `code` varchar(255) NOT NULL default '',
-  display varchar(255) NOT NULL default '',
-  codingScheme varchar(255) NOT NULL default ''
+  `display` varchar(255) NOT NULL default '',
+  `codingScheme` varchar(255) NOT NULL default ''
 ) ENGINE=MyISAM DEFAULT CHARSET=latin1;
 
 -- 
--- Dump dei dati per la tabella 'codeList'
+-- Dump dei dati per la tabella `codeList`
 -- 
 
-INSERT INTO codeList (code, display, codingScheme) VALUES 
+INSERT INTO `codeList` (`code`, `display`, `codingScheme`) VALUES 
 ('Anesthesia', 'Anesthesia', 'Connect-a-thon codeList'),
 ('Cardiology', 'Cardiology', 'Connect-a-thon codeList'),
 ('Case Manager', 'Case Manager', 'Connect-a-thon codeList'),
@@ -328,20 +328,20 @@ INSERT INTO codeList (code, display, codingScheme) VALUES
 -- --------------------------------------------------------
 
 -- 
--- Struttura della tabella 'confidentialityCode'
+-- Struttura della tabella `confidentialityCode`
 -- 
 
-CREATE TABLE confidentialityCode (
+CREATE TABLE IF NOT EXISTS `confidentialityCode` (
   `code` varchar(255) NOT NULL default '',
-  display varchar(255) NOT NULL default '',
-  codingScheme varchar(255) NOT NULL default ''
+  `display` varchar(255) NOT NULL default '',
+  `codingScheme` varchar(255) NOT NULL default ''
 ) ENGINE=MyISAM DEFAULT CHARSET=latin1;
 
 -- 
--- Dump dei dati per la tabella 'confidentialityCode'
+-- Dump dei dati per la tabella `confidentialityCode`
 -- 
 
-INSERT INTO confidentialityCode (code, display, codingScheme) VALUES 
+INSERT INTO `confidentialityCode` (`code`, `display`, `codingScheme`) VALUES 
 ('C', 'Celebrity', 'Connect-a-thon confidentialityCodes'),
 ('D', 'Clinician', 'Connect-a-thon confidentialityCodes'),
 ('I', 'Individual', 'Connect-a-thon confidentialityCodes'),
@@ -353,40 +353,41 @@ INSERT INTO confidentialityCode (code, display, codingScheme) VALUES
 -- --------------------------------------------------------
 
 -- 
--- Struttura della tabella 'CONFIG'
+-- Struttura della tabella `CONFIG`
 -- 
 
-CREATE TABLE CONFIG (
-  WWW varchar(100) NOT NULL default '',
+CREATE TABLE IF NOT EXISTS `CONFIG` (
+  `WWW` varchar(100) NOT NULL default '',
   `CACHE` char(1) NOT NULL default '',
-  PATIENTID char(1) NOT NULL default '',
-  LOG char(1) NOT NULL
+  `PATIENTID` char(1) NOT NULL default '',
+  `LOG` char(1) NOT NULL,
+  `JAVA_PATH` varchar(255) NOT NULL
 ) ENGINE=MyISAM DEFAULT CHARSET=latin1;
 
 -- 
--- Dump dei dati per la tabella 'CONFIG'
+-- Dump dei dati per la tabella `CONFIG`
 -- 
 
-INSERT INTO CONFIG (WWW, CACHE, PATIENTID, LOG) VALUES 
-('/MARIS_XDS/registry/', 'A', 'O', 'O');
+INSERT INTO `CONFIG` (`WWW`, `CACHE`, `PATIENTID`, `LOG`, `JAVA_PATH`) VALUES 
+('/MARIS_XDS/registry-b/', 'O', 'O', 'A', '/usr/lib/jvm/java-1.5.0-sun-1.5.0.13/bin/');
 
 -- --------------------------------------------------------
 
 -- 
--- Struttura della tabella 'contentTypeCode'
+-- Struttura della tabella `contentTypeCode`
 -- 
 
-CREATE TABLE contentTypeCode (
+CREATE TABLE IF NOT EXISTS `contentTypeCode` (
   `code` varchar(255) NOT NULL default '',
-  display varchar(255) NOT NULL default '',
-  codingScheme varchar(255) NOT NULL default ''
+  `display` varchar(255) NOT NULL default '',
+  `codingScheme` varchar(255) NOT NULL default ''
 ) ENGINE=MyISAM DEFAULT CHARSET=latin1;
 
 -- 
--- Dump dei dati per la tabella 'contentTypeCode'
+-- Dump dei dati per la tabella `contentTypeCode`
 -- 
 
-INSERT INTO contentTypeCode (code, display, codingScheme) VALUES 
+INSERT INTO `contentTypeCode` (`code`, `display`, `codingScheme`) VALUES 
 ('Communication', 'Communication', 'Connect-a-thon contentTypeCodes'),
 ('Evaluation and management', 'Evaluation and management', 'Connect-a-thon contentTypeCodes'),
 ('Conference', 'Conference', 'Connect-a-thon contentTypeCodes'),
@@ -419,146 +420,146 @@ INSERT INTO contentTypeCode (code, display, codingScheme) VALUES
 -- --------------------------------------------------------
 
 -- 
--- Struttura della tabella 'Counters'
+-- Struttura della tabella `Counters`
 -- 
 
-CREATE TABLE Counters (
-  id bigint(255) NOT NULL default '0'
+CREATE TABLE IF NOT EXISTS `Counters` (
+  `id` bigint(255) NOT NULL default '0'
 ) ENGINE=MyISAM DEFAULT CHARSET=latin1;
 
 -- 
--- Dump dei dati per la tabella 'Counters'
+-- Dump dei dati per la tabella `Counters`
 -- 
 
-INSERT INTO Counters (id) VALUES 
+INSERT INTO `Counters` (`id`) VALUES 
 (0);
 
 -- --------------------------------------------------------
 
 -- 
--- Struttura della tabella 'Description'
+-- Struttura della tabella `Description`
 -- 
 
-CREATE TABLE Description (
-  key_prog bigint(20) NOT NULL auto_increment,
+CREATE TABLE IF NOT EXISTS `Description` (
+  `key_prog` bigint(20) NOT NULL auto_increment,
   `charset` varchar(32) default NULL,
-  lang varchar(32) NOT NULL default 'it-it',
+  `lang` varchar(32) NOT NULL default 'it-it',
   `value` varchar(255) NOT NULL default '',
-  parent varchar(64) NOT NULL default '',
-  PRIMARY KEY  (key_prog,lang,`value`,parent),
-  KEY parent (parent)
-) ENGINE=MyISAM DEFAULT CHARSET=latin1;
+  `parent` varchar(64) NOT NULL default '',
+  PRIMARY KEY  (`key_prog`,`lang`,`value`,`parent`),
+  KEY `parent` (`parent`)
+) ENGINE=MyISAM DEFAULT CHARSET=latin1 AUTO_INCREMENT=1 ;
 
 -- 
--- Dump dei dati per la tabella 'Description'
+-- Dump dei dati per la tabella `Description`
 -- 
 
 
 -- --------------------------------------------------------
 
 -- 
--- Struttura della tabella 'EmailAddress'
+-- Struttura della tabella `EmailAddress`
 -- 
 
-CREATE TABLE EmailAddress (
-  address varchar(64) NOT NULL default '',
+CREATE TABLE IF NOT EXISTS `EmailAddress` (
+  `address` varchar(64) NOT NULL default '',
   `type` varchar(32) default NULL,
-  parent varchar(64) NOT NULL default ''
+  `parent` varchar(64) NOT NULL default ''
 ) ENGINE=MyISAM DEFAULT CHARSET=latin1;
 
 -- 
--- Dump dei dati per la tabella 'EmailAddress'
+-- Dump dei dati per la tabella `EmailAddress`
 -- 
 
 
 -- --------------------------------------------------------
 
 -- 
--- Struttura della tabella 'ExternalIdentifier'
+-- Struttura della tabella `ExternalIdentifier`
 -- 
 
-CREATE TABLE ExternalIdentifier (
-  key_prog bigint(20) NOT NULL auto_increment,
-  accessControlPolicy varchar(64) default NULL,
-  id varchar(128) NOT NULL default '',
-  objectType varchar(32) default 'ExternalIdentifier',
-  registryObject varchar(128) NOT NULL default '',
-  identificationScheme varchar(128) NOT NULL default '',
+CREATE TABLE IF NOT EXISTS `ExternalIdentifier` (
+  `key_prog` bigint(20) NOT NULL auto_increment,
+  `accessControlPolicy` varchar(64) default NULL,
+  `id` varchar(128) NOT NULL default '',
+  `objectType` varchar(32) default 'ExternalIdentifier',
+  `registryObject` varchar(128) NOT NULL default '',
+  `identificationScheme` varchar(128) NOT NULL default '',
   `value` varchar(255) NOT NULL default '',
-  PRIMARY KEY  (key_prog),
+  PRIMARY KEY  (`key_prog`),
   KEY `value` (`value`),
-  KEY registryObject (registryObject)
-) ENGINE=MyISAM DEFAULT CHARSET=latin1;
+  KEY `registryObject` (`registryObject`)
+) ENGINE=MyISAM DEFAULT CHARSET=latin1 AUTO_INCREMENT=1 ;
 
 -- 
--- Dump dei dati per la tabella 'ExternalIdentifier'
--- 
-
-
--- --------------------------------------------------------
-
--- 
--- Struttura della tabella 'ExternalLink'
--- 
-
-CREATE TABLE ExternalLink (
-  accessControlPolicy varchar(64) default NULL,
-  id varchar(64) NOT NULL default '',
-  objectType varchar(32) default 'ExternalLink',
-  externalURI varchar(255) NOT NULL default '',
-  PRIMARY KEY  (id)
-) ENGINE=MyISAM DEFAULT CHARSET=latin1;
-
--- 
--- Dump dei dati per la tabella 'ExternalLink'
+-- Dump dei dati per la tabella `ExternalIdentifier`
 -- 
 
 
 -- --------------------------------------------------------
 
 -- 
--- Struttura della tabella 'ExtrinsicObject'
+-- Struttura della tabella `ExternalLink`
 -- 
 
-CREATE TABLE ExtrinsicObject (
-  key_prog bigint(20) NOT NULL auto_increment,
-  accessControlPolicy varchar(64) default NULL,
-  id varchar(128) NOT NULL default '',
-  objectType varchar(128) default 'text/xml',
-  expiration timestamp NOT NULL default CURRENT_TIMESTAMP on update CURRENT_TIMESTAMP,
-  majorVersion int(11) NOT NULL default '0',
-  minorVersion int(11) NOT NULL default '1',
-  stability varchar(128) default NULL,
+CREATE TABLE IF NOT EXISTS `ExternalLink` (
+  `accessControlPolicy` varchar(64) default NULL,
+  `id` varchar(64) NOT NULL default '',
+  `objectType` varchar(32) default 'ExternalLink',
+  `externalURI` varchar(255) NOT NULL default '',
+  PRIMARY KEY  (`id`)
+) ENGINE=MyISAM DEFAULT CHARSET=latin1;
+
+-- 
+-- Dump dei dati per la tabella `ExternalLink`
+-- 
+
+
+-- --------------------------------------------------------
+
+-- 
+-- Struttura della tabella `ExtrinsicObject`
+-- 
+
+CREATE TABLE IF NOT EXISTS `ExtrinsicObject` (
+  `key_prog` bigint(20) NOT NULL auto_increment,
+  `accessControlPolicy` varchar(64) default NULL,
+  `id` varchar(128) NOT NULL default '',
+  `objectType` varchar(128) default 'text/xml',
+  `expiration` timestamp NOT NULL default CURRENT_TIMESTAMP on update CURRENT_TIMESTAMP,
+  `majorVersion` int(11) NOT NULL default '0',
+  `minorVersion` int(11) NOT NULL default '1',
+  `stability` varchar(128) default NULL,
   `status` varchar(128) NOT NULL default '',
-  userVersion varchar(64) default NULL,
-  isOpaque tinyint(1) NOT NULL default '0',
-  mimeType varchar(128) NOT NULL default '',
-  PRIMARY KEY  (key_prog,id),
-  KEY id (id)
-) ENGINE=MyISAM DEFAULT CHARSET=latin1;
+  `userVersion` varchar(64) default NULL,
+  `isOpaque` tinyint(1) NOT NULL default '0',
+  `mimeType` varchar(128) NOT NULL default '',
+  PRIMARY KEY  (`key_prog`,`id`),
+  KEY `id` (`id`)
+) ENGINE=MyISAM DEFAULT CHARSET=latin1 AUTO_INCREMENT=1 ;
 
 -- 
--- Dump dei dati per la tabella 'ExtrinsicObject'
+-- Dump dei dati per la tabella `ExtrinsicObject`
 -- 
 
 
 -- --------------------------------------------------------
 
 -- 
--- Struttura della tabella 'formatCode'
+-- Struttura della tabella `formatCode`
 -- 
 
-CREATE TABLE formatCode (
+CREATE TABLE IF NOT EXISTS `formatCode` (
   `code` varchar(255) NOT NULL default '',
-  display varchar(255) NOT NULL default '',
-  codingScheme varchar(255) NOT NULL default ''
+  `display` varchar(255) NOT NULL default '',
+  `codingScheme` varchar(255) NOT NULL default ''
 ) ENGINE=MyISAM DEFAULT CHARSET=latin1;
 
 -- 
--- Dump dei dati per la tabella 'formatCode'
+-- Dump dei dati per la tabella `formatCode`
 -- 
 
-INSERT INTO formatCode (code, display, codingScheme) VALUES 
+INSERT INTO `formatCode` (`code`, `display`, `codingScheme`) VALUES 
 ('PDF/IHE 1.x', 'PDF/IHE 1.x', 'Connect-a-thon formatCodes'),
 ('CDA/IHE 1.0', 'CDA/IHE 1.0', 'Connect-a-thon formatCodes'),
 ('CDAR2/IHE 1.0', 'CDAR2/IHE 1.0', 'Connect-a-thon formatCodes'),
@@ -571,20 +572,20 @@ INSERT INTO formatCode (code, display, codingScheme) VALUES
 -- --------------------------------------------------------
 
 -- 
--- Struttura della tabella 'healthcareFacilityTypeCode'
+-- Struttura della tabella `healthcareFacilityTypeCode`
 -- 
 
-CREATE TABLE healthcareFacilityTypeCode (
+CREATE TABLE IF NOT EXISTS `healthcareFacilityTypeCode` (
   `code` varchar(255) NOT NULL default '',
-  display varchar(255) NOT NULL default '',
-  codingScheme varchar(255) NOT NULL default ''
+  `display` varchar(255) NOT NULL default '',
+  `codingScheme` varchar(255) NOT NULL default ''
 ) ENGINE=MyISAM DEFAULT CHARSET=latin1;
 
 -- 
--- Dump dei dati per la tabella 'healthcareFacilityTypeCode'
+-- Dump dei dati per la tabella `healthcareFacilityTypeCode`
 -- 
 
-INSERT INTO healthcareFacilityTypeCode (code, display, codingScheme) VALUES 
+INSERT INTO `healthcareFacilityTypeCode` (`code`, `display`, `codingScheme`) VALUES 
 ('Home', 'Home', 'Connect-a-thon healthcareFacilityTypeCodes'),
 ('Assisted Living', 'Assisted Living', 'Connect-a-thon healthcareFacilityTypeCodes'),
 ('Home Health Care', 'Home Health Care', 'Connect-a-thon healthcareFacilityTypeCodes'),
@@ -602,59 +603,59 @@ INSERT INTO healthcareFacilityTypeCode (code, display, codingScheme) VALUES
 -- --------------------------------------------------------
 
 -- 
--- Struttura della tabella 'HL7_MESSAGES'
+-- Struttura della tabella `HL7_MESSAGES`
 -- 
 
-CREATE TABLE HL7_MESSAGES (
-  IDMESSAGE bigint(20) NOT NULL auto_increment,
+CREATE TABLE IF NOT EXISTS `HL7_MESSAGES` (
+  `IDMESSAGE` bigint(20) NOT NULL auto_increment,
   `TEXT` longtext,
-  ACK varchar(255) default NULL,
-  RECEIVED timestamp NOT NULL default CURRENT_TIMESTAMP on update CURRENT_TIMESTAMP,
+  `ACK` varchar(255) default NULL,
+  `RECEIVED` timestamp NOT NULL default CURRENT_TIMESTAMP on update CURRENT_TIMESTAMP,
   `STATUS` char(1) NOT NULL default 'R',
-  ACKED timestamp NOT NULL default '0000-00-00 00:00:00',
-  PRIMARY KEY  (IDMESSAGE)
-) ENGINE=MyISAM DEFAULT CHARSET=latin1;
+  `ACKED` timestamp NOT NULL default '0000-00-00 00:00:00',
+  PRIMARY KEY  (`IDMESSAGE`)
+) ENGINE=MyISAM DEFAULT CHARSET=latin1 AUTO_INCREMENT=1 ;
 
 -- 
--- Dump dei dati per la tabella 'HL7_MESSAGES'
+-- Dump dei dati per la tabella `HL7_MESSAGES`
 -- 
 
 
 -- --------------------------------------------------------
 
 -- 
--- Struttura della tabella 'HTTP'
+-- Struttura della tabella `HTTP`
 -- 
 
-CREATE TABLE HTTP (
-  HTTPD varchar(20) NOT NULL default '',
-  ACTIVE char(1) NOT NULL default 'O',
-  KEY ACTIVE (ACTIVE)
+CREATE TABLE IF NOT EXISTS `HTTP` (
+  `HTTPD` varchar(20) NOT NULL default '',
+  `ACTIVE` char(1) NOT NULL default 'O',
+  KEY `ACTIVE` (`ACTIVE`)
 ) ENGINE=MyISAM DEFAULT CHARSET=latin1;
 
 -- 
--- Dump dei dati per la tabella 'HTTP'
+-- Dump dei dati per la tabella `HTTP`
 -- 
 
-INSERT INTO HTTP (HTTPD, ACTIVE) VALUES 
+INSERT INTO `HTTP` (`HTTPD`, `ACTIVE`) VALUES 
 ('NORMAL', 'A');
 
 -- --------------------------------------------------------
 
 -- 
--- Struttura della tabella 'mimeType'
+-- Struttura della tabella `mimeType`
 -- 
 
-CREATE TABLE mimeType (
+CREATE TABLE IF NOT EXISTS `mimeType` (
   `code` varchar(255) NOT NULL default '',
   KEY `code` (`code`)
 ) ENGINE=MyISAM DEFAULT CHARSET=latin1;
 
 -- 
--- Dump dei dati per la tabella 'mimeType'
+-- Dump dei dati per la tabella `mimeType`
 -- 
 
-INSERT INTO mimeType (code) VALUES 
+INSERT INTO `mimeType` (`code`) VALUES 
 ('application/dicom'),
 ('application/pdf'),
 ('application/x-hl7'),
@@ -666,123 +667,119 @@ INSERT INTO mimeType (code) VALUES
 -- --------------------------------------------------------
 
 -- 
--- Struttura della tabella 'Name'
+-- Struttura della tabella `Name`
 -- 
 
-CREATE TABLE `Name` (
-  key_prog bigint(20) NOT NULL auto_increment,
+CREATE TABLE IF NOT EXISTS `Name` (
+  `key_prog` bigint(20) NOT NULL auto_increment,
   `charset` varchar(32) default NULL,
-  lang varchar(32) NOT NULL default 'it-it',
+  `lang` varchar(32) NOT NULL default 'it-it',
   `value` varchar(255) NOT NULL default '',
-  parent varchar(128) NOT NULL default '',
-  PRIMARY KEY  (key_prog),
-  KEY parent (parent)
-) ENGINE=MyISAM DEFAULT CHARSET=latin1;
+  `parent` varchar(128) NOT NULL default '',
+  PRIMARY KEY  (`key_prog`),
+  KEY `parent` (`parent`)
+) ENGINE=MyISAM DEFAULT CHARSET=latin1 AUTO_INCREMENT=1 ;
 
 -- 
--- Dump dei dati per la tabella 'Name'
--- 
-
-
--- --------------------------------------------------------
-
--- 
--- Struttura della tabella 'NAV'
--- 
-
-CREATE TABLE NAV (
-  NAV char(1) NOT NULL default '',
-  NAV_FROM varchar(100) NOT NULL default '',
-  NAV_TO varchar(100) NOT NULL default ''
-) ENGINE=MyISAM DEFAULT CHARSET=latin1;
-
--- 
--- Dump dei dati per la tabella 'NAV'
--- 
-
-INSERT INTO NAV (NAV, NAV_FROM, NAV_TO) VALUES 
-('O', 'dcm4chee@rad.unipd.it', 'xds@rad.unipd.it');
-
--- --------------------------------------------------------
-
--- 
--- Struttura della tabella 'Organization'
--- 
-
-CREATE TABLE Organization (
-  accessControlPolicy varchar(64) default NULL,
-  id varchar(64) NOT NULL default '',
-  objectType varchar(32) default 'Organization',
-  parent varchar(64) default NULL,
-  primaryContact varchar(64) NOT NULL default '',
-  PRIMARY KEY  (id)
-) ENGINE=MyISAM DEFAULT CHARSET=latin1;
-
--- 
--- Dump dei dati per la tabella 'Organization'
+-- Dump dei dati per la tabella `Name`
 -- 
 
 
 -- --------------------------------------------------------
 
 -- 
--- Struttura della tabella 'Patient'
+-- Struttura della tabella `NAV`
 -- 
 
-CREATE TABLE Patient (
-  ID int(11) NOT NULL auto_increment,
-  PID3 varchar(255) NOT NULL default '',
-  InsertDate datetime NOT NULL default '0000-00-00 00:00:00',
-  UpdateDate datetime default NULL,
-  PriorPID3 varchar(128) default NULL,
-  PRIMARY KEY  (ID),
-  KEY PID3 (PID3),
-  KEY PriorPID3 (PriorPID3)
+CREATE TABLE IF NOT EXISTS `NAV` (
+  `NAV` char(1) NOT NULL default '',
+  `NAV_FROM` varchar(100) NOT NULL default '',
+  `NAV_TO` varchar(100) NOT NULL default ''
 ) ENGINE=MyISAM DEFAULT CHARSET=latin1;
 
 -- 
--- Dump dei dati per la tabella 'Patient'
+-- Dump dei dati per la tabella `NAV`
+-- 
+
+INSERT INTO `NAV` (`NAV`, `NAV_FROM`, `NAV_TO`) VALUES 
+('O', 'from@dominio.it', 'to@dominio.it');
+
+-- --------------------------------------------------------
+
+-- 
+-- Struttura della tabella `Organization`
+-- 
+
+CREATE TABLE IF NOT EXISTS `Organization` (
+  `accessControlPolicy` varchar(64) default NULL,
+  `id` varchar(64) NOT NULL default '',
+  `objectType` varchar(32) default 'Organization',
+  `parent` varchar(64) default NULL,
+  `primaryContact` varchar(64) NOT NULL default '',
+  PRIMARY KEY  (`id`)
+) ENGINE=MyISAM DEFAULT CHARSET=latin1;
+
+-- 
+-- Dump dei dati per la tabella `Organization`
 -- 
 
 
 -- --------------------------------------------------------
 
 -- 
--- Struttura della tabella 'PostalAddress'
+-- Struttura della tabella `Patient`
 -- 
 
-CREATE TABLE PostalAddress (
-  city varchar(64) default NULL,
-  country varchar(64) default NULL,
-  postalCode varchar(64) default NULL,
-  state varchar(64) default NULL,
-  street varchar(64) default NULL,
-  streetNumber varchar(32) default NULL,
-  parent varchar(64) NOT NULL default ''
+CREATE TABLE IF NOT EXISTS `Patient` (
+  `ID` int(11) NOT NULL auto_increment,
+  `PID3` varchar(255) NOT NULL default '',
+  `InsertDate` datetime NOT NULL default '0000-00-00 00:00:00',
+  `UpdateDate` datetime default NULL,
+  `PriorPID3` varchar(128) default NULL,
+  PRIMARY KEY  (`ID`),
+  KEY `PID3` (`PID3`),
+  KEY `PriorPID3` (`PriorPID3`)
+) ENGINE=MyISAM  DEFAULT CHARSET=latin1 AUTO_INCREMENT=19 ;
+
+
+-- --------------------------------------------------------
+
+-- 
+-- Struttura della tabella `PostalAddress`
+-- 
+
+CREATE TABLE IF NOT EXISTS `PostalAddress` (
+  `city` varchar(64) default NULL,
+  `country` varchar(64) default NULL,
+  `postalCode` varchar(64) default NULL,
+  `state` varchar(64) default NULL,
+  `street` varchar(64) default NULL,
+  `streetNumber` varchar(32) default NULL,
+  `parent` varchar(64) NOT NULL default ''
 ) ENGINE=MyISAM DEFAULT CHARSET=latin1;
 
 -- 
--- Dump dei dati per la tabella 'PostalAddress'
+-- Dump dei dati per la tabella `PostalAddress`
 -- 
 
 
 -- --------------------------------------------------------
 
 -- 
--- Struttura della tabella 'practiceSettingCode'
+-- Struttura della tabella `practiceSettingCode`
 -- 
 
-CREATE TABLE practiceSettingCode (
+CREATE TABLE IF NOT EXISTS `practiceSettingCode` (
   `code` varchar(255) NOT NULL default '',
-  display varchar(255) NOT NULL default '',
-  codingScheme varchar(255) NOT NULL default ''
+  `display` varchar(255) NOT NULL default '',
+  `codingScheme` varchar(255) NOT NULL default ''
 ) ENGINE=MyISAM DEFAULT CHARSET=latin1;
 
 -- 
--- Dump dei dati per la tabella 'practiceSettingCode'
+-- Dump dei dati per la tabella `practiceSettingCode`
 -- 
 
-INSERT INTO practiceSettingCode (code, display, codingScheme) VALUES 
+INSERT INTO `practiceSettingCode` (`code`, `display`, `codingScheme`) VALUES 
 ('Anesthesia', 'Anesthesia', 'Connect-a-thon practiceSettingCodes'),
 ('Cardiology', 'Cardiology', 'Connect-a-thon practiceSettingCodes'),
 ('Case Manager', 'Case Manager', 'Connect-a-thon practiceSettingCodes'),
@@ -831,181 +828,181 @@ INSERT INTO practiceSettingCode (code, display, codingScheme) VALUES
 -- --------------------------------------------------------
 
 -- 
--- Struttura della tabella 'REGISTRY'
+-- Struttura della tabella `REGISTRY`
 -- 
 
-CREATE TABLE REGISTRY (
-  ID bigint(30) NOT NULL auto_increment,
-  host varchar(255) NOT NULL default '',
-  port int(100) NOT NULL default '8090',
-  SERVICE varchar(255) NOT NULL default '',
-  ACTIVE char(1) NOT NULL default 'A',
-  HTTP varchar(30) NOT NULL default 'NORMAL',
-  PRIMARY KEY  (ID),
-  KEY SERVICE (SERVICE,ACTIVE),
-  KEY HTTP (HTTP)
-) ENGINE=MyISAM  DEFAULT CHARSET=latin1;
+CREATE TABLE IF NOT EXISTS `REGISTRY` (
+  `ID` bigint(30) NOT NULL auto_increment,
+  `host` varchar(255) NOT NULL default '',
+  `port` int(100) NOT NULL default '8090',
+  `SERVICE` varchar(255) NOT NULL default '',
+  `ACTIVE` char(1) NOT NULL default 'A',
+  `HTTP` varchar(30) NOT NULL default 'NORMAL',
+  PRIMARY KEY  (`ID`),
+  KEY `SERVICE` (`SERVICE`,`ACTIVE`),
+  KEY `HTTP` (`HTTP`)
+) ENGINE=MyISAM  DEFAULT CHARSET=latin1 AUTO_INCREMENT=3 ;
 
 -- 
--- Dump dei dati per la tabella 'REGISTRY'
+-- Dump dei dati per la tabella `REGISTRY`
 -- 
 
-INSERT INTO REGISTRY (ID, host, port, SERVICE, ACTIVE, HTTP) VALUES 
+INSERT INTO `REGISTRY` (`ID`, `host`, `port`, `SERVICE`, `ACTIVE`, `HTTP`) VALUES 
 (1, '10.135.0.92', 80, 'SUBMISSION', 'A', 'NORMAL'),
 (2, '10.135.0.92', 80, 'QUERY', 'A', 'NORMAL');
 
 -- --------------------------------------------------------
 
 -- 
--- Struttura della tabella 'RegistryPackage'
+-- Struttura della tabella `RegistryPackage`
 -- 
 
-CREATE TABLE RegistryPackage (
-  key_prog bigint(20) NOT NULL auto_increment,
-  accessControlPolicy varchar(64) default NULL,
-  id varchar(64) NOT NULL default '',
-  objectType varchar(64) default 'RegistryPackage',
-  expiration timestamp NOT NULL default CURRENT_TIMESTAMP on update CURRENT_TIMESTAMP,
-  majorVersion int(11) NOT NULL default '0',
-  minorVersion int(11) NOT NULL default '1',
-  stability varchar(128) default NULL,
+CREATE TABLE IF NOT EXISTS `RegistryPackage` (
+  `key_prog` bigint(20) NOT NULL auto_increment,
+  `accessControlPolicy` varchar(64) default NULL,
+  `id` varchar(64) NOT NULL default '',
+  `objectType` varchar(64) default 'RegistryPackage',
+  `expiration` timestamp NOT NULL default CURRENT_TIMESTAMP on update CURRENT_TIMESTAMP,
+  `majorVersion` int(11) NOT NULL default '0',
+  `minorVersion` int(11) NOT NULL default '1',
+  `stability` varchar(128) default NULL,
   `status` varchar(128) NOT NULL default '',
-  userVersion varchar(64) default NULL,
-  PRIMARY KEY  (key_prog),
-  KEY id (id)
-) ENGINE=MyISAM DEFAULT CHARSET=latin1;
+  `userVersion` varchar(64) default NULL,
+  PRIMARY KEY  (`key_prog`),
+  KEY `id` (`id`)
+) ENGINE=MyISAM DEFAULT CHARSET=latin1 AUTO_INCREMENT=1 ;
 
 -- 
--- Dump dei dati per la tabella 'RegistryPackage'
+-- Dump dei dati per la tabella `RegistryPackage`
 -- 
 
 
 -- --------------------------------------------------------
 
 -- 
--- Struttura della tabella 'Service'
+-- Struttura della tabella `Service`
 -- 
 
-CREATE TABLE Service (
-  accessControlPolicy varchar(64) default NULL,
-  id varchar(64) NOT NULL default '',
-  objectType varchar(32) default 'Service',
-  expiration timestamp NOT NULL default CURRENT_TIMESTAMP on update CURRENT_TIMESTAMP,
-  majorVersion int(11) NOT NULL default '0',
-  minorVersion int(11) NOT NULL default '1',
-  stability varchar(128) default NULL,
+CREATE TABLE IF NOT EXISTS `Service` (
+  `accessControlPolicy` varchar(64) default NULL,
+  `id` varchar(64) NOT NULL default '',
+  `objectType` varchar(32) default 'Service',
+  `expiration` timestamp NOT NULL default CURRENT_TIMESTAMP on update CURRENT_TIMESTAMP,
+  `majorVersion` int(11) NOT NULL default '0',
+  `minorVersion` int(11) NOT NULL default '1',
+  `stability` varchar(128) default NULL,
   `status` varchar(128) NOT NULL default '',
-  userVersion varchar(64) default NULL,
-  PRIMARY KEY  (id)
+  `userVersion` varchar(64) default NULL,
+  PRIMARY KEY  (`id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=latin1;
 
 -- 
--- Dump dei dati per la tabella 'Service'
+-- Dump dei dati per la tabella `Service`
 -- 
 
 
 -- --------------------------------------------------------
 
 -- 
--- Struttura della tabella 'ServiceBinding'
+-- Struttura della tabella `ServiceBinding`
 -- 
 
-CREATE TABLE ServiceBinding (
-  accessControlPolicy varchar(64) default NULL,
-  id varchar(64) NOT NULL default '',
-  objectType varchar(32) default 'ServiceBinding',
-  service varchar(64) NOT NULL default '',
-  accessURI varchar(255) default NULL,
-  targetBinding varchar(64) default NULL,
-  PRIMARY KEY  (id)
+CREATE TABLE IF NOT EXISTS `ServiceBinding` (
+  `accessControlPolicy` varchar(64) default NULL,
+  `id` varchar(64) NOT NULL default '',
+  `objectType` varchar(32) default 'ServiceBinding',
+  `service` varchar(64) NOT NULL default '',
+  `accessURI` varchar(255) default NULL,
+  `targetBinding` varchar(64) default NULL,
+  PRIMARY KEY  (`id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=latin1;
 
 -- 
--- Dump dei dati per la tabella 'ServiceBinding'
+-- Dump dei dati per la tabella `ServiceBinding`
 -- 
 
 
 -- --------------------------------------------------------
 
 -- 
--- Struttura della tabella 'Slot'
+-- Struttura della tabella `Slot`
 -- 
 
-CREATE TABLE Slot (
-  key_prog bigint(100) NOT NULL auto_increment,
+CREATE TABLE IF NOT EXISTS `Slot` (
+  `key_prog` bigint(100) NOT NULL auto_increment,
   `name` varchar(128) NOT NULL default '',
-  slotType varchar(128) default NULL,
+  `slotType` varchar(128) default NULL,
   `value` varchar(255) NOT NULL default '',
-  parent varchar(128) NOT NULL default '',
-  PRIMARY KEY  (key_prog),
-  KEY parent (parent),
+  `parent` varchar(128) NOT NULL default '',
+  PRIMARY KEY  (`key_prog`),
+  KEY `parent` (`parent`),
   KEY `value` (`value`)
-) ENGINE=MyISAM DEFAULT CHARSET=latin1;
+) ENGINE=MyISAM DEFAULT CHARSET=latin1 AUTO_INCREMENT=1 ;
 
 -- 
--- Dump dei dati per la tabella 'Slot'
--- 
-
-
--- --------------------------------------------------------
-
--- 
--- Struttura della tabella 'SpecificationLink'
--- 
-
-CREATE TABLE SpecificationLink (
-  accessControlPolicy varchar(64) default NULL,
-  id varchar(64) NOT NULL default '',
-  objectType varchar(32) default 'SpecificationLink',
-  service varchar(64) NOT NULL default '',
-  serviceBinding varchar(64) NOT NULL default '',
-  specificationObject varchar(64) NOT NULL default '',
-  PRIMARY KEY  (id)
-) ENGINE=MyISAM DEFAULT CHARSET=latin1;
-
--- 
--- Dump dei dati per la tabella 'SpecificationLink'
+-- Dump dei dati per la tabella `Slot`
 -- 
 
 
 -- --------------------------------------------------------
 
 -- 
--- Struttura della tabella 'TelephoneNumber'
+-- Struttura della tabella `SpecificationLink`
 -- 
 
-CREATE TABLE TelephoneNumber (
-  areaCode varchar(4) default NULL,
-  countryCode varchar(4) default NULL,
-  extension varchar(8) default NULL,
-  number varchar(16) default NULL,
-  phoneType varchar(32) default NULL,
-  url varchar(255) default NULL,
-  parent varchar(64) NOT NULL default ''
+CREATE TABLE IF NOT EXISTS `SpecificationLink` (
+  `accessControlPolicy` varchar(64) default NULL,
+  `id` varchar(64) NOT NULL default '',
+  `objectType` varchar(32) default 'SpecificationLink',
+  `service` varchar(64) NOT NULL default '',
+  `serviceBinding` varchar(64) NOT NULL default '',
+  `specificationObject` varchar(64) NOT NULL default '',
+  PRIMARY KEY  (`id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=latin1;
 
 -- 
--- Dump dei dati per la tabella 'TelephoneNumber'
+-- Dump dei dati per la tabella `SpecificationLink`
 -- 
 
 
 -- --------------------------------------------------------
 
 -- 
--- Struttura della tabella 'typeCode'
+-- Struttura della tabella `TelephoneNumber`
 -- 
 
-CREATE TABLE typeCode (
+CREATE TABLE IF NOT EXISTS `TelephoneNumber` (
+  `areaCode` varchar(4) default NULL,
+  `countryCode` varchar(4) default NULL,
+  `extension` varchar(8) default NULL,
+  `number` varchar(16) default NULL,
+  `phoneType` varchar(32) default NULL,
+  `url` varchar(255) default NULL,
+  `parent` varchar(64) NOT NULL default ''
+) ENGINE=MyISAM DEFAULT CHARSET=latin1;
+
+-- 
+-- Dump dei dati per la tabella `TelephoneNumber`
+-- 
+
+
+-- --------------------------------------------------------
+
+-- 
+-- Struttura della tabella `typeCode`
+-- 
+
+CREATE TABLE IF NOT EXISTS `typeCode` (
   `code` varchar(255) NOT NULL default '',
-  display varchar(255) NOT NULL default '',
-  codingScheme varchar(255) NOT NULL default ''
+  `display` varchar(255) NOT NULL default '',
+  `codingScheme` varchar(255) NOT NULL default ''
 ) ENGINE=MyISAM DEFAULT CHARSET=latin1;
 
 -- 
--- Dump dei dati per la tabella 'typeCode'
+-- Dump dei dati per la tabella `typeCode`
 -- 
 
-INSERT INTO typeCode (code, display, codingScheme) VALUES 
+INSERT INTO `typeCode` (`code`, `display`, `codingScheme`) VALUES 
 ('34096-8', 'Nursing Home Comprehensive History and Physical Note', 'LOINC'),
 ('34121-4', 'Interventional Procedure Note', 'LOINC'),
 ('18743-5', 'Autopsy Note', 'LOINC'),
@@ -1114,77 +1111,77 @@ INSERT INTO typeCode (code, display, codingScheme) VALUES
 -- --------------------------------------------------------
 
 -- 
--- Struttura della tabella 'UsageDescription'
+-- Struttura della tabella `UsageDescription`
 -- 
 
-CREATE TABLE UsageDescription (
+CREATE TABLE IF NOT EXISTS `UsageDescription` (
   `charset` varchar(32) default NULL,
-  lang varchar(32) NOT NULL default '',
+  `lang` varchar(32) NOT NULL default '',
   `value` varchar(255) NOT NULL default '',
-  parent varchar(64) NOT NULL default '',
-  PRIMARY KEY  (parent,lang,`value`)
+  `parent` varchar(64) NOT NULL default '',
+  PRIMARY KEY  (`parent`,`lang`,`value`)
 ) ENGINE=MyISAM DEFAULT CHARSET=latin1;
 
 -- 
--- Dump dei dati per la tabella 'UsageDescription'
+-- Dump dei dati per la tabella `UsageDescription`
 -- 
 
 
 -- --------------------------------------------------------
 
 -- 
--- Struttura della tabella 'UsageParameter'
+-- Struttura della tabella `UsageParameter`
 -- 
 
-CREATE TABLE UsageParameter (
+CREATE TABLE IF NOT EXISTS `UsageParameter` (
   `value` varchar(255) NOT NULL default '',
-  parent varchar(64) NOT NULL default ''
+  `parent` varchar(64) NOT NULL default ''
 ) ENGINE=MyISAM DEFAULT CHARSET=latin1;
 
 -- 
--- Dump dei dati per la tabella 'UsageParameter'
+-- Dump dei dati per la tabella `UsageParameter`
 -- 
 
 
 -- --------------------------------------------------------
 
 -- 
--- Struttura della tabella 'USERS'
+-- Struttura della tabella `USERS`
 -- 
 
-CREATE TABLE USERS (
-  LOGIN varchar(30) NOT NULL default '',
+CREATE TABLE IF NOT EXISTS `USERS` (
+  `LOGIN` varchar(30) NOT NULL default '',
   `PASSWORD` varchar(50) NOT NULL default '',
-  PRIMARY KEY  (LOGIN)
+  PRIMARY KEY  (`LOGIN`)
 ) ENGINE=MyISAM DEFAULT CHARSET=latin1;
 
 -- 
--- Dump dei dati per la tabella 'USERS'
+-- Dump dei dati per la tabella `USERS`
 -- 
 
-INSERT INTO USERS (LOGIN, PASSWORD) VALUES 
+INSERT INTO `USERS` (`LOGIN`, `PASSWORD`) VALUES 
 ('marisxds', 'xdSwGC7.aBWxk');
 
 -- --------------------------------------------------------
 
 -- 
--- Struttura della tabella 'User_'
+-- Struttura della tabella `User_`
 -- 
 
-CREATE TABLE User_ (
-  accessControlPolicy varchar(64) default NULL,
-  id varchar(64) NOT NULL default '',
-  objectType varchar(32) default 'User',
-  email varchar(128) NOT NULL default '',
-  organization varchar(64) NOT NULL default '',
-  personName_firstName varchar(64) default NULL,
-  personName_middleName varchar(64) default NULL,
-  personName_lastName varchar(64) default NULL,
-  url varchar(255) default NULL,
-  PRIMARY KEY  (id)
+CREATE TABLE IF NOT EXISTS `User_` (
+  `accessControlPolicy` varchar(64) default NULL,
+  `id` varchar(64) NOT NULL default '',
+  `objectType` varchar(32) default 'User',
+  `email` varchar(128) NOT NULL default '',
+  `organization` varchar(64) NOT NULL default '',
+  `personName_firstName` varchar(64) default NULL,
+  `personName_middleName` varchar(64) default NULL,
+  `personName_lastName` varchar(64) default NULL,
+  `url` varchar(255) default NULL,
+  PRIMARY KEY  (`id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=latin1;
 
 -- 
--- Dump dei dati per la tabella 'User_'
+-- Dump dei dati per la tabella `User_`
 -- 
 

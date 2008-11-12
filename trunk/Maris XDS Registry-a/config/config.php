@@ -8,6 +8,6 @@
 # See the LICENSE files for details
 # ------------------------------------------------------------------------------------
 
-//$database="ORACLE";
-$database="MYSQL";
+//$database="oracle";
+$database="mysql";
 ?>

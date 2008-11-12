@@ -10,18 +10,15 @@
 ##### FILE DI CONFIGURAZIONE DEL REGISTRY
 
 //------------------- LOCAL REGISTRY HOST INFOS ------------------//
+require('./config/config.php');
+require('./lib/functions_'.$database.'.php');
 
 ### QUERY FOR HTTP kind of CONNECTION WITH REGISTRY (NORMAL or TLS)
 $http_con = "SELECT HTTPD FROM HTTP WHERE HTTP.ACTIVE = 'A'";
 
-include_once('./config/config.php');
-if($database=="MYSQL"){
-include_once('./lib/functions_QUERY_mysql.php');
-}
-else if($database=="ORACLE"){
-include_once('./lib/functions_oracle.php');
-}
-	$res_http = query_select($http_con);
+
+
+$res_http = query_select($http_con);
 
 ##### OTTENGO LE INFORMAZIONI SUL PROTOCOLLO
 $http = $res_http[0][0];
@@ -87,6 +84,11 @@ $ns_rim_path = "urn:oasis:names:tc:ebxml-regrep:rim:xsd:2.1";
 $ns_q = "q";
 $ns_q_path = "urn:oasis:names:tc:ebxml-regrep:query:xsd:2.1";
 
+$ns_rim3 = "rim";
+$ns_rim3_path = "urn:oasis:names:tc:ebxml-regrep:xsd:rim:3.0";
+$ns_q3 = "q";
+$ns_q3_path = "urn:oasis:names:tc:ebxml-regrep:xsd:query:3.0";
+
 ###### PER COSTRUIRE I MESSAGGI DI AUDIT ATNA
 $path_to_IMPORT = "./atna/message/DataImport.xml";
 $path_to_EXPORT = "./atna/message/DataExport.xml";
@@ -126,12 +128,14 @@ $logActive = $res_config[0][3];
 $log_path = "./log/";
 
 
+
+$java_path = $res_config[0][4];
+
 ####### NAV
 
 $get_NAV="SELECT * FROM NAV";
 
-//include_once('./lib/functions_QUERY_mysql.php');
-	$res_NAV = query_select($get_NAV);
+$res_NAV = query_select($get_NAV);
 
 
 

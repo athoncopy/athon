@@ -7,7 +7,7 @@
 # See the LICENSE files for details
 # ------------------------------------------------------------------------------------
 
-include_once('../config/registry_QUERY_mysql_db.php');
+include_once('../config/registry_mysql_db.php');
 
 ##### CREO L'OGGETTO DOM
 //$dom_initialize = domxml_open_file('../config/Initialize_05-Dec-2005_1315/initialize.xml');

@@ -8,13 +8,8 @@
 # ------------------------------------------------------------------------------------
 
 
-include_once('./config/config.php');
-if($database=="MYSQL"){
-include_once('./lib/functions_QUERY_mysql.php');
-}
-else if($database=="ORACLE"){
-include_once('./lib/functions_oracle.php');
-}
+require('./config/config.php');
+require('./lib/functions_'.$database.'.php');
 
 $autenticato = false;
 
@@ -115,6 +110,7 @@ $query_link="http://registry.ip".str_replace('setup.php', 'query.php',$script);
 else {
 $query_link="http://".$ip.str_replace('setup.php', 'query.php',$script); 
 }
+
 if($ip=="127.0.0.1" || $ip=="localhost"){
 $stored_query_link="http://registry.ip".str_replace('setup.php', 'storedquery.php',$script); 
 }
@@ -131,8 +127,9 @@ echo "The link to the registry you have to set in your software (XDS Repository)
 echo "<br><b>".$registry_link."</b><br><br>";
 echo "The link to the registry you have to set in your software for query (XDS Consumer) is:";
 echo "<br><b>".$query_link."</b><br><br>";
-echo "The link to the registry you have to set in your software for stored query (XDS Consumer) is:";
-echo "<br><b>".$stored_query_link."</b>";
+
+//echo "The link to the registry you have to set in your software for stored query (XDS Consumer) is:";
+//echo "<br><b>".$stored_query_link."</b>";
 
 
 
@@ -220,13 +217,14 @@ else if($REG_http_query=="TLS"){
   	</select><br></br>";
 	}
 */
-$get_REG_config="SELECT * FROM CONFIG";
+$get_REG_config="SELECT WWW,CACHE,PATIENTID,LOG,JAVA_PATH FROM CONFIG";
 $res_REG_config = query_select($get_REG_config);
 
 $REG_www = str_replace('setup.php','',$script);
 $REG_cache = $res_REG_config[0][1];
 $REG_PatientID = $res_REG_config[0][2];
 $REG_log= $res_REG_config[0][3];
+$REG_java = $res_REG_config[0][4];
 
 echo "<INPUT type=\"hidden\" name=\"registry_www\" value=\"$REG_www\" size=\"50\" maxlength=\"100\">";
 
@@ -328,6 +326,14 @@ else {
 
 echo "NAV e-mail from: <INPUT type=\"text\" name=\"registry_nav_from\" value=\"$REG_NAV_from\" size=\"20\" maxlength=\"50\"><br></br>";
 echo "NAV e-mail to: <INPUT type=\"text\" name=\"registry_nav_to\" value=\"$REG_NAV_to\" size=\"20\" maxlength=\"50\"><br></br>";
+
+
+#################### JAVA_PATH ###################
+
+echo "<h3>JAVA HOME</h3>";
+echo "JAVA_HOME could be /usr/lib/jvm/jre/bin/ or /usr/lib/jvm/java-xxx/bin/ or C:\\\\Programmi\\Java\\jre.xxx\\bin\\<br>";
+echo "<INPUT type=\"text\" name=\"registry_java_home\" value=\"$REG_java\" size=\"50\" maxlength=\"100\"><br></br>";
+
 
 echo "<INPUT type=\"Submit\" value=\"Update\"><br></br>";
 

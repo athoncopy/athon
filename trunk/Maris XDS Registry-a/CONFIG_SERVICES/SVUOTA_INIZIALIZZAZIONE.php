@@ -8,13 +8,8 @@
 # ------------------------------------------------------------------------------------
 
 ######UTILITY DI SVUOTAMENTO DELLA INIZIALIZZAZIONE DEL REGISTRY
-include_once('../config/config.php');
-if($database=="MYSQL"){
-include_once('../lib/functions_QUERY_mysql.php');
-}
-else if($database=="ORACLE"){
-include_once('../lib/functions_oracle.php');
-}
+require('../config/config.php');
+require('../lib/functions_'.$database.'.php');
 
 $query_ClassificationNode = "TRUNCATE TABLE ClassificationNode";
 $query_ClassificationScheme = "TRUNCATE TABLE ClassificationScheme";

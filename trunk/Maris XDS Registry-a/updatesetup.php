@@ -7,13 +7,8 @@
 # See the LICENSE files for details
 # ------------------------------------------------------------------------------------
 
-include_once('./config/config.php');
-if($database=="MYSQL"){
-include_once('./lib/functions_QUERY_mysql.php');
-}
-else if($database=="ORACLE"){
-include_once('./lib/functions_oracle.php');
-}
+require('./config/config.php');
+require('./lib/functions_'.$database.'.php');
 
 ############## HTTP ################
 
@@ -58,10 +53,11 @@ $REG_www = $_POST['registry_www'];
 $REG_cache = $_POST['registry_cache'];
 $REG_patient = $_POST['registry_patient'];
 $REG_log = $_POST['registry_log'];
+$REG_java_home = $_POST['registry_java_home'];
 
 $deleteREG_config = "DELETE FROM CONFIG";
 $REG_delete_config = query_exec($deleteREG_config);
-$insertREG_config = "INSERT INTO CONFIG (www,cache,patientid,log) VALUES ('$REG_www','$REG_cache','$REG_patient','$REG_log')";
+$insertREG_config = "INSERT INTO CONFIG (WWW,CACHE,PATIENTID,LOG,JAVA_PATH) VALUES ('$REG_www','$REG_cache','$REG_patient','$REG_log','$REG_java_home')";
 $REG_insert_config = query_exec($insertREG_config);
 
 
