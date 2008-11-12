@@ -12,9 +12,11 @@ ob_start();//OKKIO FONADAMENTALE!!!!!!!!!!
 ##### CONFIGURAZIONE DEL REPOSITORY
 include("config/REP_configuration.php");
 #######################################
-
 include($lib_path."utilities.php");
 include_once($lib_path."log.php");
+$system=PHP_OS;
+
+$windows=substr_count(strtoupper($system),"WIN");
 
 $idfile = idrandom_file();
 /*
@@ -101,7 +103,7 @@ include($lib_path.'mimeDecode.php');
 // $structure = $decode->decode($params); //struttura: oggetto
 //
 // $body = $structure->{'body'};
-
+/*
 #### PRIMA OCCORRENZA DELL'ENVELOPE SOAP
 if(strstr(strtoupper($input),"SOAP-ENV")){
 $body = substr($input,strpos(strtoupper($input),"<SOAP-ENV:ENVELOPE"));
@@ -116,7 +118,7 @@ $log->writeLogFile("RECEIVED:",1);
 $log->writeLogFile($body,0);
 
 
-$log->writeLogFileS($body,$idfile."-body-".$idfile,"N");
+$log->writeLogFileS($body,$idfile."-body-".$idfile,"N");*/
 
 
 $content_type = stristr($headers["Content-Type"],'boundary');
@@ -213,6 +215,23 @@ writeTimeFile($idfile."--Repository: Scrivo boundary");
 ###### CASO DI PRESENZA DI ATTACHMENTS
 if($boundary != "--")
 {
+//////////////////nuovo/////////////////////////
+#### PRIMA OCCORRENZA DELL'ENVELOPE SOAP
+if(strstr(strtoupper($input),"SOAP-ENV")){
+$body = substr($input,strpos(strtoupper($input),"<SOAP-ENV:ENVELOPE"));
+writeTimeFile($idfile."--Repository: trovato SOAP-ENV:ENVELOPE");
+}
+else if(strstr(strtoupper($input),"SOAPENV")){
+$body = substr($input,strpos(strtoupper($input),"<SOAPENV:ENVELOPE"));
+writeTimeFile($idfile."--Repository: trovato SOAPENV:ENVELOPE");
+}
+
+$log->writeLogFile("RECEIVED:",1);
+$log->writeLogFile($body,0);
+
+
+$log->writeLogFileS($body,$idfile."-body-".$idfile,"N");
+///////////////////////////////////////////
 
 #### ebXML IMBUSTATO SOAP
 $ebxml_imbustato_soap = rtrim(rtrim(substr($body,0,strpos($body,$boundary)),"\n"),"\r");
@@ -417,7 +436,7 @@ if(!empty($ExtrinsicObject_array))#### IMPORTANTE!!
 #### TERZA COSA: DEVO VALIDARE XDSDocumentEntry.uniqueId
 $UniqueId_valid_array = validate_XDSDocumentEntryUniqueId($dom_ebXML);
 
-writeTimeFile($idfile."--Repository: Verifico se il XDSDocumentEntryUniqueId è valido");
+writeTimeFile($idfile."--Repository: Verifico XDSDocumentEntryUniqueId");
 
 if(!$UniqueId_valid_array[0])
 {
@@ -578,7 +597,52 @@ for($o = 0 ; $o < (count($ExtrinsicObject_array)) ; $o++)
 ### SALVATAGGIO DELL'ALLEGATO SU FILESYSTEM
 
 	#### ORA DEVO ANDARE SUL FILE Body PER SALVARE L' ALLEGATO
-	$contentID_UP=strtoupper("Content-ID: <$ExtrinsicObject_id_attr>");
+
+	// Qui va gestito un errore (potrebbe essere Content-ID: <$ExtrinsicObject_id_attr)
+
+$contentID_UP=strtoupper("Content-ID: <$ExtrinsicObject_id_attr>");
+if(!strpos(strtoupper($body),$contentID_UP))#### IMPORTANTE!!
+{
+#### QUINTA COSA: DEVO VERIFICARE CHE Content-ID sia corretto
+writeTimeFile($idfile."--Repository: In Content-ID non e formattato bene");
+
+         //RESTITUISCE IL MESSAGGIO DI ERRORE
+	$advertise = "\nThe Content-ID is not correctly set\n";
+	$failure_response = makeSoapedFailureResponse($advertise,$logentry);
+
+	$log->writeLogFile("SENT:",1);
+	$log->writeLogFile($failure_response,0);
+	$file_written4 = $log->writeLogFileS($failure_response,$idfile."-content-id_failure_response-".$idfile,"M");
+
+	//PULISCO IL BUFFER DI USCITA
+	ob_get_clean();//OKKIO FONDAMENTALE!!!!!
+
+	//HEADERS
+	header("HTTP/1.1 200 OK");
+	header("Path: $www_REP_path");
+	header("Content-Type: text/xml;charset=UTF-8");
+	header("Content-Length: ".(string)filesize($file_written3));
+	//CONTENUTO DEL FILE DI RISPOSTA
+	if($file4 = fopen($file_written4, 'rb'))
+	{
+   		while((!feof($file4)) && (connection_status()==0))
+   		{
+     			print(fread($file4, 1024*8));
+      			flush();//NOTA BENE!!!!!!!!!
+   		}
+
+   		fclose($file4);
+	}
+
+	//SPEDISCO E PULISCO IL BUFFER DI USCITA
+	ob_end_flush();
+	//BLOCCO L'ESECUZIONE DELLO SCRIPT
+	exit;
+}//FINE if($conta_boundary==$conta_EO)
+
+
+
+	
 	$allegato_STRING_2 = substr($body,(strpos(strtoupper($body),$contentID_UP)+strlen($contentID_UP)),(strpos($body,$boundary,(strpos(strtoupper($body),$contentID_UP)))-strpos(strtoupper($body),$contentID_UP)-strlen($contentID_UP)));
 	/*if(strpos($body,"Content-ID: <$ExtrinsicObject_id_attr>")){
 	$content_id = "Content-ID: <$ExtrinsicObject_id_attr>";
@@ -855,6 +919,18 @@ fclose($fp_da_registry);
 $da_registry = $registry_response_arr[0];//Stringa
 
 
+// Se la risposta del registry è errata cancello il documento creato nel repository
+if(strpos(strtoupper($da_registry),"ERROR")||strpos(strtoupper($da_registry),"FAILURE")){
+	if ($windows>0) {
+		exec('del '.$document_URI2.' /q');	
+		}
+	else {	
+		exec('rm -f '.$document_URI2);
+		}
+
+	$deleteDocument="DELETE FROM DOCUMENTS WHERE KEY_PROG = $next_token";
+		$res_delete = query_execute($deleteDocument);
+}
 
 #### XML RICEVUTO IN RISPOSTA DAL REGISTRY
 $body = trim((substr($da_registry,strpos($da_registry,"<SOAP-ENV:Envelope"))));
@@ -951,9 +1027,7 @@ unset($_SESSION['logActive']);
 unset($_SESSION['log_query_path']);
 
 //PULISCO LA CACHE TEMPORANEA
-$system=PHP_OS;
 
-$windows=substr_count(strtoupper($system),"WIN");
 
 
 if($clean_cache=="A")

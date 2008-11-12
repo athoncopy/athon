@@ -11,9 +11,9 @@
 # hostname
   $ip = 'localhost';
 # user name
-  $user_db = 'xds';
+  $user_db = 'marco';
 # password
-  $password_db = 'xds';
+  $password_db = 'marco';
 # database name
-  $db_name = 'XDS_REPOSITORY';
+  $db_name = 'XDS_REP_ORACLE';
 ?>

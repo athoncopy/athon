@@ -6,7 +6,6 @@
 # This program is distributed under the terms and conditions of the GPL
 # See the LICENSE files for details
 # ------------------------------------------------------------------------------------
-
 include_once('./config/config.php');
 if($database=="MYSQL"){
 include_once('./lib/functions_mysql.php');
