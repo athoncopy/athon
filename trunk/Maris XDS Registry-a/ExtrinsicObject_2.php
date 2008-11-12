@@ -11,7 +11,7 @@
 writeSQLQuery('-------------------------------------------------------------------------------------');
 writeSQLQuery('ExtrinsicObject_2.php');
 ##### METODO PRINCIPALE
-function fill_ExtrinsicObject_tables($dom)
+function fill_ExtrinsicObject_tables($dom,$connessione)
 {
 	#### LANGUAGECODE DI DEFAULT
 	$lang="it-it";
@@ -63,8 +63,8 @@ function fill_ExtrinsicObject_tables($dom)
 	{
 		#### DEVO CERCARE NEL DB: INITIALIZE
 		$query_for_objectType="SELECT id FROM ClassificationNode WHERE ClassificationNode.code = 'XDSDocumentEntry'";
-		$res = query_select($query_for_objectType);
-		writeSQLQuery($query_for_objectType);
+		$res = query_select2($query_for_objectType,$connessione);
+		writeSQLQuery($res.": ".$query_for_objectType);
 		$value_objectType = $res[0][0];
 	}
         $value_expiration = $ExtrinsicObject_node->get_attribute('expiration');
@@ -146,13 +146,9 @@ $INSERT_INTO_ExtrinsicObject = "INSERT INTO ExtrinsicObject
 VALUES 
 ('".trim($DB_array_extrinsicobject_attributes['id'])."','".trim($DB_array_extrinsicobject_attributes['accessControlPolicy'])."','".trim($DB_array_extrinsicobject_attributes['objectType'])."',".trim($DB_array_extrinsicobject_attributes['expiration']).",'".trim($DB_array_extrinsicobject_attributes['majorVersion'])."','".trim($DB_array_extrinsicobject_attributes['minorVersion'])."','".trim($DB_array_extrinsicobject_attributes['stability'])."','".trim($DB_array_extrinsicobject_attributes['status'])."','".trim($DB_array_extrinsicobject_attributes['userVersion'])."','".trim($DB_array_extrinsicobject_attributes['isOpaque'])."','".trim($DB_array_extrinsicobject_attributes['mimeType'])."')";
 
-writeSQLQuery($INSERT_INTO_ExtrinsicObject);
-			
-	/*$fp_INSERT_INTO_ExtrinsicObject = fopen("tmpQuery/INSERT_INTO_ExtrinsicObject","w+");
-		fwrite($fp_INSERT_INTO_ExtrinsicObject,$INSERT_INTO_ExtrinsicObject);
-	fclose($fp_INSERT_INTO_ExtrinsicObject);*/
-	
-	$ris = query_exec($INSERT_INTO_ExtrinsicObject);
+		
+	$ris = query_exec2($INSERT_INTO_ExtrinsicObject,$connessione);
+	writeSQLQuery($ris.": ".$INSERT_INTO_ExtrinsicObject);
 
 ############## FINE RECUPERO TUTTI GLI ATTRIBUTI DEL NODO EXTRINSICOBJECT
 
@@ -206,69 +202,47 @@ writeSQLQuery($INSERT_INTO_ExtrinsicObject);
 				if($slot_child_node_tagname=='ValueList')
 				{
 					$valuelist_node = $slot_child_node;
-				//print_r($valuelist_node);
 					$valuelist_child_nodes = $valuelist_node->child_nodes();
-				//print_r($valuelist_child_nodes);
-					## UN SOLO VALUE
-					if(count($valuelist_child_nodes)==3)
-					{
-					  $value_node = $valuelist_child_nodes[1];
-					  $value_value = $value_node->get_content();
-					  $DB_array_slot_attributes['value'] = $value_value;
-
-					  #### LANGUAGE CODE
-					  if(strtoupper($value_name)=="LANGUAGECODE")
-					  {
-						### LANG
-						$lang=$value_value;
-
-						$update_Name_lang="UPDATE Name SET Name.lang = '$lang' WHERE Name.parent = '$value_ExtrinsicObject_id'";
-
-						$update_Description_lang="UPDATE Description SET Description.lang = '$lang' WHERE Description.parent = '$value_ExtrinsicObject_id'";
-
-						$rs = query_exec($update_Name_lang);
-						$rs = query_exec($update_Description_lang);
-
-					  }//SALVO LA LINGUA
-
-					  ##### SONO PRONTO A SCRIVERE NEL DB
-					  $INSERT_INTO_Slot = "INSERT INTO Slot (name,slotType,value,parent) VALUES ('".trim($DB_array_slot_attributes['name'])."','".trim($DB_array_slot_attributes['slotType'])."','".trim(adjustString($DB_array_slot_attributes['value']))."','".trim($DB_array_slot_attributes['parent'])."')";
-
-					  writeSQLQuery($INSERT_INTO_Slot);
-		$fp_INSERT_INTO_Slot = fopen("tmpQuery/INSERT_INTO_Slot","a+");
-			fwrite($fp_INSERT_INTO_Slot,$INSERT_INTO_Slot);
-		fclose($fp_INSERT_INTO_Slot);
 	
-			$ris = query_exec($INSERT_INTO_Slot);
-						
-					 }//END OF if(count($valuelist_child_nodes)==3)
-				else  //CASO NUMERO VALUE > 1
-				{
-				for($r=0;$r<count($valuelist_child_nodes);$r++)
-				{
-					$value_node=$valuelist_child_nodes[$r];
-					$value_node_tagname=$value_node->node_name();
-					if($value_node_tagname=='Value')
+					for($r=0;$r<count($valuelist_child_nodes);$r++)
 					{
-					  $value_value = $value_node->get_content();
-					  $DB_array_slot_attributes['value'] = $value_value;
+						$value_node=$valuelist_child_nodes[$r];
+						$value_node_tagname=$value_node->node_name();
+						if($value_node_tagname=='Value')
+						{
+					 		$value_value = $value_node->get_content();
+					  		$DB_array_slot_attributes['value'] = $value_value;
 
-					   ##### SONO PRONTO A SCRIVERE NEL DB
-					  $INSERT_INTO_Slot = "INSERT INTO Slot (name,slotType,value,parent) VALUES ('".trim($DB_array_slot_attributes['name'])."','".trim($DB_array_slot_attributes['slotType'])."','".trim(adjustString($DB_array_slot_attributes['value']))."','".trim($DB_array_slot_attributes['parent'])."')";
 
-					  writeSQLQuery($INSERT_INTO_Slot);	
+							#### LANGUAGE CODE
+					  		if(strtoupper($value_name)=="LANGUAGECODE")
+					  		{
+							### LANG
+							$lang=$value_value;
 
-		if (trim($DB_array_slot_attributes['name'])=='sourcePatientInfo' && substr_count(trim(adjustString($DB_array_slot_attributes['value'])),'PID-5')>0){
-			$atna_patient_value=trim(adjustString($DB_array_slot_attributes['value']));
-			}
-			$ris = query_exec($INSERT_INTO_Slot);
+							$update_Name_lang="UPDATE Name SET Name.lang = '$lang' WHERE Name.parent = '$value_ExtrinsicObject_id'";
 
+							$update_Description_lang="UPDATE Description SET Description.lang = '$lang' WHERE Description.parent = '$value_ExtrinsicObject_id'";
+
+							$rs = query_exec2($update_Name_lang,$connessione);
+							$rs = query_exec2($update_Description_lang,$connessione);
+
+					  		}//SALVO LA LINGUA
+
+
+					   		##### SONO PRONTO A SCRIVERE NEL DB
+					  		$INSERT_INTO_Slot = "INSERT INTO Slot (name,slotType,value,parent) VALUES ('".trim($DB_array_slot_attributes['name'])."','".trim($DB_array_slot_attributes['slotType'])."','".trim(adjustString($DB_array_slot_attributes['value']))."','".trim($DB_array_slot_attributes['parent'])."')";
+
+							if (trim($DB_array_slot_attributes['name'])=='sourcePatientInfo' && substr_count(trim(adjustString($DB_array_slot_attributes['value'])),'PID-5')>0){
+							$atna_patient_value=trim(adjustString($DB_array_slot_attributes['value']));
+							}
+							$ris = query_exec2($INSERT_INTO_Slot,$connessione);
+							writeSQLQuery($ris.": ".$INSERT_INTO_Slot);
+
+						}
 					}
 				}
-
-				}//FINE ELSE
 			}
-		}
 
 		}//END OF if($ExtrinsicObject_child_node_tagname == 'Slot')
 ########## NODO SLOT
@@ -317,13 +291,9 @@ writeSQLQuery($INSERT_INTO_ExtrinsicObject);
 		##### SONO PRONTO A SCRIVERE NEL DB
         	$INSERT_INTO_Name = "INSERT INTO Name (charset,lang,value,parent) VALUES ('".trim($DB_array_name['charset'])."','".trim($DB_array_name['lang'])."','".trim(adjustString($DB_array_name['value']))."','".trim($DB_array_name['parent'])."')";
 
-		writeSQLQuery($INSERT_INTO_Name);
-
-		$fp_INSERT_INTO_Name = fopen("tmpQuery/INSERT_INTO_Name","w+");
-		fwrite($fp_INSERT_INTO_Name,$INSERT_INTO_Name);
-		fclose($fp_INSERT_INTO_Name);
-	
-			$ris = query_exec($INSERT_INTO_Name);
+		
+		$ris = query_exec2($INSERT_INTO_Name,$connessione);
+		writeSQLQuery($ris.": ".$INSERT_INTO_Name);
 
 		}//END OF if($ExtrinsicObject_child_node_tagname == 'Name')
 ######## NODO NAME
@@ -380,14 +350,9 @@ writeSQLQuery($INSERT_INTO_ExtrinsicObject);
 		##### SONO PRONTO A SCRIVERE NEL DB
         	$INSERT_INTO_Description = "INSERT INTO Description (charset,lang,value,parent) VALUES ('".trim($DB_array_description['charset'])."','".trim($DB_array_description['lang'])."','".trim(adjustString($DB_array_description['value']))."','".trim($DB_array_description['parent'])."')";
 
-		writeSQLQuery($INSERT_INTO_Description);
-
-		$fp_INSERT_INTO_Description = fopen("tmpQuery/INSERT_INTO_Description","w+");
-		fwrite($fp_INSERT_INTO_Description,$INSERT_INTO_Description);
-		fclose($fp_INSERT_INTO_Description);
-	
-			$ris = query_exec($INSERT_INTO_Description);
-
+		
+		$ris = query_exec2($INSERT_INTO_Description,$connessione);
+		writeSQLQuery($ris.": ".$INSERT_INTO_Description);
 		}//END OF if($ExtrinsicObject_child_node_tagname == 'Description')
 ######### NODO DESCRIPTION
 		
@@ -430,28 +395,29 @@ writeSQLQuery($INSERT_INTO_ExtrinsicObject);
 			if($value_classificationNode == '')
 			{
 				$queryForName_value="SELECT Name_value FROM ClassificationScheme WHERE ClassificationScheme.id = '$value_classificationScheme'";
-				writeSQLQuery($queryForName_value);
-				$risName_value=query_select($queryForName_value);
+				$risName_value=query_select2($queryForName_value,$connessione);
+				writeSQLQuery($risName_value.": ".$queryForName_value);
 				$name_value=$risName_value[0][0];
 				$name_value=substr($name_value,0,strpos($name_value,'.'));
 
 				$queryForClassificationNode="SELECT id FROM ClassificationNode WHERE ClassificationNode.code = '$name_value'";
-				$ris_code=query_select($queryForClassificationNode);
+				$ris_code=query_select2($queryForClassificationNode,$connessione);
 
 				$value_classificationNode=$ris_code[0][0];
 			}
 			if($value_classificationScheme == '')
 			{
 			$queryForClassificationNode="SELECT code FROM ClassificationNode WHERE ClassificationNode.id = '$value_classificationNode'";
-			writeSQLQuery($queryForClassificationNode);
-			$ris_classificationNode = query_select($queryForClassificationNode);
+			writeSQLQuery($ris.": ".$queryForClassificationNode);
+			$ris_classificationNode = query_select2($queryForClassificationNode,$connessione);
 			$code_classificationNode = $ris_classificationNode[0][0];
 			#### FOLDER
 			if($code_classificationNode=="XDSFolder")
 			{
 				$queryForClassificationScheme="SELECT id FROM ClassificationScheme WHERE ClassificationScheme.Name_value = 'XDSFolder.codeList'";
-				writeSQLQuery($queryForClassificationScheme);
-				$ris_ClassificationScheme=query_select($queryForClassificationScheme);
+				$ris_ClassificationScheme=query_select2($queryForClassificationScheme,$connessione);
+				writeSQLQuery($ris_ClassificationScheme.": ".$queryForClassificationScheme);
+				
 
 				$value_classificationScheme=$ris_ClassificationScheme[0][0];
 				
@@ -460,8 +426,8 @@ writeSQLQuery($INSERT_INTO_ExtrinsicObject);
 			else if($code_classificationNode=="XDSSubmissionSet")
 			{
 				$queryForClassificationScheme="SELECT id FROM ClassificationScheme WHERE ClassificationScheme.Name_value = 'XDSSubmissionSet.contentTypeCode'";
-				writeSQLQuery($queryForClassificationScheme);
-				$ris_ClassificationScheme=query_select($queryForClassificationScheme);
+				$ris_ClassificationScheme=query_select2($queryForClassificationScheme,$connessione);
+				writeSQLQuery($ris_ClassificationScheme.": ".$queryForClassificationScheme);
 
 				$value_classificationScheme=$ris_ClassificationScheme[0][0];
 
@@ -486,12 +452,9 @@ writeSQLQuery($INSERT_INTO_ExtrinsicObject);
 			//print_r($DB_array_classification_attributes);
 			##### SONO PRONTO A SCRIVERE NEL DB
 			$INSERT_INTO_Classification = "INSERT INTO Classification (id,accessControlPolicy,objectType,classificationNode,classificationScheme,classifiedObject,nodeRepresentation) VALUES ('".trim($DB_array_classification_attributes['id'])."','".trim($DB_array_classification_attributes['accessControlPolicy'])."','".trim($DB_array_classification_attributes['objectType'])."','".trim($DB_array_classification_attributes['classificationNode'])."','".trim($DB_array_classification_attributes['classificationScheme'])."','".trim($DB_array_classification_attributes['classifiedObject'])."','".trim($DB_array_classification_attributes['nodeRepresentation'])."')";
-			writeSQLQuery($INSERT_INTO_Classification);
-			/*$fp = fopen("tmpQuery/INSERT_INTO_Classification","w+");
-    			fwrite($fp,$INSERT_INTO_Classification);
-			fclose($fp);*/
 			
-			$ris = query_exec($INSERT_INTO_Classification);
+			$ris = query_exec2($INSERT_INTO_Classification,$connessione);
+			writeSQLQuery($ris.": ".$INSERT_INTO_Classification);
 
 		#### NODI FIGLI DI CLASSIFICATION
 		$classification_child_nodes = $classification_node->child_nodes();
@@ -542,12 +505,9 @@ writeSQLQuery($INSERT_INTO_ExtrinsicObject);
 		//print_r($DB_array_name);
 		##### SONO PRONTO A SCRIVERE NEL DB
         	$INSERT_INTO_Name = "INSERT INTO Name (charset,lang,value,parent) VALUES ('".trim($DB_array_name['charset'])."','".trim($DB_array_name['lang'])."','".trim(adjustString($DB_array_name['value']))."','".trim($DB_array_name['parent'])."')";
-		writeSQLQuery($INSERT_INTO_Name);
-		/*$fp_INSERT_INTO_Name = fopen("tmpQuery/INSERT_INTO_Name","w+");
-		fwrite($fp_INSERT_INTO_Name,$INSERT_INTO_Name);
-		fclose($fp_INSERT_INTO_Name);*/
-	
-		$ris = query_exec($INSERT_INTO_Name);
+		
+		$ris = query_exec2($INSERT_INTO_Name,$connessione);
+		writeSQLQuery($ris.": ".$INSERT_INTO_Name);
 
 		}//END OF if($classification_child_node_tagname=='Name')
 		}//END of for child_nodes
@@ -557,10 +517,6 @@ writeSQLQuery($INSERT_INTO_ExtrinsicObject);
 
 		for($sl = 0;$sl < count($classification_child_nodes);$sl++)
 			{
-
-			$fp_conta_nodi_slot = fopen("tmpQuery/ContaNodi","a+");
-			fwrite($fp_conta_nodi_slot,$sl."\n");
-			fclose($fp_conta_nodi_slot);
 
 			$classification_child_node = $classification_child_nodes[$sl];
 			$classification_child_node_tagname = $classification_child_node->node_name();
@@ -596,62 +552,31 @@ writeSQLQuery($INSERT_INTO_ExtrinsicObject);
 				if($slot_child_node_tagname=='ValueList')
 				{
 					$valuelist_node = $slot_child_node;
-				//print_r($valuelist_node);
 					$valuelist_child_nodes = $valuelist_node->child_nodes();
-				//print_r($valuelist_child_nodes);
-					//UN SOLO VALUE
-					if(count($valuelist_child_nodes)==3)
-					{
-					  $value_node = $valuelist_child_nodes[1];
-					  $value_value = $value_node->get_content();
-					  $DB_array_slot_attributes['value'] = $value_value;
-					//print_r($DB_array_slot_attributes);
-					  ##### SONO PRONTO A SCRIVERE NEL DB
-					  $INSERT_INTO_Slot = "INSERT INTO Slot (name,slotType,value,parent) VALUES ('".trim($DB_array_slot_attributes['name'])."','".trim($DB_array_slot_attributes['slotType'])."','".trim(adjustString($DB_array_slot_attributes['value']))."','".trim($DB_array_slot_attributes['parent'])."')";
 
-					  writeSQLQuery($INSERT_INTO_Slot);
-			//$fp_INSERT_INTO_Slot = fopen("tmpQuery/INSERT_INTO_Slot","a+");
-			//fwrite($fp_INSERT_INTO_Slot,$INSERT_INTO_Slot);
-			//fclose($fp_INSERT_INTO_Slot);
-	
-			$ris = query_exec($INSERT_INTO_Slot);
-						
-					}//END OF if(count($valuelist_child_nodes)==3)
-				else  //CASO NUMERO VALUE > 1
-				{
-				for($r=0;$r<count($valuelist_child_nodes);$r++)
-				{
-					$value_node=$valuelist_child_nodes[$r];
-					$value_node_tagname=$value_node->node_name();
-					if($value_node_tagname=='Value')
+					for($r=0;$r<count($valuelist_child_nodes);$r++)
 					{
-					  $value_value = $value_node->get_content();
-					  $DB_array_slot_attributes['value'] = $value_value;
-					//print_r($DB_array_slot_attributes);
-					   ##### SONO PRONTO A SCRIVERE NEL DB
-					  $INSERT_INTO_Slot = "INSERT INTO Slot (name,slotType,value,parent) VALUES ('".trim($DB_array_slot_attributes['name'])."','".trim($DB_array_slot_attributes['slotType'])."','".trim(adjustString($DB_array_slot_attributes['value']))."','".trim($DB_array_slot_attributes['parent'])."')";
-					  writeSQLQuery($INSERT_INTO_Slot);
-
-			//$fp_INSERT_INTO_Slot = fopen("tmpQuery/INSERT_INTO_Slot","w+");
-			//fwrite($fp_INSERT_INTO_Slot,$INSERT_INTO_Slot);
-			//fclose($fp_INSERT_INTO_Slot);
-	
-			$ris = query_exec($INSERT_INTO_Slot);
+						$value_node=$valuelist_child_nodes[$r];
+						$value_node_tagname=$value_node->node_name();
+						if($value_node_tagname=='Value')
+						{
+					  		$value_value = $value_node->get_content();
+					  		$DB_array_slot_attributes['value'] = $value_value;
+					   		##### SONO PRONTO A SCRIVERE NEL DB
+					 		$INSERT_INTO_Slot = "INSERT INTO Slot (name,slotType,value,parent) VALUES ('".trim($DB_array_slot_attributes['name'])."','".trim($DB_array_slot_attributes['slotType'])."','".trim(adjustString($DB_array_slot_attributes['value']))."','".trim($DB_array_slot_attributes['parent'])."')";
+					  
+							$ris = query_exec2($INSERT_INTO_Slot,$connessione);
+							writeSQLQuery($ris.": ".$INSERT_INTO_Slot);
+						}
 					}
-				}
-
-				}//FINE ELSE
-					
+				
 
 				}
 			}
 			
-			}//END OF if($classification_child_node_tagname=='Slot')
+		}//END OF if($classification_child_node_tagname=='Slot')
 
-
-
-
-			}//Fine for per Slot
+		}//Fine for per Slot
 		//}//Fine else per Slot
 
 
@@ -708,13 +633,9 @@ writeSQLQuery($INSERT_INTO_ExtrinsicObject);
 			//print_r($DB_array_externalidentifier_attributes);
 			##### SONO PRONTO A SCRIVERE NEL DB
 			$INSERT_INTO_ExternalIdentifier = "INSERT INTO ExternalIdentifier (id,accessControlPolicy,objectType,registryObject,identificationScheme,value) VALUES ('".trim($DB_array_externalidentifier_attributes['id'])."','".trim($DB_array_externalidentifier_attributes['accessControlPolicy'])."','".trim($DB_array_externalidentifier_attributes['objectType'])."','".trim($DB_array_externalidentifier_attributes['registryObject'])."','".trim($DB_array_externalidentifier_attributes['identificationScheme'])."','".trim(adjustString($DB_array_externalidentifier_attributes['value']))."')";
-			writeSQLQuery($INSERT_INTO_ExternalIdentifier);
 
-			//$fp = fopen("tmpQuery/INSERT_INTO_ExternalIdentifier","w+");
-    			//fwrite($fp,$INSERT_INTO_ExternalIdentifier);
-			//fclose($fp);
-			
-			$ris = query_exec($INSERT_INTO_ExternalIdentifier);
+			$ris = query_exec2($INSERT_INTO_ExternalIdentifier,$connessione);
+			writeSQLQuery($ris.": ".$INSERT_INTO_ExternalIdentifier);
 
 			#### NODI FIGLI DI EXTERNALIDENTIFIER
 			$externalidentifier_child_nodes = $externalidentifier_node->child_nodes();
@@ -766,14 +687,14 @@ writeSQLQuery($INSERT_INTO_ExtrinsicObject);
 		//print_r($DB_array_name);
 		##### SONO PRONTO A SCRIVERE NEL DB
         	$INSERT_INTO_Name = "INSERT INTO Name (charset,lang,value,parent) VALUES ('".trim($DB_array_name['charset'])."','".trim($DB_array_name['lang'])."','".trim(adjustString($DB_array_name['value']))."','".trim($DB_array_name['parent'])."')";
-		writeSQLQuery($INSERT_INTO_Name);
+		
 
 		//$fp_INSERT_INTO_Name = fopen("tmpQuery/INSERT_INTO_Name","w+");
 		//fwrite($fp_INSERT_INTO_Name,$INSERT_INTO_Name);
 		//fclose($fp_INSERT_INTO_Name);
 	
-		$ris = query_exec($INSERT_INTO_Name);	
-			
+		$ris = query_exec2($INSERT_INTO_Name,$connessione);	
+		writeSQLQuery($ris.": ".$INSERT_INTO_Name);	
 		}//END OF if($ExtrinsicObject_child_node_tagname=='ExternalIdentifier')
 
 	}//END OF for($k=0;$k<count($ExtrinsicObject_child_nodes);$k++)
@@ -782,8 +703,8 @@ writeSQLQuery($INSERT_INTO_ExtrinsicObject);
 
 ######## AGGIORNO IL CONTATORE
 	$UPDATE_counters = "UPDATE Counters SET id = id + 1";
-		query_exec($UPDATE_counters);
-		writeSQLQuery($UPDATE_counters);
+		$ris=query_exec2($UPDATE_counters,$connessione);
+		writeSQLQuery($ris.": ".$UPDATE_counters);
 	}//END OF for($index=0;$index<(count($dom_ebXML_ExtrinsicObject_node_array));$index++)
 	}
 

@@ -140,16 +140,16 @@ function makeSoapEnvelope($stringToSoap,$logentry)
 
 //== PER IMBUSTARE SOAP UNA STRINGA PASSATA ==//
 
-function makeSoapedFailureResponse($advertise,$logentry)
+function makeSoapedFailureResponse($advertise,$errorcode)
 {
 	$response = "<SOAP-ENV:Envelope xmlns:SOAP-ENV=\"http://schemas.xmlsoap.org/soap/envelope/\">
 	<SOAP-ENV:Body>
 	      <RegistryResponse status=\"Failure\" xmlns=\"urn:oasis:names:tc:ebxml-regrep:registry:xsd:2.1\">
-	      		<RegistryErrorList>
-				<RegistryError codeContext=\"\" errorCode=\"Unknown\" severity=\"Error\">
-				$advertise
-	      			</RegistryError> 
-	      		</RegistryErrorList>
+	      		<RegistryErrorList>";
+			for($i=0;$i<count($errorcode);$i++){
+			$response .= "\r<RegistryError codeContext=\"".$advertise[$i]."\" errorCode=\"".$errorcode[$i]."\" severity=\"Error\"/>";
+			}
+	  $response .="</RegistryErrorList>
 	      </RegistryResponse>
 	</SOAP-ENV:Body>
 </SOAP-ENV:Envelope>";
@@ -197,50 +197,61 @@ function makeSoapedSuccessQueryResponse($logentry,$QueryResult)
 
 #### PER LE RISPOSTE ALLE STORED QUERY
 #### RICEVE IN INGRESSO <SQLQueryResult>      </SQLQueryResult>
-function makeSoapedSuccessStoredQueryResponse($logentry,$QueryResult)	
+function makeSoapedSuccessStoredQueryResponse($action,$docid,$QueryResult)	
 {
 
-
-	$success_query_response = "<SOAP-ENV:Envelope xmlns:SOAP-ENV=\"http://schemas.xmlsoap.org/soap/envelope/\">
-	<SOAP-ENV:Header>
-		<xdsheader SOAP-ENV:mustUnderstand=\"0\">
-			<logentry url=$logentry/>
-		</xdsheader>
-	</SOAP-ENV:Header>
-	<SOAP-ENV:Body>
-	<AdhocQueryResponse xmlns:xsi=\"http://www.w3.org/2001/XMLSchemainstance\" 
-	xsi:schemaLocation=\"urn:oasis:names:tc:ebxml-regrep:xsd:query:3.0 ../schema/ebRS/query.xsd\"
-		xmlns=\"urn:oasis:names:tc:ebxml-regrep:xsd:query:3.0\"
-		xmlns:rim=\"urn:oasis:names:tc:ebxml-regrep:xsd:rim:3.0\"
-		status=\"Success\">
-		<rim:RegistryObjectList>
+	$success_query_response ="<?xml version='1.0' encoding='UTF-8'?>\r\n<SOAP-ENV:Envelope xmlns:SOAP-ENV=\"http://schemas.xmlsoap.org/soap/envelope/\" xmlns:wsa=\"http://www.w3.org/2005/08/addressing\"><SOAP-ENV:Header>";
+	if($action!=""){
+		$success_query_response .="<wsa:Action>".$action."Response</wsa:Action>";
+	}
+    	if($docid!=""){
+		$success_query_response .="<wsa:RelatesTo>".$docid."</wsa:RelatesTo>";
+	}
+  	$success_query_response .="</SOAP-ENV:Header>
+  	<SOAP-ENV:Body>
+        <query:AdhocQueryResponse xmlns:query=\"urn:oasis:names:tc:ebxml-regrep:xsd:query:3.0\"
+            status=\"urn:oasis:names:tc:ebxml-regrep:ResponseStatusType:Success\">
+           	<rim:RegistryObjectList xmlns:rim=\"urn:oasis:names:tc:ebxml-regrep:xsd:rim:3.0\">
 		$QueryResult
 		</rim:RegistryObjectList>
-	</AdhocQueryResponse>
-	</SOAP-ENV:Body>
+        </query:AdhocQueryResponse>
+  	</SOAP-ENV:Body>
 	</SOAP-ENV:Envelope>";
-
-/*<?xml version=\"1.0\" encoding=\"UTF-8\"?>*/
-	/*$success_query_response = "<SOAP-ENV:Envelope xmlns:SOAP-ENV=\"http://schemas.xmlsoap.org/soap/envelope/\">
-	<SOAP-ENV:Header>
-		<xdsheader SOAP-ENV:mustUnderstand=\"0\">
-			<logentry url=$logentry/>
-		</xdsheader>
-	</SOAP-ENV:Header>
-	<SOAP-ENV:Body>
-		<RegistryResponse 
-   		status=\"Success\" 
-   		xmlns=\"urn:oasis:names:tc:ebxml-regrep:registry:xsd:2.1\">
-			<AdhocQueryResponse xmlns=\"urn:oasis:names:tc:ebxml-regrep:query:xsd:2.1\">
-			<SQLQueryResult>$QueryResult</SQLQueryResult>
-			</AdhocQueryResponse>
-		</RegistryResponse>
-	</SOAP-ENV:Body>
-	</SOAP-ENV:Envelope>";*/
 
 	return $success_query_response;
 
 }//END OF makeSoapedSuccessQueryResponse($logentry,$AdhocQueryResponse)
+
+
+
+function makeSoapedFailureStoredQueryResponse($failure_response,$errorcode,$action,$docid)
+{
+
+	$response ="<SOAP-ENV:Envelope xmlns:SOAP-ENV=\"http://schemas.xmlsoap.org/soap/envelope/\" xmlns:wsa=\"http://www.w3.org/2005/08/addressing\">
+  	<SOAP-ENV:Header>";
+	if($action!=""){
+		$success_query_response .="<wsa:Action>".$action."Response</wsa:Action>";
+	}
+    	if($docid!=""){
+		$success_query_response .="<wsa:RelatesTo>".$docid."</wsa:RelatesTo>";
+	}
+  	$success_query_response .="</SOAP-ENV:Header>
+  	<SOAP-ENV:Body>
+    	 <query:AdhocQueryResponse xmlns:query=\"urn:oasis:names:tc:ebxml-regrep:xsd:query:3.0\" 		
+		status=\"urn:oasis:names:tc:ebxml-regrep:ResponseStatusType:Failure\">
+		<rim:RegistryObjectList xmlns:rim=\"urn:oasis:names:tc:ebxml-regrep:xsd:rim:3.0\">";
+		/*for($i=0;$i<count($action);$i++){
+		$response .="<RegistryError errorCode=\"".$errorcode[$i]."\" codeContext=\"".$failure_response[$i]."\" location=\"\" severity=\"urn:oasis:names:tc:ebxmlregrep:ErrorSeverityType:Error\"/>";
+		}*/
+	$response .= "</rim:RegistryObjectList>
+        </query:AdhocQueryResponse>
+  	</SOAP-ENV:Body>
+	</SOAP-ENV:Envelope>";
+
+	return $response;
+
+}//END OF makeSoapedFailureResponse
+
 
 
 ####### GENERA URN UUIDs
@@ -358,5 +369,50 @@ function idrandom_file()
       return $stringa; // restituisci alla funzione
 
 }//END OF idrandom_ERRATA()
+
+
+function givenamescape($link,$input){
+
+	preg_match('/((xmlns:)?([^\t\n\r\f\v ";<]+)?(="'.$link.'"))/i',$input,$matches);
+
+	$namespace=$matches[3];
+
+return $namespace;
+
+}
+
+
+
+
+function SendResponse($file_input){
+
+	ob_get_clean();//OKKIO FONDAMENTALE!!!!!
+
+	//HEADERS
+	header("HTTP/1.1 200 OK");
+	header("Path: ".$_SESSION['www_REG_path']);
+	header("Content-Type: text/xml;charset=UTF-8");
+	header("Content-Length: ".(string)filesize($file_input));
+		//CONTENUTO DEL FILE DI RISPOSTA
+	if($file = fopen($file_input,'rb'))
+	{
+   		while((!feof($file)) && (connection_status()==0))
+   		{
+     			print(fread($file, 1024*8));
+      			flush();//NOTA BENE!!!!!!!!!
+   		}
+
+   		fclose($file);
+	}
+
+	//SPEDISCO E PULISCO IL BUFFER DI USCITA
+	ob_end_flush();
+	//BLOCCO L'ESECUZIONE DELLO SCRIPT
+	exit;
+
+}
+
+
+
 
 ?>

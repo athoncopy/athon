@@ -11,14 +11,16 @@
 
 //------------------- LOCAL REGISTRY HOST INFOS ------------------//
 require('./config/config.php');
-require('./lib/functions_'.$database.'.php');
+require_once('./lib/functions_'.$database.'.php');
+
+$connessione=connectDB();
 
 ### QUERY FOR HTTP kind of CONNECTION WITH REGISTRY (NORMAL or TLS)
 $http_con = "SELECT HTTPD FROM HTTP WHERE HTTP.ACTIVE = 'A'";
 
 
 
-$res_http = query_select($http_con);
+$res_http = query_select2($http_con,$connessione);
 
 ##### OTTENGO LE INFORMAZIONI SUL PROTOCOLLO
 $http = $res_http[0][0];
@@ -31,7 +33,7 @@ $normal_protocol = "http://";
 $get_reg_info="SELECT * FROM REGISTRY WHERE REGISTRY.SERVICE = 'SUBMISSION' AND REGISTRY.ACTIVE = 'A' AND REGISTRY.HTTP IN ($http_con)";
 
 //include_once('./lib/functions_QUERY_mysql.php');
-	$res_reg_info = query_select($get_reg_info);
+	$res_reg_info = query_select2($get_reg_info,$connessione);
 
 ###### OTTENGO LE INFORMAZIONI DI QUESTO REGISTRY (SUBMISSION)
 $reg_host = $res_reg_info[0][1];
@@ -41,7 +43,7 @@ $reg_port = $res_reg_info[0][2];
 $get_QUERY_info="SELECT * FROM REGISTRY WHERE REGISTRY.SERVICE = 'QUERY' AND REGISTRY.ACTIVE = 'A' AND REGISTRY.HTTP IN ($http_con)";
 
 //include_once('./lib/functions_QUERY_mysql.php');
-	$res_QUERY_info = query_select($get_QUERY_info);
+	$res_QUERY_info = query_select2($get_QUERY_info,$connessione);
 
 ###### OTTENGO LE INFORMAZIONI DI QUESTO REGISTRY (QUERY)
 $reg_QUERY_host = $res_QUERY_info[0][1];
@@ -57,7 +59,7 @@ $tmpQueryService_path = "./tmpQueryService/";
 $lib_path = "./lib/";      //nota: sempre con lo / finale!!!
 
 $select_config = "SELECT * FROM CONFIG";
-$res_config = query_select($select_config);
+$res_config = query_select2($select_config,$connessione);
 
 $www_REG_path=$res_config[0][0];
 //$www_REG_path  = "/MARIS_xds3/xdsServices2/registry/";
@@ -100,7 +102,7 @@ $path_to_ATNA_jar = "./atna/java/";
 ###### A CHI SPEDIRE I MESSAGGI ATNA
 $get_ATNA_node = "SELECT * FROM ATNA";
 //include_once('./lib/functions_QUERY_mysql.php');
-	$res_ATNA_info = query_select($get_ATNA_node);
+	$res_ATNA_info = query_select2($get_ATNA_node,$connessione);
 
 $ATNA_host = $res_ATNA_info[0][1];
 $ATNA_port = $res_ATNA_info[0][2];
@@ -135,7 +137,7 @@ $java_path = $res_config[0][4];
 
 $get_NAV="SELECT * FROM NAV";
 
-$res_NAV = query_select($get_NAV);
+$res_NAV = query_select2($get_NAV,$connessione);
 
 
 
