@@ -1,0 +1,25 @@
+<AuditMessage>
+	<EventIdentification EventDateTime="2007-07-04T12:19:52" EventActionCode="E" EventOutcomeIndicator="0">
+		<EventID code="110112" codeSystemName="DCM" displayName="Query"/>
+	</EventIdentification>
+	<ActiveParticipant UserID="XDS Registry" NetworkAccessPointID="10.135.0.115" NetworkAccessPointTypeCode="2" UserIsRequestor="true">
+		<RoleIDCode code="110153" codeSystemName="DCM" displayName="Source"/>
+	</ActiveParticipant>
+	
+	<ActiveParticipant UserID="XDS Consumer" NetworkAccessPointID="10.135.0.114" NetworkAccessPointTypeCode="2" UserIsRequestor="false">
+		<RoleIDCode code="110152" displayName="Destination" codeSystemName="DCM"/>
+	</ActiveParticipant>
+	
+	<AuditSourceIdentification AuditSourceID="XDS Registry">
+		<AuditSourceTypeCode code="3"/>
+		
+	</AuditSourceIdentification>
+	<ParticipantObjectIdentification ParticipantObjectTypeCode="2" ParticipantObjectTypeCodeRole="3" ParticipantObjectID="">
+		<ParticipantObjectIDTypeCode code="110181"/>
+		
+		<ParticipantObjectQuery>
+				
+		U0VMRUNUIGVvLmlkIAoJRlJPTSBFeHRyaW5zaWNPYmplY3QgZW8sIEV4dGVybmFsSWRlbnRpZmllciBlaQoJV0hFUkUgZW8uaWQgPSBlaS5yZWdpc3RyeW9iamVjdCBBTkQKCWVpLmlkZW50aWZpY2F0aW9uU2NoZW1lPSd1cm46dXVpZDoyZTgyYzFmNi1hMDg1LTRjNzItOWRhMy04NjQwYTMyZTQyYWInIEFORAoJZWkudmFsdWUgPSAnMS4yLjQwLjAuMTMuMS4xLjIwNDU2ODY5OC4yMDA3MDYyMjE1MjczMTE5OS4zMzM5OCcgQU5EIGVvLnN0YXR1cyBJTiAoJ0FwcHJvdmVkJyk=</ParticipantObjectQuery>
+
+	</ParticipantObjectIdentification>
+</AuditMessage>
