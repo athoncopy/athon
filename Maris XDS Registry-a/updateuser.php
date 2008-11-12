@@ -7,13 +7,8 @@
 # See the LICENSE files for details
 # ------------------------------------------------------------------------------------
 
-include_once('./config/config.php');
-if($database=="MYSQL"){
-include_once('./lib/functions_QUERY_mysql.php');
-}
-else if($database=="ORACLE"){
-include_once('./lib/functions_oracle.php');
-}
+require('./config/config.php');
+require('./lib/functions_'.$database.'.php');
 
 
 $Login = $_POST['login'];

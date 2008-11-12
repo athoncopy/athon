@@ -15,7 +15,7 @@ ob_start();//OKKIO FONADAMENTALE!!!!!!!!!!
 ##### CONFIGURAZIONE DEL REPOSITORY
 include("REGISTRY_CONFIGURATION/REG_configuration.php");
 #######################################
-
+include_once($lib_path."domxml-php4-to-php5.php");
 include($lib_path."utilities.php");
 include("./lib/log.php");
 $idfile = idrandom_file();
@@ -67,8 +67,10 @@ $fp_AdhocQueryRequest = fopen($tmpQueryService_path."AdhocQueryRequest","w+");
 	fwrite($fp_AdhocQueryRequest,$ebxml_STRING);
 fclose($fp_AdhocQueryRequest);
 
+
+/*
 ####### VALIDAZIONE DELL'ebXML SECONDO LO SCHEMA
-$comando_java_validation=("java -jar ".$path_to_VALIDATION_jar."valid.jar -xsd ".$path_to_XSD_file." -xml ".$tmpQueryService_path."AdhocQueryRequest");
+$comando_java_validation=($java_path."java -jar ".$path_to_VALIDATION_jar."valid.jar -xsd ".$path_to_XSD_file." -xml ".$tmpQueryService_path."AdhocQueryRequest");
 
 $fp_ebxml_val = fopen($tmpQueryService_path."comando_java_validation","w+");
 	fwrite($fp_ebxml_val,$comando_java_validation);
@@ -136,11 +138,76 @@ if(!$isValid)
 $fp_SCHEMA_val = fopen($tmpQueryService_path."SCHEMA_validation","w+");
 	fwrite($fp_SCHEMA_val,"VALIDAZIONE DA SCHEMA ==> OK <==");
 fclose($fp_SCHEMA_val);
+*/
+
+
+libxml_use_internal_errors(true);
+$domEbxml = DOMDocument::loadXML($ebxml_STRING);
+
+// Valido il messaggio da uno schema
+if (!$domEbxml->schemaValidate('schemas/rs.xsd')) {
+	$error_message = "Schema Validation Failed\n"; 
+	$errors = libxml_get_errors();
+	print_r($errors);
+    	foreach ($errors as $error) {
+        	$error_message .= $error->message."\n";
+   	 }
+	//$error_message.= $errors->message;
+	### RESTITUISCE IL MESSAGGIO DI FAIL IN SOAP
+    	$SOAPED_failure_response = makeSoapedFailureResponse($error_message,$logentry);
+
+	### SCRIVO LA RISPOSTA IN UN FILE
+	// File da scrivere
+	 $fp = fopen($tmpQueryService_path."SOAPED_failure_VALIDATION_response","w+");
+           fwrite($fp,$SOAPED_failure_response);
+         fclose($fp);
+
+	### PULISCO IL BUFFER DI USCITA
+	ob_get_clean();//OKKIO FONDAMENTALE!!!!!
+
+	### HEADERS
+	header("HTTP/1.1 200 OK");
+	header("Path: $www_REG_path");
+	header("Content-Type: text/xml;charset=UTF-8");
+	header("Content-Length: ".(string)filesize($tmpQueryService_path."SOAPED_failure_VALIDATION_response"));
+	### CONTENUTO DEL FILE DI RISPOSTA
+	if($file = fopen($tmpQueryService_path."SOAPED_failure_VALIDATION_response",'rb'))
+	{
+   		while((!feof($file)) && (connection_status()==0))
+   		{
+     			print(fread($file, 1024*8));
+      			flush();//NOTA BENE!!!!!!!!!
+   		}
+
+   		fclose($file);
+	}
+	### SPEDISCO E PULISCO IL BUFFER DI USCITA
+	ob_end_flush();
+	### BLOCCO L'ESECUZIONE DELLO SCRIPT
+	exit;
+	}
+
+writeTimeFile($idfile."--Registry: Il documento e' valido");
+
+
+$fp_SCHEMA_val = fopen($tmp_path.$idfile."-SCHEMA_validation-".$idfile,"w+");
+	fwrite($fp_SCHEMA_val,"VALIDAZIONE DA SCHEMA ==> OK <==");
+fclose($fp_SCHEMA_val);
+
+
 
 #### OTTENGO L'OGGETTO DOM DALL'AdhocQueryRequest
-$dom_AdhocQueryRequest = domxml_open_mem(file_get_contents($tmpQueryService_path."AdhocQueryRequest"));
-##############################################################################
+$contents=file_get_contents($tmpQueryService_path."AdhocQueryRequest");
+//writeTimeFile($contents);
 
+
+$dom_AdhocQueryRequest = domxml_open_mem($contents);
+if (!$dom = domxml_open_mem($contents)) {
+  writeTimeFile($idfile."--Registry query: AdhocQueryRequest non corretto");
+}
+
+
+##############################################################################
 ##### PARAMETRI DA RICAVARE DALL'ebXML DI QUERY
 $SQLQuery = '';  //TESTO DELLA QUERY
 $returnComposedObjects_a = ''; // TRUE O FALSE
@@ -148,9 +215,9 @@ $returnType_a = ''; // LeafClass
 
 //NODO DI ROOT DELL'OGGETTO DOM
 $root = $dom_AdhocQueryRequest->document_element();
-
 ################# RECUPERO LE OPZIONI DELLA QUERY
 $SQLQuery_options_node_array = $root->get_elements_by_tagname("ResponseOption");
+
 
 for($u = 0;$u < count($SQLQuery_options_node_array);$u++)
 {
@@ -160,12 +227,12 @@ for($u = 0;$u < count($SQLQuery_options_node_array);$u++)
    $returnType_a = $SQLQuery_options_node->get_attribute("returnType");
 	
 }//END OF for($u = 0;$u < count($SQLQuery_options_node_array);$u++)
-
+writeTimeFile($idfile."--Registry: dopo get_attribute");
 //SCRIVO returnComposedObjects
 $fp_returnComposedObjects = fopen($tmpQueryService_path."returnComposedObjects","wb+");
 	fwrite($fp_returnComposedObjects,$returnComposedObjects_a);
 fclose($fp_returnComposedObjects);
-
+writeTimeFile($idfile."--Registry: returnComposedObjects");
 //SCRIVO returnType
 $fp_returnType = fopen($tmpQueryService_path."returnType","wb+");
 	fwrite($fp_returnType,$returnType_a);
@@ -422,6 +489,7 @@ else if($returnType_a=="LeafClass")
 
 	     if($objectType_code_from_ExtrinsicObject=="XDSDocumentEntry")
 	     {
+		writeSQLQueryService("\nSono nel caso XDSDocumentEntry");
 		$ExtrinsicObject_id = $SQLResponse[$rr][0];
 
 		$dom_ebXML_ExtrinsicObject = domxml_new_doc("1.0");
@@ -562,7 +630,10 @@ else if($returnType_a=="LeafClass")
 			#### CLASSIFICATION + EXTERNALIDENTIFIER + OBJECTREF
 
 			###### NODI CLASSIFICATION
-			$get_ExtrinsicObject_Classification="SELECT classificationScheme,classificationNode,classifiedObject,id,nodeRepresentation,objectType FROM Classification WHERE Classification.classifiedObject = '$ExtrinsicObject_id' AND Classification.nodeRepresentation != 'NULL'";
+			writeSQLQueryService("\nCiclo su Classification di ExtrinsicObject");
+			//Query modificata per ebxml v2.1 (AuthorInstitution....)
+			/*$get_ExtrinsicObject_Classification="SELECT classificationScheme,classificationNode,classifiedObject,id,nodeRepresentation,objectType FROM Classification WHERE Classification.classifiedObject = '$ExtrinsicObject_id' AND Classification.nodeRepresentation != 'NULL'";*/
+			$get_ExtrinsicObject_Classification="SELECT classificationScheme,classificationNode,classifiedObject,id,nodeRepresentation,objectType FROM Classification WHERE Classification.classifiedObject = '$ExtrinsicObject_id'";
 			$ExtrinsicObject_Classification_arr=query_select($get_ExtrinsicObject_Classification);
 			writeSQLQueryService($get_ExtrinsicObject_Classification);
 
@@ -717,6 +788,7 @@ else if($returnType_a=="LeafClass")
 			}//END OF for($t=0;$t<count($ExtrinsicObject_Classification_arr);$t++)
 
 			#### NODI EXTERNALIDENTIFIER
+			writeSQLQueryService("\nCiclo su ExternalIdentifier di ExtrinsicObject");
 			$get_ExtrinsicObject_ExternalIdentifier="SELECT identificationScheme,objectType,id,value FROM ExternalIdentifier WHERE ExternalIdentifier.registryObject = '$ExtrinsicObject_id'";
 			$ExtrinsicObject_ExternalIdentifier_arr=query_select($get_ExtrinsicObject_ExternalIdentifier);
 			writeSQLQueryService($get_ExtrinsicObject_ExternalIdentifier);
@@ -810,6 +882,8 @@ else if($returnType_a=="LeafClass")
 
 	     if($objectType_code_from_RegistryPackage=="XDSSubmissionSet")
 	     {
+		writeSQLQueryService("Sono nel caso XDSSubmissionSet");
+
 		$RegistryPackage_id = $SQLResponse[$rr][0];
 
 		$dom_ebXML_RegistryPackage = domxml_new_doc("1.0");
@@ -950,6 +1024,7 @@ else if($returnType_a=="LeafClass")
 			#### CLASSIFICATION + EXTERNALIDENTIFIER + OBJECTREF
 
 			###### NODI CLASSIFICATION
+			writeSQLQueryService("\nCiclo su Classification di RegistryPackage");
 			$get_RegistryPackage_Classification="SELECT classificationScheme,classificationNode,classifiedObject,id,nodeRepresentation,objectType FROM Classification WHERE Classification.classifiedObject = '$RegistryPackage_id'";
 			$RegistryPackage_Classification_arr=query_select($get_RegistryPackage_Classification);
 			writeSQLQueryService($get_RegistryPackage_Classification);
@@ -1067,6 +1142,7 @@ else if($returnType_a=="LeafClass")
 			}//END OF for($t=0;$t<count($RegistryPackage_Classification_arr);$t++)
 
 			#### NODI EXTERNALIDENTIFIER
+			writeSQLQueryService("\nCiclo su ExternalIdentifier di RegistryPackage");
 			$get_RegistryPackage_ExternalIdentifier="SELECT identificationScheme,objectType,id,value FROM ExternalIdentifier WHERE ExternalIdentifier.registryObject = '$RegistryPackage_id'";
 			$RegistryPackage_ExternalIdentifier_arr=query_select($get_RegistryPackage_ExternalIdentifier);
 			writeSQLQueryService($get_RegistryPackage_ExternalIdentifier);
@@ -1161,6 +1237,8 @@ else if($returnType_a=="LeafClass")
 
 	     if($objectType_code_from_RegistryPackage=="XDSFolder")
 	     {
+		writeSQLQueryService("Sono nel caso XDSFolder");
+
 		$fp=fopen("tmp/REQUEST_OBJECT","w+");
     		fwrite($fp,"REQUESTED_OBJECT =  $objectType_code_from_RegistryPackage");
 		fclose($fp);
@@ -1520,6 +1598,8 @@ else if($returnType_a=="LeafClass")
 	     ##### ASSOCIATION
 	     if($objectType_from_Association=="Association")
 	     {
+		writeSQLQueryService("Sono nel caso Association");
+
 		$Association_id = $SQLResponse[$rr][0];
 
 		$dom_ebXML_Association = domxml_new_doc("1.0");
@@ -1896,7 +1976,7 @@ include_once("reg_atna.php");
 	$ip_consumer=$_SERVER['REMOTE_ADDR'];  //Ip consumer
 
 	createQueryEvent($eventOutcomeIndicator,$ip_registry,$ip_consumer,$SUID,$SQLQuery);
-	$java_atna_query=("java -jar ".$path_to_ATNA_jar."syslog.jar -u ".$ATNA_host." -p ".$ATNA_port." -f ".$atna_path."Query.xml");
+	$java_atna_query=($java_path."java -jar ".$path_to_ATNA_jar."syslog.jar -u ".$ATNA_host." -p ".$ATNA_port." -f ".$atna_path."Query.xml");
 
 	$fp_ebxml_val = fopen($tmp_path.$idfile."-comando_java_atna_query-".$idfile,"w+");
 	fwrite($fp_ebxml_val,$java_atna_query);
@@ -1947,7 +2027,7 @@ include_once("reg_atna.php");
 	$idName="Study Instance UID"; 
 	
 	createExportEvent($eventOutcomeIndicator,$ip_registry,$ip_consumer,$SUID,$idName,$pid,$pna);
-	$java_atna_export=("java -jar ".$path_to_ATNA_jar."syslog.jar -u ".$ATNA_host." -p ".$ATNA_port." -f ".$atna_path."DataExport.xml");
+	$java_atna_export=($java_path."java -jar ".$path_to_ATNA_jar."syslog.jar -u ".$ATNA_host." -p ".$ATNA_port." -f ".$atna_path."DataExport.xml");
 
 	$fp_ebxml_val = fopen($tmp_path.$idfile."-comando_java_atna_export-".$idfile,"w+");
 	fwrite($fp_ebxml_val,$java_atna_export);

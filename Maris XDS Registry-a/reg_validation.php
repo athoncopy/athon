@@ -8,13 +8,10 @@
 # ------------------------------------------------------------------------------------
 
 #### INCLUDO LE LIBRERIE DI SCRITTURA SU DB DEL REGISTRY
-include_once('./config/config.php');
-if($database=="MYSQL"){
-include_once('./lib/functions_QUERY_mysql.php');
-}
-else if($database=="ORACLE"){
-include_once('./lib/functions_oracle.php');
-}
+require_once('./config/config.php');
+require_once('./lib/functions_'.$database.'.php');
+//include($lib_path."utilities.php");
+
 writeSQLQuery('-------------------------------------------------------------------------------------');
 writeSQLQuery('reg_validation.php');
 //RICERCA ALL'INTERNO DELL'ebXML 

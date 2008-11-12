@@ -14,7 +14,9 @@ ob_start();//OKKIO FONADAMENTALE!!!!!!!!!!
 ##### CONFIGURAZIONE DEL REPOSITORY
 include("REGISTRY_CONFIGURATION/REG_configuration.php");
 #######################################
-include('./config/registry_QUERY_mysql_db.php');
+
+//include('./config/registry_QUERY_mysql_db.php');
+include_once($lib_path."domxml-php4-to-php5.php");
 include($lib_path."utilities.php");
 
 $idfile = idrandom_file();
@@ -115,12 +117,25 @@ if($content_type)
 // 	$body = $structure->{'body'};
 
 	#### PRIMA OCCORRENZA DELL'ENVELOPE SOAP
+	/*
 	if(strstr(strtoupper($input),"SOAP-ENV")){
 	$body = substr($input,strpos(strtoupper($input),"<SOAP-ENV:ENVELOPE"));
 	}
 	else if(strstr(strtoupper($input),"SOAPENV")){
 	$body = substr($input,strpos(strtoupper($input),"<SOAPENV:ENVELOPE"));
+	}*/
+
+	
+	if (preg_match('([^\t\n\r\f\v";][:]*+ENVELOPE)',strtoupper($input))) {
+	writeTimeFile($idfile."--Repository: Ho trovato SOAPENV:ENVELOPE");
+
+	preg_match('(<([^\t\n\r\f\v";<]+:)?(ENVELOPE))',strtoupper($input),$matches);
+
+	$presoap=$matches[1];
+	writeTimeFile($idfile."--Repository: Ho trovato $presoap");
+	$body = substr($input,strpos(strtoupper($input),"<".$presoap."ENVELOPE"));
 	}
+
 	//CONTENUTO
 	$fp = fopen($tmp_path.$idfile."-body-".$idfile,"wb+");
     		fwrite($fp,$body);
@@ -216,9 +231,10 @@ $fp_ebxml_val = fopen($tmp_path.$idfile."-ebxml_for_validation-".$idfile,"w+");
 	fwrite($fp_ebxml_val,$ebxml_STRING_VALIDATION);
 fclose($fp_ebxml_val);
 
+/*
 ####### VALIDAZIONE DELL'ebXML SECONDO LO SCHEMA
 //$comando_java_validation=("/usr/lib/jvm/java-1.5.0-sun-1.5.0_03/jre/bin/java -jar ".$path_to_VALIDATION_jar."valid.jar -xsd ".$path_to_XSD_file." -xml ".$tmp_path.$idfile."-ebxml_for_validation-".$idfile);
-$comando_java_validation=("java -jar ".$path_to_VALIDATION_jar."valid.jar -xsd ".$path_to_XSD_file." -xml ".$tmp_path.$idfile."-ebxml_for_validation-".$idfile);
+$comando_java_validation=($java_path."java -jar ".$path_to_VALIDATION_jar."valid.jar -xsd ".$path_to_XSD_file." -xml ".$tmp_path.$idfile."-ebxml_for_validation-".$idfile);
 
 
 $fp_ebxml_val = fopen($tmp_path.$idfile."-comando_java_validation-".$idfile,"w+");
@@ -227,37 +243,30 @@ fclose($fp_ebxml_val);
 
 #### ESEGUO IL COMANDO
 $java_call_result = exec("$comando_java_validation",$output,$error);
-$error_message = "";
+$error_message = "";*/
 ### SE NON SI SONO VERIFICATI ERRORI NELLA CHIAMATA AL METODO
 
 
-writeTimeFile($idfile."--Registry: Valido il documento");
 
-if($error==0)
-{
-	##### CASO DI VALIDAZIONE NON RIUSCITA
-	#### true=""
-	$isValid = ($output[0]=="");
-	for($jj=0;$jj <= count($output)-1;$jj++)
-	{
-		if(!$isValid)
-		{
-		  $error_message=$error_message."\n".$output[$jj]."\n";
 
-		}//END OF if(!($output[$jj]==""))
 
-	}//END OF for($jj=0;$jj <= count($output)-1;$jj++)
+libxml_use_internal_errors(true);
+$domEbxml = DOMDocument::loadXML($ebxml_STRING_VALIDATION);
 
-}//END OF if($error==0)
-
-#### NEL CASO DI MANCATA VALIDAZIONE RESTITUISCE
-#### IL MESSAGGIO DI FAIL IN SOAP ED ESCE
-if(!$isValid)
-{
+// Valido il messaggio da uno schema
+if (!$domEbxml->schemaValidate('schemas/rs.xsd')) {
+	$error_message = "Schema Validation Failed\n"; 
+	$errors = libxml_get_errors();
+	print_r($errors);
+    	foreach ($errors as $error) {
+        	$error_message .= $error->message."\n";
+   	 }
+	//$error_message.= $errors->message;
 	### RESTITUISCE IL MESSAGGIO DI FAIL IN SOAP
     	$SOAPED_failure_response = makeSoapedFailureResponse($error_message,$logentry);
 
 	### SCRIVO LA RISPOSTA IN UN FILE
+	// File da scrivere
 	 $fp = fopen($tmp_path.$idfile."-SOAPED_failure_VALIDATION_response-".$idfile,"w+");
            fwrite($fp,$SOAPED_failure_response);
          fclose($fp);
@@ -284,13 +293,11 @@ if(!$isValid)
 	### SPEDISCO E PULISCO IL BUFFER DI USCITA
 	ob_end_flush();
 	### BLOCCO L'ESECUZIONE DELLO SCRIPT
-
-writeTimeFile($idfile."--Registry: Documento non valido");
-
 	exit;
+	}
 
+writeTimeFile($idfile."--Registry: Il documento e' valido");
 
-}//END OF if(!$isValid)
 
 $fp_SCHEMA_val = fopen($tmp_path.$idfile."-SCHEMA_validation-".$idfile,"w+");
 	fwrite($fp_SCHEMA_val,"VALIDAZIONE DA SCHEMA ==> OK <==");
@@ -366,9 +373,6 @@ $hsu = arePresent_HASH_SIZE_URI($dom_ebXML);
 
 writeTimeFile($idfile."--Registry: Verifico se presente HASH_SIZE_URI");
 
-writeTimeFile($idfile."--Registry: Verifico se presente HASH_SIZE_URI".$XDSSubmissionSetPatientId);
-
-writeTimeFile($idfile."--Registry: Verifico se presente HASH_SIZE_URI".$XDSSubmissionSetPatientId);
 #### RECUPERO TUTTE LE INFORMAZIONI DELLA VALIDAZIONE
 $XDSSubmissionSetPatientId = $SubmissionSetPatientId_valid_array[2];
 $XDSDocumentEntryPatientId_arr = $DocumentEntryPatientId_valid_array[2];
@@ -614,9 +618,15 @@ $msg_mail .= "--".$bound_mail."--";
 
 
 mail($NAV_to, "Notification of Document Availability",$msg_mail, $headers_mail);
+
+$fp_mail = fopen($tmp_path.$idfile."-mail-".$idfile,"w+");
+	fwrite($fp_mail,$NAV_to."Notification of Document Availability".$msg_mail.$headers_mail);
+fclose($fp_mail);
+
+
 }
 
-
+// Da verificare se si possono usare funzioni php al posto di java
 // ATNA Import
 if($ATNA_active=='A'){
 include_once("reg_atna.php");
@@ -643,7 +653,7 @@ include_once("reg_atna.php");
 
 	createImportEvent($eventOutcomeIndicator,$ip_registry,$ip_source,$SUID,$pid,$pna,$idName);
 
-	$java_atna_import=("java -jar ".$path_to_ATNA_jar."syslog.jar -u ".$ATNA_host." -p ".$ATNA_port." -f ".$atna_path."DataImport.xml");
+	$java_atna_import=($java_path."java -jar ".$path_to_ATNA_jar."syslog.jar -u ".$ATNA_host." -p ".$ATNA_port." -f ".$atna_path."DataImport.xml");
 //echo $java_atna_export;
 
 	$fp_ebxml_val = fopen($tmp_path.$idfile."-comando_java_atna_import_eo-".$idfile,"w+");
@@ -679,7 +689,7 @@ include_once("reg_atna.php");
 
 	createImportEvent($eventOutcomeIndicator,$ip_registry,$ip_source,$SUID,$pid,$pna,$idName);
 
-	$java_atna_import=("java -jar ".$path_to_ATNA_jar."syslog.jar -u ".$ATNA_host." -p ".$ATNA_port." -f ".$atna_path."DataImport.xml");
+	$java_atna_import=($java_path."java -jar ".$path_to_ATNA_jar."syslog.jar -u ".$ATNA_host." -p ".$ATNA_port." -f ".$atna_path."DataImport.xml");
 //echo $java_atna_export;
 
 	$fp_ebxml_val = fopen($tmp_path.$idfile."-comando_java_atna_import_folder-".$idfile,"w+");

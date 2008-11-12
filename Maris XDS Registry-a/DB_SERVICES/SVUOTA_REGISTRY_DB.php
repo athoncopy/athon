@@ -9,11 +9,11 @@
 
 ######UTILITY DI SVUOTAMENTO DEL DB DEL REGISTRY
 include_once('../config/config.php');
-if($database=="MYSQL"){
+if($database=="mysql"){
 function query_exec($query) //ERA LA query_execute($query)
 {
 # IMPORT MYSQL PARAMETERS (NOTE: IT WORKS WITH ABSOLUTE PATH ONLY !!)
-include('../config/registry_QUERY_mysql_db.php');
+include('../config/registry_mysql_db.php');
 
 
 # open connection to db
@@ -32,7 +32,7 @@ include('../config/registry_QUERY_mysql_db.php');
 
 }//END OF query_exec($query)
 }
-else if($database=="ORACLE"){
+else if($database=="oracle"){
 function query_exec($query)
 {
 # IMPORT MYSQL PARAMETERS (NOTE: IT WORKS WITH ABSOLUTE PATH ONLY !!)

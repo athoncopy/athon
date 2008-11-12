@@ -186,7 +186,7 @@ function writeSQLQueryService($tempotxt)
 			{
 				$txt = "";
 				### IMPOSTA L'ARRAY NELLA FORMA [etichetta] = valore
-				foreach($log_text as $element => $value) 
+				foreach($tempotxt as $element => $value) 
 				{
    					$txt = $txt."$element = $value\n";
 				}//END OF foreach
@@ -225,7 +225,7 @@ function writeTimeFile($tempotxt)
 			{
 				$txt = "";
 				### IMPOSTA L'ARRAY NELLA FORMA [etichetta] = valore
-				foreach($log_text as $element => $value) 
+				foreach($tempotxt as $element => $value) 
 				{
    					$txt = $txt."$element = $value\n";
 				}//END OF foreach

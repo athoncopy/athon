@@ -7,7 +7,7 @@
 # See the LICENSE files for details
 # ------------------------------------------------------------------------------------
 
-include_once('../config/registry_QUERY_mysql_db.php');
+include_once('../config/registry_mysql_db.php');
 
 $dom_affinity_domain = domxml_open_file ('../config/AffinityDomain_17-Nov-2005_1303/codes.xml');
 
