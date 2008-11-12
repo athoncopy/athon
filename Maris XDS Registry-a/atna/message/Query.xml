@@ -1,0 +1,25 @@
+<AuditMessage>
+	<EventIdentification EventDateTime="" EventActionCode="E" EventOutcomeIndicator="">
+		<EventID code="110112" codeSystemName="DCM" displayName="Query"/>
+	</EventIdentification>
+	<ActiveParticipant UserID="ipconsumer" NetworkAccessPointID="10.x.x.x" NetworkAccessPointTypeCode="2"  UserIsRequestor="true">
+		<RoleIDCode code="110153" codeSystemName="DCM" displayName="Source"/>
+	</ActiveParticipant>
+	
+	<ActiveParticipant UserID="ADT_O3-C" NetworkAccessPointID="172.30.1.143" NetworkAccessPointTypeCode="2" UserIsRequestor="false">
+		<RoleIDCode code="110152" displayName="Destination" codeSystemName="DCM"/>
+	</ActiveParticipant>
+	
+	<AuditSourceIdentification AuditSourceID="XDS Registry">
+		<AuditSourceTypeCode code="3"/>
+		
+	</AuditSourceIdentification>
+	<ParticipantObjectIdentification ParticipantObjectTypeCode="2" ParticipantObjectTypeCodeRole="3" ParticipantObjectID="">
+		<ParticipantObjectIDTypeCode code="110181"/>
+		
+		<ParticipantObjectQuery>
+				
+		</ParticipantObjectQuery>
+
+	</ParticipantObjectIdentification>
+</AuditMessage>
