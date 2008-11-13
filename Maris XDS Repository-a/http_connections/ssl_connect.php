@@ -16,6 +16,7 @@ class HTTP_Client_ssl
 	var $idfile;
 	var $action;
 	var $protocol;
+	var $tmp_path;
 
 //Constructor, timeout 30s
 function HTTP_Client_ssl($host,$port,$timeout)
@@ -141,5 +142,11 @@ function set_save_files($save_files)
 {
 	$this->save_files = $save_files;
 }
+
+function set_tmp_path($tmp_path)
+{
+	$this->tmp_path = $tmp_path;
+}
+
 }
 ?>

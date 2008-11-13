@@ -13,7 +13,7 @@
 * PHP 5.x
 * Apache 1.3 or 2.0
 
-# --- MARiS XDS-Repository INSTALL v2.0.1
+# --- MARiS XDS-Repository INSTALL v2.0.3
 
 
 1. Create the database
@@ -32,6 +32,9 @@ a. Install ORACLE 9.x or higher
 b. create the database xds-repository
 c. set ORACLE_HOME (for example export ORACLE_HOME=/usr/lib/oracle/xe/app/oracle/product/10.2.0/server)
 d. import database with $ORACLE_HOME/bin/imp xds-repository/password_db@SID FILE=$FILE_PATH/repository_oracle.dmp full=y
+
+
+$ORACLE_HOME/bin/imp xds-repository/xds-repository@XE FILE=/var/www/MARIS_XDS/repository-a/db/repository_oracle.dmp full=y
 
 2. Configure the database access
 MySQL case

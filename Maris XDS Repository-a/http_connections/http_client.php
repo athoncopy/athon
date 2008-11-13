@@ -26,6 +26,7 @@ class HTTP_Client
 	var $dataLength;
 	var $agent_name = "MyAgent";
 	var $idfile;
+	var $tmp_path;
         
 //Constructor, timeout 30s
 function HTTP_Client($host,$port,$timeout)
@@ -45,7 +46,7 @@ function connect()
 
 //writeTimeFile("HTTP_client: Setto il socket");
 	if($this->save_files){
-	$fp_HTTP_Client_CONNECTION_STATUS = fopen("tmp/".$this->idfile."-HTTP_Client_CONNECTION_STATUS-".$this->idfile,"w+");
+	$fp_HTTP_Client_CONNECTION_STATUS = fopen($this->tmp_path.$this->idfile."-HTTP_Client_CONNECTION_STATUS-".$this->idfile,"w+");
 	}
 //writeTimeFile("HTTP_client: Verifico connessione");
 
@@ -115,7 +116,7 @@ function request($post_data)
 		"\r\n".$post_data;
 	
 	if($this->save_files){
-	$fp_HTTP_Client_POSTED = fopen("tmp/".$this->idfile."-HTTP_Client_POSTED-".$this->idfile,"w+");
+	$fp_HTTP_Client_POSTED = fopen($this->tmp_path.$this->idfile."-HTTP_Client_POSTED-".$this->idfile,"w+");
     	fwrite($fp_HTTP_Client_POSTED,$post);
 	fclose($fp_HTTP_Client_POSTED);
 	}
@@ -151,6 +152,11 @@ function set_post_data($data)
 function set_data_length($len)
 {
 	$this->dataLength = $len;
+}
+
+function set_tmp_path($tmp_path)
+{
+	$this->tmp_path = $tmp_path;
 }
 
 function set_protocol($prot)

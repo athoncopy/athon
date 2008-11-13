@@ -35,10 +35,11 @@ $rep_protocol = $res[0][2];
 //------------------------- LOCAL REPOSITORY HOST INFOS -------------------------//
 
 //------------------------- LOCAL FILE SYSTEM PATHS -------------------------//
-$tmp_path = "./tmp/";
+$ip_source=$_SERVER['REMOTE_ADDR'];
+
+
 //$tmpQuery_path = "./tmpQuery/";
 $lib_path = "./lib/";
-   $tmp_path_2 = "tmp/";                         //nota: sempre con lo / finale!!!
 
 
 $relative_docs_path = "./Submitted_Documents/".date("Y")."/".date("m")."/".date("d")."/";   // come sopra
@@ -56,36 +57,35 @@ $www_REP_path=$res_config[0][0];
 
 $www_docs_path = $www_REP_path.$relative_docs_path_2;//PER COMPORRE L'URI
 
-#### VARIABILI DI SERVIZIO
-//============ SECURITY OPTIONS ====================
-define ("IS_SECURE", FALSE);
-define("MY_CERT", "/var/www/MARIS_XDS/repository-a/certificates/athon1.ihe-europe.org.p12");
-//define("MY_CERT", "/srv/www/htdocs/Consumer/consumer/ssl/ssl/o3-c1.ihe-europe.org.cer");
-//define("MY_CERT", "/home/eso/Desktop/TLS/usati/o3_1.p12");
-define("MY_KEY", "/var/www/MARIS_XDS/repository-a/certificates/athon1.ihe-europe.org.pem");
-//define("MY_KEY", "/srv/www/htdocs/Consumer/consumer/ssl/ssl/o3c1.pem");
-define ("MY_CAPATH","/var/www/MARIS_XDS/repository-a/certificates/");
-//define ("MY_CAINFO", "/srv/www/htdocs/Consumer/consumer/ssl/ssl/tiani-spirit3.ihe-europe.org.cer");
-//define ("MY_CAINFO", "/var/www/MARIS_XDS/repository-a/certificates/ac_gipcps1.cer");
-define ("MY_CAINFO", "/var/www/MARIS_XDS/repository-a/certificates/cacerts.jks");
 #### LOGS
 //$log_path = "./log/log.out";
 $log_path = "./log/";
 
-
-//$logActive = "A";
 $logActive = $res_config[0][1];
 
 $res_config[0][1];
 ##### PULIZIA CACHE TEMPORANEA
-//$clean_cache = "O";	### A=attiva O=non attivo
 $clean_cache = $res_config[0][2];
 
 ##### True=Salva tutti i file False=Salva solo i file necessari
 
-if($res_config[0][3]=="A"){
-	$save_files = true;
+if($res_config[0][3]=="L"){
+	$save_files = false;
+	$tmp_path = "./tmp/";
 	}
+
+else if($res_config[0][3]=="M"){
+	$save_files = true;
+	$tmp_path = "./tmp/";
+	}
+else if($res_config[0][3]=="H"){
+	$save_files = true;
+	$tmp_path = "./tmp/".date("Y").date("m").date("d")."/".$ip_source."/";
+	}
+
+
+
+
 #### JAVA PATH
 $java_path = $res_config[0][4];
 
@@ -113,13 +113,6 @@ $reg_port = $ris[0][1];
 $reg_path = $ris[0][2];
 $reg_http = $ris[0][3];
 
-###### PER COSTRUIRE I MESSAGGI DI AUDIT ATNA
-$path_to_IMPORT = "./atna/message/DataImport.xml";
-$path_to_EXPORT = "./atna/message/DataExport.xml";
-$path_to_QUERY = "./atna/message/Query.xml";
-
-###### PER LA CHIAMATA AL JAR FILE (SENDING ATNA MESSAGES)
-$path_to_ATNA_jar = "./atna/java/";
 
 ###### A CHI SPEDIRE I MESSAGGI ATNA
 $get_ATNA_node = "SELECT * FROM ATNA";

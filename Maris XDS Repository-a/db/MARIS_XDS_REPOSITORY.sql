@@ -79,7 +79,7 @@ CREATE TABLE IF NOT EXISTS `CONFIG` (
 -- 
 
 INSERT INTO `CONFIG` (`WWW`, `LOG`, `CACHE`, `FILES`, `JAVA_PATH`, `UNIQUEID`) VALUES 
-('/MARIS_XDS/repository-b/', 'A', 'O', 'A', '', '1.19.6.24.109.52.1');
+('/MARIS_XDS/repository-a/', 'A', 'O', 'H', '', '');
 
 -- --------------------------------------------------------
 
