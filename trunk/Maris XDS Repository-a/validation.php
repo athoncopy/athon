@@ -7,7 +7,7 @@
 # See the LICENSE files for details
 # ------------------------------------------------------------------------------------
 #### XDSSubmissionSet.sourceId
-function validate_XDSSubmissionSetSourceId($dom,$idfile,$save_files)
+function validate_XDSSubmissionSetSourceId($dom,$idfile,$save_files,$connessione)
 {
   if($save_files){
     $fp_sourceIdQuery = fopen("tmp/".$idfile."-SubmissionSetSourceIdQuery-".$idfile,"w+");
@@ -92,7 +92,7 @@ function validate_XDSSubmissionSetSourceId($dom,$idfile,$save_files)
 	fclose($fp_sourceIdQuery);
 	}
 	#### ESEGUO LA QUERY
-    	$res = query_select($query); //array bidimensionale
+    	$res = query_select2($query,$connessione); //array bidimensionale
 
     	$bool = (empty($res));
     	$ret = array($bool,$ebxml_value);
@@ -104,7 +104,7 @@ function validate_XDSSubmissionSetSourceId($dom,$idfile,$save_files)
 ##############################################################################
 
 ##### XDSDocumentEntry.uniqueId
-function validate_XDSDocumentEntryUniqueId($dom)
+function validate_XDSDocumentEntryUniqueId($dom,$connessione)
 {
 //      $fp_uniqueIdQuery = fopen("tmp/DocumentEntryUniqueIdQuery","w+");
 
@@ -184,7 +184,7 @@ function validate_XDSDocumentEntryUniqueId($dom)
 // 	fclose($fp_uniqueIdQuery);
     	
 	### EFFETTUO LA QUERY ED OTTENGO IL RISULTATO
-	$res = query_select($query); //array bidimensionale
+	$res = query_select2($query,$connessione); //array bidimensionale
 	 
     	$isEmpty = ((empty($res)) || $isEmpty);
     	if(!$isEmpty)###---> uniqueId già presente --> eccezione

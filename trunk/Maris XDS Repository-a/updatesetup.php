@@ -9,6 +9,7 @@
 
 include_once('./config/config.php');
 require_once('./lib/functions_'.$database.'.php');
+$connessione=connectDB();
 
 $REG_host_post = $_POST['registry_host'];
 $REG_port_post = $_POST['registry_port'];
@@ -17,11 +18,11 @@ $REG_http_post = $_POST['registry_http'];
 
 
 $deleteREG = "DELETE FROM REGISTRY";
-$REG_delete = query_execute($deleteREG);
+$REG_delete = query_execute2($deleteREG,$connessione);
 
 $insertREG = "INSERT INTO REGISTRY (ID,HOST,PORT,PATH,ACTIVE,HTTP,SERVICE,DESCRIPTION) VALUES ('1','$REG_host_post','$REG_port_post','$REG_path_post','A','$REG_http_post','SUBMISSION','REGISTRY')";
 //echo $insertREG;
-$REG_insert = query_execute($insertREG);
+$REG_insert = query_execute2($insertREG,$connessione);
 
 
 $REP_host_post = $_POST['repository_host'];
@@ -30,11 +31,11 @@ $REP_http_post = $_POST['repository_http'];
 
 
 $deleteREP = "DELETE FROM REPOSITORY";
-$REP_delete = query_execute($deleteREP);
+$REP_delete = query_execute2($deleteREP,$connessione);
 
 $insertREP = "INSERT INTO REPOSITORY (ID,HOST,PORT,SERVICE,ACTIVE,HTTP) VALUES ('1','$REP_host_post','$REP_port_post','SUBMISSION','A','$REP_http_post')";
 //echo $insertREP;
-$REP_insert = query_execute($insertREP);
+$REP_insert = query_execute2($insertREP,$connessione);
 
 $REP_www_post = $_POST['repository_www'];
 $REP_log_post = $_POST['repository_log'];
@@ -43,11 +44,11 @@ $REP_files_post = $_POST['repository_files'];
 $REP_java_home = $_POST['repository_java_home'];
 
 $deleteREP_config = "DELETE FROM CONFIG";
-$REP_delete_config = query_execute($deleteREP_config);
+$REP_delete_config = query_execute2($deleteREP_config,$connessione);
 
-$insertREP_config = "INSERT INTO CONFIG (WWW,LOG,CACHE,FILES,JAVA_PATH) VALUES ('$REP_www_post','$REP_log_post','$REP_cache_post','$REP_files_post','$REP_java_home')";
+$insertREP_config = "INSERT INTO CONFIG (WWW,LOG,CACHE,FILES) VALUES ('$REP_www_post','$REP_log_post','$REP_cache_post','$REP_files_post')";
 //echo $insertREP_config;
-$REP_insert_config = query_execute($insertREP_config);
+$REP_insert_config = query_execute2($insertREP_config,$connessione);
 
 
 
@@ -58,11 +59,11 @@ $ATNA_port = $_POST['repository_atna_port'];
 
 
 $deleteATNA = "DELETE FROM ATNA";
-$ATNA_delete = query_execute($deleteATNA);
+$ATNA_delete = query_execute2($deleteATNA,$connessione);
 
 $insertATNA = "INSERT INTO ATNA (ID,HOST,PORT,ACTIVE,DESCRIPTION) VALUES ('1','$ATNA_host','$ATNA_port','$ATNA_status','ATNA NODE')";
 //echo $insertREP;
-$ATNA_insert = query_execute($insertATNA);
+$ATNA_insert = query_execute2($insertATNA,$connessione);
 
 
 

@@ -81,7 +81,7 @@ function makeSoapEnvelope($stringToSoap)
 }//END OF makeSoapEnvelope($stringToSoap)
 
 //======== PER RISPONDERE SOAP NEL CASO DI FAILURE ========//
-function makeSoapedFailureResponse($advertise,$logentry)
+/*function makeSoapedFailureResponse($advertise,$logentry)
 {
 	$response = "<SOAP-ENV:Envelope xmlns:SOAP-ENV=\"http://schemas.xmlsoap.org/soap/envelope/\">
 	<SOAP-ENV:Body>
@@ -97,7 +97,27 @@ function makeSoapedFailureResponse($advertise,$logentry)
 
 	return $response;
 
+}//END OF makeSoapedFailureResponse*/
+
+
+function makeSoapedFailureResponse($advertise,$errorcode)
+{
+	$response = "<SOAP-ENV:Envelope xmlns:SOAP-ENV=\"http://schemas.xmlsoap.org/soap/envelope/\">
+	<SOAP-ENV:Body>
+	      <RegistryResponse status=\"Failure\" xmlns=\"urn:oasis:names:tc:ebxml-regrep:registry:xsd:2.1\">
+	      		<RegistryErrorList>";
+			for($i=0;$i<count($errorcode);$i++){
+			$response .= "\r<RegistryError codeContext=\"".$advertise[$i]."\" errorCode=\"".$errorcode[$i]."\" severity=\"Error\"/>";
+			}
+	  $response .="</RegistryErrorList>
+	      </RegistryResponse>
+	</SOAP-ENV:Body>
+</SOAP-ENV:Envelope>";
+
+	return $response;
+
 }//END OF makeSoapedFailureResponse
+
 
 ####### GENERA URN UUIDs
 function idrandom()
@@ -140,5 +160,98 @@ function idrandom_file()
       return $stringa; // restituisci alla funzione
 
 }//END OF idrandom_ERRATA()
+
+
+function givenamescape($link,$input){
+
+	preg_match('/((xmlns:)?([^\t\n\r\f\v ";<]+)?(="'.$link.'"))/i',$input,$matches);
+
+	$namespace=$matches[3];
+
+return $namespace;
+
+}
+
+
+function giveboundary($headers){
+
+	if(stripos($headers["Content-Type"],"boundary")){
+		writeTimeFile($_SESSION['idfile']."--Repository: Il boundary e' presente");
+
+		if (preg_match('(boundary="[^\t\n\r\f\v";]+")',$headers["Content-Type"])) {
+			writeTimeFile($_SESSION['idfile']."--Repository: Ho trovato il boundary di tipo boundary=\"bvdwetrct637crtv\"");
+
+			$content_type = stristr($headers["Content-Type"],'boundary');
+			$pre_boundary = substr($content_type,strpos($content_type,'"')+1);
+
+			$fine_boundary = strpos($pre_boundary,'"')+1;
+			//BOUNDARY ESATTO
+			$boundary = '';
+			$boundary = substr($pre_boundary,0,$fine_boundary-1);
+
+			writeTimeFile($idfile."--Repository: Il boundary ".$boundary);
+		}
+
+		else if (preg_match('(boundary=[^\t\n\r\f\v";]+[;])',$headers["Content-Type"])) {
+			writeTimeFile($_SESSION['idfile']."--Repository: Ho trovato il boundary di tipo boundary=bvdwetrct637crtv;");
+			$content_type = stristr($headers["Content-Type"],'boundary');
+			$pre_boundary = substr($content_type,strpos($content_type,'=')+1);
+			$fine_boundary = strpos($pre_boundary,';');
+			//BOUNDARY ESATTO
+			$boundary = '';
+			$boundary = substr($pre_boundary,0,$fine_boundary);
+
+			writeTimeFile($_SESSION['idfile']."--Repository: Il boundary ".$boundary);
+
+		}
+
+		else {
+			writeTimeFile($_SESSION['idfile']."--Repository: Il boundary non e' del tipo boundary=\"bvdwetrct637crtv\" o boundary=bvdwetrct637crtv;");
+	
+ 		}
+
+		$MTOM=false;
+	}
+	//Caso MTOM
+	else {
+		writeTimeFile($_SESSION['idfile']."--Repository: non e' dichiarato il boundary");
+		$MTOM=true;
+		//$boundary = "--boundary_per_MTOM";
+	}
+
+	$ret=array($boundary,$MTOM);
+ return $ret;
+}
+
+
+function SendError($file_input){
+
+	ob_get_clean();//OKKIO FONDAMENTALE!!!!!
+
+	//HEADERS
+	header("HTTP/1.1 200 OK");
+	header("Path: ".$_SESSION['www_REP_path']);
+	header("Content-Type: text/xml;charset=UTF-8");
+	header("Content-Length: ".(string)filesize($file_input));
+		//CONTENUTO DEL FILE DI RISPOSTA
+	if($file = fopen($file_input,'rb'))
+	{
+   		while((!feof($file)) && (connection_status()==0))
+   		{
+     			print(fread($file, 1024*8));
+      			flush();//NOTA BENE!!!!!!!!!
+   		}
+
+   		fclose($file);
+	}
+
+	//SPEDISCO E PULISCO IL BUFFER DI USCITA
+	ob_end_flush();
+	//BLOCCO L'ESECUZIONE DELLO SCRIPT
+	exit;
+
+}
+
+
 
 ?>

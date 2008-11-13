@@ -103,7 +103,7 @@ function request($post_data)
 //$log = new Log("REP");
 	$this->buf = "";
 	$post = "POST ".$this->path." HTTP/1.1\r\n".
-		"Host: ".$this->host."\r\n".
+		"Host: ".$this->host.":".$this->port."\r\n".
 		"Accept: text/html, text/xml, image/gif, image/jpeg, *; q=.2, */*; q=.2\r\n".
 		"Cache-Control: no-cache\r\n".
 		"Connection: Close\r\n".

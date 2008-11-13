@@ -63,20 +63,23 @@ CREATE TABLE IF NOT EXISTS `AUDITABLEEVENT` (
 -- Struttura della tabella `CONFIG`
 -- 
 
+
 CREATE TABLE IF NOT EXISTS `CONFIG` (
   `WWW` varchar(100) NOT NULL default '',
   `LOG` char(1) NOT NULL default '0',
   `CACHE` char(1) NOT NULL default '0',
   `FILES` char(1) NOT NULL default '0',
-  `JAVA_PATH` varchar(255) NOT NULL
+  `JAVA_PATH` varchar(255) NOT NULL,
+  `UNIQUEID` varchar(100) NOT NULL,
+  PRIMARY KEY  (`WWW`)
 ) ENGINE=MyISAM DEFAULT CHARSET=latin1;
 
 -- 
 -- Dump dei dati per la tabella `CONFIG`
 -- 
 
-INSERT INTO `CONFIG` (`WWW`, `LOG`, `CACHE`, `FILES`, `JAVA_PATH`) VALUES 
-('/repository/', 'A', 'O', 'A', '/usr/lib/jvm/java-1.5.0-sun-1.5.0.13/bin/');
+INSERT INTO `CONFIG` (`WWW`, `LOG`, `CACHE`, `FILES`, `JAVA_PATH`, `UNIQUEID`) VALUES 
+('/MARIS_XDS/repository-b/', 'A', 'O', 'A', '', '1.19.6.24.109.52.1');
 
 -- --------------------------------------------------------
 

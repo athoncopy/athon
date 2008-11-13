@@ -75,9 +75,9 @@ function createExportEvent($eventOutcomeIndicator,$ip_repository,$ip_consumer)
 	fclose($fp_EXPORT);
 
 	##### COMPONGO L'ARRAY DA RITORNARE
-	$ret = array($EXPORT_STRING,$filename);
+	//$ret = array($EXPORT_STRING,$filename);
 
-	return $ret;
+	return $EXPORT_STRING_2;
 
 }//END OF createExportEvent
 
