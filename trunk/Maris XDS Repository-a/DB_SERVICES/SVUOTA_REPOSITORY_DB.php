@@ -102,15 +102,13 @@ $windows=substr_count(strtoupper($system),"WINDOWS");
 
 if ($windows>0){
 	exec('del ..\\tmp\\* /q');
-	exec('del ..\\tmpQuery\\* /q');
 	exec('del ..\\log\\* /q');
 	header('location: ../setup.php');
 
 	}
 else{	
-	exec('rm -f ../tmp/*');
-	exec('rm -f ../tmpQuery/*');
-	exec('rm -f ../log/*');
+	exec('rm -Rf ../tmp/*');
+	exec('rm -Rf ../log/*');
 	header('location: ../setup.php');
 	}
 
@@ -131,7 +129,7 @@ if ($windows>0){
 
 	}
 else{	
-	exec('rm -f -R ../Submitted_Documents/*');
+	exec('rm -Rf ../Submitted_Documents/*');
 	header('location: ../setup.php');
 	}
 

@@ -15,7 +15,6 @@ include("config/REP_configuration.php");
 include_once($lib_path."domxml-php4-to-php5.php");
 include_once($lib_path."utilities.php");
 include_once($lib_path."log.php");
-include_once($lib_path."dom_utils.php");
 $system=PHP_OS;
 
 $windows=substr_count(strtoupper($system),"WIN");
@@ -34,6 +33,10 @@ $log->setCurrentFileSLogPath($tmp_path);
 
 $errorcode=array();
 $advertise=array();
+
+if(!is_dir($tmp_path)){
+mkdir($tmp_path, 0777,true);
+}
 
 $_SESSION['tmp_path']=$tmp_path;
 $_SESSION['idfile']=$idfile;
@@ -150,6 +153,8 @@ $log->writeLogFileS($ebxml_STRING,$idfile."-ebxml-".$idfile,"N");
 $ebxml_STRING_VALIDATION = adjustURN_UUIDs($ebxml_STRING);
 
 //file da scrivere!!!!!
+
+
 $fp_ebxml_val = fopen($tmp_path.$idfile."-ebxml_for_validation-".$idfile,"w+");
 	fwrite($fp_ebxml_val,$ebxml_STRING_VALIDATION);
 fclose($fp_ebxml_val);
@@ -182,17 +187,12 @@ writeTimeFile($idfile."--Repository: XDSSubmissionSetSourceId valido");}
 
 $conta_boundary=substr_count($body,$boundary)-1;
 $conta_allegati=$conta_boundary;
-/*
-allegato_array[1]=primo allegato con parte iniziale
-allegato_array[2]=secondo allegato con parte iniziale
-allegato_array[$i]=$i allegato con parte iniziale
-*/
 
 $allegato_array=array();
 $busta_array=explode($boundary,$input);
 $conta_da_explode=count($busta_array);
 for($ce=2;$ce<$conta_da_explode-1;$ce++){
-$allegato_array=array_merge($allegato_array,array($busta_array[$ce]));
+	$allegato_array=array_merge($allegato_array,array($busta_array[$ce]));
 }
 
 
@@ -200,14 +200,14 @@ $validAllegatiExtrinsicObject = verificaContentMimeExtrinsicObject($dom_ebXML,$a
 
 if($validAllegatiExtrinsicObject){
 
-####SE SONO QUI HO PASSATO IL VINCOLO DI VALIDAZIONE SU DocumentEntryUniqueId
-$log->writeLogFile('SUPERATO I VINCOLI DI VALIDAZIONE',1);
+	####SE SONO QUI HO PASSATO IL VINCOLO DI VALIDAZIONE SU DocumentEntryUniqueId
+	$log->writeLogFile('SUPERATO I VINCOLI DI VALIDAZIONE',1);
 
-if($save_files){
-$log->writeLogFileS('SUPERATO I VINCOLI DI VALIDAZIONE',$idfile."-post_validation-".$idfile,"N");}
+	if($save_files){
+		$log->writeLogFileS('SUPERATO I VINCOLI DI VALIDAZIONE',$idfile."-post_validation-".$idfile,"N");}
 
-writeTimeFile($idfile."--Repository: Ho superato la validazione del messaggio");
-}
+		writeTimeFile($idfile."--Repository: Ho superato la validazione del messaggio");
+	}
 
 #### CONTROLLO CHE CI SIANO DOCUMENTI IN ALLEGATO
 $ExtrinsicObject_array = $dom_ebXML->get_elements_by_tagname("ExtrinsicObject");
@@ -216,15 +216,15 @@ $ExtrinsicObject_array = $dom_ebXML->get_elements_by_tagname("ExtrinsicObject");
 ##### SOLO NEL CASO CHE CI SIANO DOCUMENTI IN ALLEGATO
 if(!empty($ExtrinsicObject_array))#### IMPORTANTE!!
 {
-#### TERZA COSA: DEVO VALIDARE XDSDocumentEntry.uniqueId
-$UniqueId_valid_array = validate_XDSDocumentEntryUniqueId($dom_ebXML,$connessione);
+	#### TERZA COSA: DEVO VALIDARE XDSDocumentEntry.uniqueId
+	$UniqueId_valid_array = validate_XDSDocumentEntryUniqueId($dom_ebXML,$connessione);
 
-if($UniqueId_valid_array[0]){
-	writeTimeFile($idfile."--Repository: XDSDocumentEntryUniqueId valido $UniqueId_valid_array[0]");
-	}//FINE if(!$UniqueId_valid_array[0])
+	if($UniqueId_valid_array[0]){
+		writeTimeFile($idfile."--Repository: XDSDocumentEntryUniqueId valido $UniqueId_valid_array[0]");
+		}//FINE if(!$UniqueId_valid_array[0])
 
-// Devo verificare che siano corretti i boundary
-$conta_EO = count($ExtrinsicObject_array);
+	// Devo verificare che siano corretti i boundary
+	$conta_EO = count($ExtrinsicObject_array);
 
 
 
@@ -236,7 +236,6 @@ $submission_uniqueID = getSubmissionUniqueID($dom_ebXML);
 
 ############ !!! IL METADATA RICEVUTO E' VALIDO !!! ############
 
-// $ExtrinsicObject_array = $dom_ebXML->get_elements_by_tagname("ExtrinsicObject");
 #### CICLO SU TUTTI I FILE ALLEGATI
 
 for($o = 0 ; $o < $conta_EO ; $o++)
@@ -263,9 +262,7 @@ for($o = 0 ; $o < $conta_EO ; $o++)
 
 
 	if(!is_dir($relative_docs_path)){
-	mkdir('./Submitted_Documents/'.date("Y").'/', 0777);
-	mkdir('./Submitted_Documents/'.date("Y").'/'.date("m").'/', 0777);
-	mkdir('./Submitted_Documents/'.date("Y").'/'.date("m").'/'.date("d").'/', 0777);
+		mkdir('./Submitted_Documents/'.date("Y").'/'.date("m").'/'.date("d").'/', 0777,true);
 	}
 
 	$document_URI = $relative_docs_path.$file_name;
@@ -309,19 +306,14 @@ for($o = 0 ; $o < $conta_EO ; $o++)
 
 
 	$selectTOKEN="SELECT KEY_PROG FROM DOCUMENTS WHERE XDSDOCUMENTENTRY_UNIQUEID = '".$UniqueId_valid_array[1][$o]."'";
-	//writeTimeFile($idfile."--Repository: uniqueid".$selectTOKEN);
-	//$selectTOKEN= "SELECT MAX(TOKEN_ID) AS TOKEN_ID FROM TOKEN";
 		$res_token = query_select2($selectTOKEN,$connessione);
 		$next_token = $res_token[0][0];
 	writeTimeFile($idfile."--Repository: $selectTOKEN");
 	$document_token = $www_REP_path."getDocument.php?token=".$next_token;
-	//writeTimeFile($idfile."--Repository: document_token".$document_token);
-	writeTimeFile($idfile."--Repository: protocol $rep_protocol");
 	###### Calcolo URI
 	if($rep_protocol=="NORMAL")
 	{
 	   $Document_URI_token = $normal_protocol.$rep_host.":".$rep_port.$document_token;
-		writeTimeFile($idfile."--Sono in NORMAL: $Document_URI_token");
 	}
 	else if($rep_protocol=="TLS")
 	{
@@ -335,7 +327,7 @@ for($o = 0 ; $o < $conta_EO ; $o++)
 	###### Calcolo size
 	$size = filesize($document_URI);
 
-include_once("createMetadataToForward.php");
+include_once("./lib/createMetadataToForward.php");
 #### MODIFICO IL METADATA PER FORWARDARLO SUCCESSIVAMENTE AL REGISTRY
       if($mod) ### CASO HASH-SIZE-URI NON PRESENTI
       {
@@ -426,6 +418,7 @@ $client->set_data_length(filesize($file_forwarded_written));
 $client->set_path($reg_path);
 $client->set_idfile($idfile);
 $client->set_save_files($save_files);
+$client->set_tmp_path($tmp_path);
 
 
 ######## INOLTRO AL REGISTRY E ATTENDO LA RISPOSTA ##########
@@ -484,85 +477,21 @@ if(strpos(strtoupper($da_registry),"ERROR")||strpos(strtoupper($da_registry),"FA
 #### XML RICEVUTO IN RISPOSTA DAL REGISTRY
 
 if (preg_match('([^\t\n\r\f\v";][:]*+ENVELOPE)',strtoupper($da_registry))) {
-writeTimeFile($idfile."--Repository: Ho trovato SOAPENV:ENVELOPE");
+	writeTimeFile($idfile."--Repository: Ho trovato SOAPENV:ENVELOPE");
 
-preg_match('(<([^\t\n\r\f\v";<]+:)?(ENVELOPE))',strtoupper($da_registry),$matches_reg);
+	preg_match('(<([^\t\n\r\f\v";<]+:)?(ENVELOPE))',strtoupper($da_registry),$matches_reg);
 
-$presoap_reg=$matches_reg[1];
-writeTimeFile($idfile."--Repository: Ho trovato $presoap");
-$body = substr($da_registry,strpos(strtoupper($da_registry),"<".$presoap_reg."ENVELOPE"));
-
-
-
-
-
-
+	$presoap_reg=$matches_reg[1];
+	writeTimeFile($idfile."--Repository: Ho trovato $presoap");
+	$body = substr($da_registry,strpos(strtoupper($da_registry),"<".$presoap_reg."ENVELOPE"));
 }
 
-
-
-//$body = trim((substr($da_registry,strpos($da_registry,"<SOAP-ENV:Envelope"))));
 
 //File da scrivere!!!!!
 $fp_body_response = fopen($tmp_path.$idfile."-body_response-".$idfile, "wb+");
 		fwrite($fp_body_response,$body);
 fclose($fp_body_response);
-/*
-#### HEADERS RICEVUTI IN RISPOSTA DAL REGISTRY
-$headers = trim(substr($da_registry,strpos($da_registry,"HTTP"),(strlen($da_registry)-strlen($body)-17)));
 
-//File da scrivere!!!!
-$fp_headers_response = fopen($tmp_path.$idfile."-headers_response-".$idfile, "wb+");
-		fwrite($fp_headers_response,$headers);
-fclose($fp_headers_response);
-
-//=============================================================================//
-//==============  ORA RISPONDO (ACK) AL DOCUMENT SOURCE  =====================//
-$headers_vector = file($tmp_path.$idfile."-headers_response-".$idfile);//metto gli headers ricevuti in un vettore
-*/
-
-//$body_response_fileSize = filesize($tmp_path.$idfile."-body_response-".$idfile);
-
-##### CALCOLO LA SIZE DELLA RISPOSTA RICEVUTA
-$fp_dim = fopen($tmp_path.$idfile."-dim-".$idfile,'wb+');
-fwrite($fp_dim,$body_response_fileSize);
-fclose($fp_dim);
-
-/*
-// La parte degli headers non serve
-
-##### RESTITUISCO GLI HEADERS al PRODUCER
-if(!empty($headers_vector))
-{
-	## FILE DEGLI HEADERS RESTITUITI AL SOURCE
-	$fp_vector = fopen($tmp_path.$idfile."-headers_to_source-".$idfile,'wb+');
-
-	######## PROCESSO IL VETTORE DEGLI HEADERS RICEVUTI DAL REGISTRY
-	for($t =0;$t<count($headers_vector);$t++)
-	{
-		$h = $headers_vector[$t];
-		##### FORZO IL CONTENT LENGTH
-		if((strcmp(substr($h,0,14),"Content-Length:")) == 0)
-		{
-			$con_len_header = "Content-Length: ".(string)$body_response_fileSize;
-			header($con_len_header);
-			fwrite($fp_vector,$con_len_header."\n");
-		}
-		else
-		{
-			header($h);
-			fwrite($fp_vector,$h."\n");
-		}
-	}
-
-### AGGIUNGO LA SOAPACTION VUOTA
-//header("SOAPAction : \"\"");
-
-    //fwrite($fp_vector,"SOAPAction : \"\"");
-fclose($fp_vector);
-
-}//END OF if(!empty($headers_vector))
-*/
 
 header("HTTP/1.1 200 OK");
 header("Content-Type: text/xml;charset=UTF-8");
@@ -599,19 +528,19 @@ writeTimeFile($idfile."--Repository: Ho terminato");
 
 
 if($ATNA_active=='A'){
-require_once('./lib/syslog.php');
+	require_once('./lib/syslog.php');
         $syslog = new Syslog();
-// ATNA IMPORT per Provide And Register Document Set
-$eventOutcomeIndicator="0"; //EventOutcomeIndicator 0 OK 12 ERROR
-$repository_endpoint="http://".$rep_host.":".$rep_port.$www_REP_path."repository.php";
-$ip_repository=$rep_host; 
-$ip_source=$_SERVER['REMOTE_ADDR']; 
+	// ATNA IMPORT per Provide And Register Document Set
+	$eventOutcomeIndicator="0"; //EventOutcomeIndicator 0 OK 12 ERROR
+	$repository_endpoint="http://".$rep_host.":".$rep_port.$www_REP_path."repository.php";
+	$ip_repository=$rep_host; 
+	$ip_source=$_SERVER['REMOTE_ADDR']; 
 
-$today = date("Y-m-d");
-$cur_hour = date("H:i:s");
-$datetime = $today."T".$cur_hour;
+	$today = date("Y-m-d");
+	$cur_hour = date("H:i:s");
+	$datetime = $today."T".$cur_hour;
 
-$message_import="<AuditMessage>
+	$message_import="<AuditMessage>
 	<EventIdentification EventDateTime=\"$datetime\" EventActionCode=\"R\" EventOutcomeIndicator=\"0\">
 		<EventID code=\"110107\" codeSystemName=\"DCM\" displayName=\"Import\"/>
 		<EventTypeCode code=\"ITI-15\" codeSystemName=\"IHE Transactions\" displayName=\"Provide and Register Document Set\"/>
@@ -632,10 +561,10 @@ $message_import="<AuditMessage>
 
 	$logSyslog=$syslog->Send($ATNA_host,$ATNA_port,$message_import);
 
-// ATNA EXPORT per Register Document Set
-$eventOutcomeIndicator="0"; //EventOutcomeIndicator 0 OK 12 ERROR
+	// ATNA EXPORT per Register Document Set
+	$eventOutcomeIndicator="0"; //EventOutcomeIndicator 0 OK 12 ERROR
 
-$message_export="<AuditMessage>
+	$message_export="<AuditMessage>
 	<EventIdentification EventDateTime=\"$datetime\" EventActionCode=\"R\" EventOutcomeIndicator=\"$eventOutcomeIndicator\">
 		<EventID code=\"110106\" codeSystemName=\"DCM\" displayName=\"Export\"/>
 		<EventTypeCode code=\"ITI-14\" codeSystemName=\"IHE Transactions\" displayName=\"Register Document Set\"/>
@@ -660,13 +589,9 @@ $message_export="<AuditMessage>
 
 
 
-writeTimeFile($idfile."--Repository: Ho spedito i messaggi di ATNA");
+	writeTimeFile($idfile."--Repository: Ho spedito i messaggi di ATNA");
 
-}
-
-
-
-
+} //Fine if($ATNA_active=='A')
 
 unset($_SESSION['tmp_path']);
 unset($_SESSION['idfile']);
