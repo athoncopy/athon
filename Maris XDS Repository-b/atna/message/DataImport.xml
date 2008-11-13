@@ -1,0 +1,27 @@
+<AuditMessage>
+	<EventIdentification EventDateTime="" EventActionCode="C" EventOutcomeIndicator="0">
+		<EventID code="110107" codeSystemName="DCM" displayName="Import"/>
+	</EventIdentification>
+	
+	<ActiveParticipant UserID="ADT_O3-C" UserIsRequestor="true">
+		<RoleIDCode code="110152" codeSystemName="DCM" displayName="Destination"/>
+	</ActiveParticipant>
+	
+	<ActiveParticipant UserID="IP" UserIsRequestor="false" NetworkAccessPointTypeCode="2" NetworkAccessPointID="IP">
+		
+		<RoleIDCode code="110155" codeSystemName="DCM" displayName="Source Media"/>
+	</ActiveParticipant>
+	<AuditSourceIdentification AuditSourceID="ADT_O3-C">
+		<AuditSourceTypeCode code="3"/>
+		
+	</AuditSourceIdentification>
+	
+	<ParticipantObjectIdentification ParticipantObjectID="The Study Instance UID" ParticipantObjectTypeCode="2" ParticipantObjectTypeCodeRole="3">
+		<ParticipantObjectIDTypeCode code="110180" codeSystemName="DCM" displayName="Study Instance UID"/>
+	</ParticipantObjectIdentification>
+	
+	<ParticipantObjectIdentification ParticipantObjectID="The patient ID" ParticipantObjectTypeCode="1" ParticipantObjectTypeCodeRole="1">
+		<ParticipantObjectIDTypeCode code="2"/>
+		<ParticipantObjectName></ParticipantObjectName>
+	</ParticipantObjectIdentification>
+</AuditMessage>
