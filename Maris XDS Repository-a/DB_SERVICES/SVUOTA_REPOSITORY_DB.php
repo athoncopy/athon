@@ -64,11 +64,10 @@ if($action=="database")
 {
 #### COMANDI
 $query_DOCUMENTS = "TRUNCATE TABLE DOCUMENTS";
-$query_TOKENS = "TRUNCATE TABLE TOKEN";
 $query_AuditableEvent = "TRUNCATE TABLE AUDITABLEEVENT";
 
 #### CREO L'ARRAY DEI COMANDI DA ESEGUIRE
-$svuota_array =array($query_DOCUMENTS,$query_TOKENS,$query_AuditableEvent);
+$svuota_array =array($query_DOCUMENTS,$query_AuditableEvent);
 	$i = 0;
 	while($i<count($svuota_array))
 	{

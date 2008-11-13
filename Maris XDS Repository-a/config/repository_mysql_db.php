@@ -11,9 +11,9 @@
 # hostname
   $ip = 'localhost';
 # user name
-  $user_db = 'xds';
+  $user_db = 'marco';
 # password
-  $password_db = 'xds';
+  $password_db = 'marco';
 # database name
-  $db_name = 'MARIS_XDS_REPOSITORY';
+  $db_name = 'MARIS_XDS_REPOSITORY-A';
 ?>

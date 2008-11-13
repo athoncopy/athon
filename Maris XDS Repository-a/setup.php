@@ -11,10 +11,11 @@ include_once('./config/config.php');
 require_once('./lib/functions_'.$database.'.php');
 
 $autenticato = false;
+$connessione=connectDB();
+
 
 $users = "SELECT * FROM USERS";
-$res_users = query_select($users);
-
+$res_users = query_select2($users,$connessione);
 if (isset($_SERVER['PHP_AUTH_USER']) && 
     isset($_SERVER['PHP_AUTH_PW']))
   {
@@ -85,6 +86,14 @@ return false;
 </script>
 
 
+<title>
+<?php 
+
+$v_maris_repository="2.0.2";
+
+echo "MARIS XDS REPOSITORY v$v_maris_repository SETUP"; //."   (".$_SESSION["idcode"].")"; 
+	?></title>
+
 </HEAD>
 
 
@@ -114,18 +123,18 @@ $ip_new=$ip;
 echo "<FORM name=\"myForm\" action=\"updatesetup.php\" method=\"POST\">";
 
 
-$get_REP="SELECT * FROM REPOSITORY WHERE ACTIVE = 'A'";
+$get_REP="SELECT HOST,PORT,HTTP FROM REPOSITORY WHERE ACTIVE = 'A'";
 
 
 $res_REP = query_select($get_REP);
 
 
-$REP_host = $res_REP[0][1];
-$REP_port = $res_REP[0][2];
-$REP_http = $res_REP[0][5];
+$REP_host = $res_REP[0][0];
+$REP_port = $res_REP[0][1];
+$REP_http = $res_REP[0][2];
 
 
-echo "<h2>Setup Repository</h2>";
+echo "<h2>Repository v$v_maris_repository Setup</h2>";
 echo "The link to the repository you have to set in your software (XDS Source) is:";
 echo "<br><b>".$repository_link."</b>";
 echo "<br><br>";
@@ -139,7 +148,7 @@ echo "Repository Port: (80 default) <INPUT type=\"text\" name=\"repository_port\
 
 
 $get_REP_config="SELECT * FROM CONFIG";
-$res_REP_config = query_select($get_REP_config);
+$res_REP_config = query_select2($get_REP_config,$connessione);
 
 $REP_www = str_replace('setup.php','',$script);
 $REP_log = $res_REP_config[0][1];
@@ -212,7 +221,7 @@ else {
 
 $get_ATNA="SELECT * FROM ATNA";
 
-$res_ATNA = query_select($get_ATNA);
+$res_ATNA = query_select2($get_ATNA,$connessione);
 
 $ATNA_host = $res_ATNA[0][1];
 $ATNA_port = $res_ATNA[0][2];
@@ -242,15 +251,15 @@ echo "Repository ATNA Port: <INPUT type=\"text\" name=\"repository_atna_port\" v
 
 #################### REGISTRY ####################
 
-$get_REG="SELECT * FROM REGISTRY WHERE ACTIVE = 'A'";
+$get_REG="SELECT HOST,PORT,PATH,HTTP FROM REGISTRY WHERE ACTIVE = 'A'";
 
 
 $res_REG = query_select($get_REG);
 
-$REG_host = $res_REG[0][1];
-$REG_port = $res_REG[0][2];
-$REG_path = $res_REG[0][3];
-$REG_http = $res_REG[0][5];
+$REG_host = $res_REG[0][0];
+$REG_port = $res_REG[0][1];
+$REG_path = $res_REG[0][2];
+$REG_http = $res_REG[0][3];
 
 echo "<h3>Registry parameters</h3>";
 
@@ -271,12 +280,12 @@ echo "Registry HTTP: <select name=\"registry_http\">
   </select><br></br>";}
 
 #################### JAVA_PATH ###################
-
+/*
 echo "<h3>JAVA HOME</h3>";
 echo "JAVA_HOME could be /usr/lib/jvm/jre/bin/ or /usr/lib/jvm/java-xxx/bin/ or C:\\\\Programmi\\Java\\jre.xxx\\bin\\<br>";
 echo "<INPUT type=\"text\" name=\"repository_java_home\" value=\"$REP_java\" size=\"50\" maxlength=\"100\"><br></br>";
 
-
+*/
 
 
 echo "<INPUT type=\"Submit\" value=\"Update\"><br></br>";
@@ -317,7 +326,7 @@ echo "</FORM>";
 $get_SOURCES="SELECT * FROM KNOWN_SOUCES_IDS";
 
 
-$res_REP_SOURCES = query_select($get_SOURCES);
+$res_REP_SOURCES = query_select2($get_SOURCES,$connessione);
 
 echo "<h3>Known Sources</h3>";
 
@@ -350,7 +359,7 @@ echo "</table>";
 
 $get_USER="SELECT * FROM USERS";
 
-$res_USER = query_select($get_USER);
+$res_USER = query_select2($get_USER,$connessione);
 
 $USER_login = $res_USER[0][0];
 

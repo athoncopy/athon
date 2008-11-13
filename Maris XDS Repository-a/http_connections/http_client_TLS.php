@@ -72,10 +72,10 @@ function send_request()
   curl_setopt($ch, CURLOPT_STDERR, $fp_TLS_Client_POST);
 
   curl_setopt($ch, CURLOPT_SSLCERTTYPE, "PEM");
-  curl_setopt($ch, CURLOPT_SSLCERT, "/etc/apache2/tls/test_sys_1.cert.pem");
+  curl_setopt($ch, CURLOPT_SSLCERT, "/var/www/MARIS_XDS/repository-a/certificates/athon1.ihe-europe.org.pem");
   curl_setopt($ch, CURLOPT_SSLCERTPASSWD, '');
   curl_setopt($ch, CURLOPT_SSLKEYTYPE, "PEM");
-  curl_setopt($ch, CURLOPT_SSLKEY, "/etc/apache2/tls/test_sys_1.key.pem");
+  curl_setopt($ch, CURLOPT_SSLKEY, "/var/www/MARIS_XDS/repository-a/certificates/athon1.ihe-europe.org.key");
   curl_setopt($ch, CURLOPT_SSLKEYPASSWD, '');
   curl_setopt($ch, CURLOPT_RETURNTRANSFER,1);
   curl_setopt($ch, CURLOPT_SSL_VERIFYHOST,FALSE);
