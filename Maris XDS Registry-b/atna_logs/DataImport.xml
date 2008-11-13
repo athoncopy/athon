@@ -1,0 +1,27 @@
+<AuditMessage>
+	<EventIdentification EventDateTime="2007-08-21T17:06:27" EventActionCode="C" EventOutcomeIndicator="0">
+		<EventID code="110107" codeSystemName="DCM" displayName="Import"/>
+	</EventIdentification>
+	
+	<ActiveParticipant UserID="XDS Registry" UserIsRequestor="true" NetworkAccessPointID="10.135.0.92">
+		<RoleIDCode code="110152" codeSystemName="DCM" displayName="Destination"/>
+	</ActiveParticipant>
+	
+	<ActiveParticipant UserID="XDS Source" UserIsRequestor="false" NetworkAccessPointTypeCode="2" NetworkAccessPointID="Script_source">
+		
+		<RoleIDCode code="110155" codeSystemName="DCM" displayName="Source Media"/>
+	</ActiveParticipant>
+	<AuditSourceIdentification AuditSourceID="MARIS XDS">
+		<AuditSourceTypeCode code="3"/>
+		
+	</AuditSourceIdentification>
+	
+	<ParticipantObjectIdentification ParticipantObjectID="a2f59471c9c6a0008d335d54988a5721" ParticipantObjectTypeCode="2" ParticipantObjectTypeCodeRole="3">
+		<ParticipantObjectIDTypeCode code="110180" codeSystemName="DCM" displayName="Study Instance UID"/>
+	</ParticipantObjectIdentification>
+	
+	<ParticipantObjectIdentification ParticipantObjectID="0cd545b18526c2d067ff070c78128b99^^^script" ParticipantObjectTypeCode="1" ParticipantObjectTypeCodeRole="1">
+		<ParticipantObjectIDTypeCode code="2"/>
+		<ParticipantObjectName>PID-5|Max^Pippo^^^</ParticipantObjectName>
+	</ParticipantObjectIdentification>
+</AuditMessage>
