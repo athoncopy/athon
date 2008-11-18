@@ -18,7 +18,9 @@ $connessione=connectDB();
 ### QUERY FOR HTTP kind of CONNECTION WITH REGISTRY (NORMAL or TLS)
 $http_con = "SELECT HTTPD FROM HTTP WHERE HTTP.ACTIVE = 'A'";
 
-
+$ip_source=$_SERVER['REMOTE_ADDR']; //Repository IP
+$ip_server=$_SERVER['SERVER_NAME']; //Registry IP
+$port_server=$_SERVER['SERVER_PORT']; //Registry IP
 
 $res_http = query_select2($http_con,$connessione);
 
@@ -26,8 +28,12 @@ $res_http = query_select2($http_con,$connessione);
 $http = $res_http[0][0];
 
 ###### PARAMETRO PROTOCOLLO HTTPS
-$tls_protocol = "https://";
-$normal_protocol = "http://";
+if($http=="NORMAL"){
+$http_protocol = "http://";
+}
+else if ($http=="TLS"){
+$http_protocol = "https://";
+}
 
 ############### SERVIZIO DI SUBMISSION
 $get_reg_info="SELECT * FROM REGISTRY WHERE REGISTRY.SERVICE = 'SUBMISSION' AND REGISTRY.ACTIVE = 'A' AND REGISTRY.HTTP IN ($http_con)";
@@ -53,9 +59,6 @@ $reg_QUERY_port = $res_QUERY_info[0][2];
 
 //------------------ LOCAL FILE SYSTEM PATHS --------------------//
 
-$tmp_path = "./tmp/";
-$tmpQuery_path = "./tmpQuery/";
-$tmpQueryService_path = "./tmpQueryService/";
 $lib_path = "./lib/";      //nota: sempre con lo / finale!!!
 
 $select_config = "SELECT * FROM CONFIG";
@@ -114,8 +117,16 @@ $atna_path = "./atna_logs/";
 //------------------ LOCAL FILE SYSTEM PATHS ------------------//
 
 ##### PULIZIA CACHE TEMPORANEA
-
 $clean_cache = $res_config[0][1];	### A=attiva O=non attivo
+if($clean_cache=="O" || $clean_cache=="L"){
+	$tmp_path = "./tmp/";
+	$tmpQueryService_path = "./tmpQueryService/";
+	}
+
+else if($clean_cache=="H"){
+	$tmp_path = "./tmp/".date("Y").date("m").date("d")."/".$ip_source."/";
+	$tmpQueryService_path = "./tmpQueryService/".date("Y").date("m").date("d")."/".$ip_source."/";
+	}
 
 
 ##### CONTROL PATIENT ID

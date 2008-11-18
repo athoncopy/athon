@@ -451,7 +451,7 @@ switch ($AdhocQuery) {
 
 	// SQL Part1
 	$SQLStoredQuery_From_EO = "SELECT eo.id FROM ExtrinsicObject eo, ExternalIdentifier patId ";
-	$SQLStoredQuery_Required_EO = "WHERE eo.status = '".trim($SQEntryStatus)."' AND (eo.objectType = 'urn:uuid:7edca82f-054d-47f2-a032-9b2a5b5186c1' AND patId.registryObject = eo.id AND patId.identificationScheme = 'urn:uuid:58a6f841-87b3-4a3e-92fd-a8ffeff98427' AND patId.value = '".trim($SQPatientID)."')";
+	$SQLStoredQuery_Required_EO = "WHERE eo.status = '".trim($SQEntryStatus)."' AND (eo.objectType = 'urn:uuid:7edca82f-054d-47f2-a032-9b2a5b5186c1' AND patId.registryObject = eo.id AND patId.identificationScheme = 'urn:uuid:58a6f841-87b3-4a3e-92fd-a8ffeff98427' AND patId.value = ".trim($SQPatientID).")";
 
 
 	$SQLStoredQuery_Optional_EO = "";
@@ -471,15 +471,15 @@ switch ($AdhocQuery) {
 	$SQLStoredQuery_EO = $SQLStoredQuery_From_EO.$SQLStoredQuery_Required_EO.$SQLStoredQuery_Optional_EO;
 
 	// SQL Part2
-	$SQLStoredQuery_From_RP = "SELECT rp.id FROM RegistryPackage rp, Classification cl, ExternalIdentifier patId ";
-	$SQLStoredQuery_Required_RP = "WHERE (rp.status = '".trim($SQSubmissionStatus)."' AND cl.classifiedObject = rp.id AND cl.classificationNode = 'urn:uuid:a54d6aa5-d40d-43f9-88c5-b4633d873bdd' AND patId.registryObject = rp.id AND patId.identificationScheme = 'urn:uuid:6b5aea1a-874d-4603-a4bc-96a0a7b38446' AND patId.value = '".trim($SQPatientID)."') OR (rp.status = '".trim($SQFolderStatus)."' AND cl.classifiedObject = rp.id AND cl.classificationNode = 'urn:uuid:d9d542f3-6cc4-48b6-8870-ea235fbc94c2' AND patId.registryObject = rp.id AND patId.identificationScheme = 'urn:uuid:f64ffdf0-4b97-4e06-b79f-a52b38ec2f8a' AND patId.value = '".trim($SQPatientID)."')" ;
+	$SQLStoredQuery_From_RP = "SELECT DISTINCT rp.id FROM RegistryPackage rp, Classification cl, ExternalIdentifier patId ";
+	$SQLStoredQuery_Required_RP = "WHERE (rp.status = '".trim($SQSubmissionStatus)."' AND cl.classifiedObject = rp.id AND cl.classificationNode = 'urn:uuid:a54d6aa5-d40d-43f9-88c5-b4633d873bdd' AND patId.registryObject = rp.id AND patId.identificationScheme = 'urn:uuid:6b5aea1a-874d-4603-a4bc-96a0a7b38446' AND patId.value = ".trim($SQPatientID).") OR (rp.status = '".trim($SQFolderStatus)."' AND cl.classifiedObject = rp.id AND cl.classificationNode = 'urn:uuid:d9d542f3-6cc4-48b6-8870-ea235fbc94c2' AND patId.registryObject = rp.id AND patId.identificationScheme = 'urn:uuid:f64ffdf0-4b97-4e06-b79f-a52b38ec2f8a' AND patId.value = ".trim($SQPatientID).")" ;
 
 
 	$SQLStoredQuery_RP = $SQLStoredQuery_From_RP.$SQLStoredQuery_Required_RP;
 
 	// SQL Part3
 	$SQLStoredQuery_From_ASS = "SELECT DISTINCT ass.id FROM Association ass, ExtrinsicObject eo, RegistryPackage ss, RegistryPackage fol ";
-	$SQLStoredQuery_Required_ASS = "WHERE ((ass.sourceObject = ss.id AND ass.targetObject = fol.id) OR (ass.sourceObject = ss.id AND ass.targetObject = eo.id) OR (ass.sourceObject = fol.id AND ass.targetObject = eo.id) ) AND eo.id IN (SELECT eo.id FROM ExtrinsicObject eo, ExternalIdentifier patId WHERE eo.status = '".trim($SQEntryStatus)."' AND patId.registryObject = eo.id AND patId.identificationScheme = 'urn:uuid:58a6f841-87b3-4a3e-92fd-a8ffeff98427' AND patId.value = '".trim($SQPatientID)."') AND ss.id IN (SELECT ss.id FROM RegistryPackage ss, ExternalIdentifier patId WHERE ss.status = '".trim($SQSubmissionStatus)."' AND patId.registryObject = ss.id AND patId.identificationScheme = 'urn:uuid:6b5aea1a-874d-4603-a4bc-96a0a7b38446' AND patId.value = '".trim($SQPatientID)."') AND fol.id IN (SELECT fol.id FROM RegistryPackage fol, ExternalIdentifier patId WHERE fol.status = '".trim($SQFolderStatus)."' AND patId.registryObject = fol.id AND patId.identificationScheme = 'urn:uuid:f64ffdf0-4b97-4e06-b79f-a52b38ec2f8a' AND patId.value = '".trim($SQPatientID)."')" ;
+	$SQLStoredQuery_Required_ASS = "WHERE ((ass.sourceObject = ss.id AND ass.targetObject = fol.id) OR (ass.sourceObject = ss.id AND ass.targetObject = eo.id) OR (ass.sourceObject = fol.id AND ass.targetObject = eo.id) ) AND eo.id IN (SELECT eo.id FROM ExtrinsicObject eo, ExternalIdentifier patId WHERE eo.status = '".trim($SQEntryStatus)."' AND patId.registryObject = eo.id AND patId.identificationScheme = 'urn:uuid:58a6f841-87b3-4a3e-92fd-a8ffeff98427' AND patId.value = ".trim($SQPatientID).") AND ss.id IN (SELECT ss.id FROM RegistryPackage ss, ExternalIdentifier patId WHERE ss.status = '".trim($SQSubmissionStatus)."' AND patId.registryObject = ss.id AND patId.identificationScheme = 'urn:uuid:6b5aea1a-874d-4603-a4bc-96a0a7b38446' AND patId.value = ".trim($SQPatientID).") AND fol.id IN (SELECT fol.id FROM RegistryPackage fol, ExternalIdentifier patId WHERE fol.status = '".trim($SQFolderStatus)."' AND patId.registryObject = fol.id AND patId.identificationScheme = 'urn:uuid:f64ffdf0-4b97-4e06-b79f-a52b38ec2f8a' AND patId.value = ".trim($SQPatientID).")" ;
 
 
 	$SQLStoredQuery_ASS = $SQLStoredQuery_From_ASS.$SQLStoredQuery_Required_ASS;
