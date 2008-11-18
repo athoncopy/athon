@@ -15,9 +15,6 @@ require("config/REP_configuration.php");
 include_once($lib_path."domxml-php4-to-php5.php");
 include_once($lib_path."utilities.php");
 include_once($lib_path."log.php");
-include_once($lib_path."dom_utils.php");
-
-
 
 $system=PHP_OS;
 
@@ -39,13 +36,25 @@ $log->setCurrentFileSLogPath($tmp_path);
 $errorcode=array();
 $advertise=array();
 
+if(!is_dir($tmp_path)){
+	mkdir($tmp_path, 0777,true);
+}
+
+if(!is_dir($tmp_retrieve_path)){
+	mkdir($tmp_retrieve_path, 0777,true);
+}
+
+
+
 $_SESSION['tmp_path']=$tmp_path;
+$_SESSION['tmp_retrieve_path']=$tmp_retrieve_path;
 $_SESSION['idfile']=$idfile;
 $_SESSION['logActive']=$logActive;
 $_SESSION['log_path']=$log_path;
 $_SESSION['reg_host']=$reg_host;
 $_SESSION['reg_port']=$reg_port;
 $_SESSION['reg_path']=$reg_path;
+
 
 
 writeTimeFile($idfile."--Repository: Ho ricevuto la richiesta");
@@ -60,8 +69,8 @@ writeTimeFile($idfile."--Repository: RECUPERO GLI HEADERS RICEVUTI DA APACHE");
 $log->writeLogFile("RECEIVED:",1);
 $log->writeLogFile($headers,0);
 
-if($save_files)
-$log->writeLogFileS($headers,$idfile."-headers_received-".$idfile,"M");
+if($save_files){
+$log->writeLogFileS($headers,$idfile."-headers_received-".$idfile,"M");}
 
 
 writeTimeFile($idfile."--Repository: Scrivo headers_received");
@@ -84,7 +93,6 @@ include('rep_validation.php');
 
 
 //COMPLETO IL BOUNDARY con due - davanti
-//$boundary = "--".substr($pre_boundary,0,strlen($pre_boundary)-1);
 $boundary = "--".$boundary;
 
 
@@ -194,6 +202,9 @@ $isValid = isValid($ebxml_STRING_VALIDATION);
 if ($isValid){
 writeTimeFile($idfile."--Repository: Ho superato la validazione dell'ebxml");}
 $connessione=connectDB();
+
+
+
 
 ##################################################################
 ### QUI SONO SICURO CHE IL METADATA E' VALIDO RISPETTO ALLO SCHEMA
@@ -338,9 +349,7 @@ else {
 }
 
 	if(!is_dir($relative_docs_path)){
-	mkdir('./Submitted_Documents/'.date("Y").'/', 0777);
-	mkdir('./Submitted_Documents/'.date("Y").'/'.date("m").'/', 0777);
-	mkdir('./Submitted_Documents/'.date("Y").'/'.date("m").'/'.date("d").'/', 0777);
+		mkdir('./Submitted_Documents/'.date("Y").'/'.date("m").'/'.date("d").'/', 0777,true);
 	}
 
 	$document_URI = $relative_docs_path.$file_name;
@@ -408,7 +417,7 @@ else {
 	$size = filesize($document_URI);
 
 
-include_once("createMetadataToForward.php");
+include_once("./lib/createMetadataToForward.php");
 #### MODIFICO IL METADATA PER FORWARDARLO SUCCESSIVAMENTE AL REGISTRY
       if($mod) ### CASO HASH-SIZE-URI NON PRESENTI
       {
@@ -496,16 +505,9 @@ else if($reg_http=="TLS")
 
 
 
-
 ### SETTAGGI COMUNI
 writeTimeFile($idfile."--Repository: La dimensione e ".filesize($file_forwarded_written));
 
-
-//Per http_client_new
-/*$client->set_data_length(filesize($file_forwarded_written));
-$client->set_header($header);
-$client->set_post_data("");
-$client->set_local_tmp_path($tmp_path);*/
 
 //Per http_client
 $client->set_post_data($post_data);
@@ -514,7 +516,7 @@ $client->set_path($reg_path);
 $client->set_idfile($idfile);
 $client->set_save_files($save_files);
 $client->set_action("urn:ihe:iti:2007:RegisterDocumentSet-b");
-
+$client->set_tmp_path($tmp_path);
 
 #### SETTAGGI DEL TLS
 
@@ -536,7 +538,7 @@ writeTimeFile($idfile."--Repository: Ho ottenuto la risposta dal registry");
 
 #### CASO DI ERORE DI CERTIFICATO
 if($registry_response_log!=""){	
-makeErrorFromRegistry($registry_response_log);
+makeErrorFromRegistry("XDSRegistryError",$registry_response_log);
 }//END OF if($registry_response_log!="")
 
 
@@ -613,64 +615,8 @@ $fp_body_response = fopen($tmp_path.$idfile."-body_response-".$idfile, "wb+");
 fclose($fp_body_response);
 
 
-/*
-#### HEADERS RICEVUTI IN RISPOSTA DAL REGISTRY
-$headers = trim(substr($da_registry,strpos($da_registry,"HTTP"),(strlen($da_registry)-strlen($body_response)-17)));
-
-//File da scrivere!!!!
-$fp_headers_response = fopen($tmp_path.$idfile."-headers_response-".$idfile, "wb+");
-		fwrite($fp_headers_response,$headers);
-fclose($fp_headers_response);
-
-//=============================================================================//
-//==============  ORA RISPONDO (ACK) AL DOCUMENT SOURCE  =====================//
-$headers_vector = file($tmp_path.$idfile."-headers_response-".$idfile);//metto gli headers ricevuti in un vettore
-
-
-$body_response_fileSize = filesize($tmp_path.$idfile."-body_response-".$idfile);
-
-if($save_files){
-$fp_dim = fopen($tmp_path.$idfile."-dim-".$idfile,'wb+');
-##### CALCOLO LA SIZE DELLA RISPOSTA RICEVUTA
-fwrite($fp_dim,$body_response_fileSize);
-fclose($fp_dim);
-}
-
-##### RESTITUISCO GLI HEADERS al PRODUCER
-if(!empty($headers_vector))
-{
-	## FILE DEGLI HEADERS RESTITUITI AL SOURCE
-	$fp_vector = fopen($tmp_path.$idfile."-headers_to_source-".$idfile,'wb+');
-
-	######## PROCESSO IL VETTORE DEGLI HEADERS RICEVUTI DAL REGISTRY
-	for($t =0;$t<count($headers_vector);$t++)
-	{
-		$h = $headers_vector[$t];
-		##### FORZO IL CONTENT LENGTH
-		if((strcmp(substr($h,0,14),"Content-Length:")) == 0)
-		{
-			$con_len_header = "Content-Length: ".(string)$body_response_fileSize;
-			header($con_len_header);
-			fwrite($fp_vector,$con_len_header."\n");
-		}
-		else
-		{
-			header($h);
-			fwrite($fp_vector,$h."\n");
-		}
-	}
-
-### AGGIUNGO LA SOAPACTION VUOTA
-//header("SOAPAction : \"\"");
-
-
-    fwrite($fp_vector,"SOAPAction : \"\"");
-fclose($fp_vector);
-
-}//END OF if(!empty($headers_vector))*/
-
 header("HTTP/1.1 200 OK");
-header("Content-Type: text/xml;charset=UTF-8");
+header("Content-Type: application/soap+xml;charset=UTF-8");
 header("Content-Length: ".(string)filesize($tmp_path.$idfile."-body_response-".$idfile));
 
 
@@ -783,7 +729,7 @@ unset($_SESSION['tmp_path']);
 unset($_SESSION['idfile']);
 unset($_SESSION['logActive']);
 unset($_SESSION['log_query_path']);
-
+unset($_SESSION['tmp_retrieve_path']);
 //PULISCO LA CACHE TEMPORANEA
 
 

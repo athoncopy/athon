@@ -69,12 +69,66 @@ function avoidHtmlEntitiesInterpretation($str)
 	
 //==IMPEDISCE CHE PHP INTERPRETI LE HTMLENTITIES==/
 
+
+// 1 --> modificabile
+// 0 --> NON modificabile
+### $node = IL SINGOLO NODO EXTRINSICOBJECT
+function modifiable($node)
+{
+	$hash_bool = true;
+	$size_bool = true;
+	$URI_bool = true;
+	
+	$problem = "";
+
+	$child_array_nodes = $node->child_nodes();
+	for($j = 0;$j<count($child_array_nodes);$j++)
+	{
+		$nod = $child_array_nodes[$j];
+		$nod_name = $nod->node_name();
+		if ($nod->node_type() == XML_ELEMENT_NODE) 
+		{
+			$name = $nod->node_name();
+			if($name == "Slot")
+			{
+				#### SLOT ATTRIBUTE
+				$attribute = $nod->get_attribute("name");
+
+				if(strtoupper($attribute) == "HASH") 
+				{
+					$hash_bool = false;
+				}
+				if(strtoupper($attribute) == "SIZE")
+				{
+					 $size_bool = false;
+				}
+				if(strtoupper($attribute) == "URI") 
+				{
+					$URI_bool = false;
+				}
+
+			}//END OF if($name == "Slot")
+			
+		}//END OF if ($nod->node_type() == XML_ELEMENT_NODE) 
+		
+	}//END OF for($j = 0;$j<count($child_array_nodes);$j++)
+
+	#### COMPONGO IL VALORE BOOLEANO DA RITORNARE
+	$ret = ($hash_bool && $size_bool && $URI_bool);
+
+	#### RETURN
+	return $ret;
+
+}//END OF function modifiable($node)
+
+
+
 function makeSoapEnvelope($stringToSoap,$action)
 {
 
-	$stringSoaped = "<?xml version='1.0' encoding='UTF-8'?>\r\n<SOAP-ENV:Envelope xmlns:SOAP-ENV=\"http://schemas.xmlsoap.org/soap/envelope/\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\" xmlns:wsa=\"http://www.w3.org/2005/08/addressing\"><SOAP-ENV:Header>
+	$stringSoaped = "<?xml version='1.0' encoding='UTF-8'?>\r\n<SOAP-ENV:Envelope xmlns:SOAP-ENV=\"http://www.w3.org/2003/05/soap-envelope\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\" xmlns:wsa=\"http://www.w3.org/2005/08/addressing\"><SOAP-ENV:Header>
 	<wsa:To>http://".$_SESSION['reg_host'].":".$_SESSION['reg_port'].$_SESSION['reg_path']."</wsa:To>
-	<wsa:MessageID>urn:uuid:".$_SESSION['messageID']."</wsa:MessageID>
+	<wsa:MessageID>".$_SESSION['messageID']."</wsa:MessageID>
 	<wsa:Action>urn:ihe:iti:2007:".$action."</wsa:Action>
 	</SOAP-ENV:Header>
 	<SOAP-ENV:Body>
@@ -90,9 +144,9 @@ function makeSoapEnvelope($stringToSoap,$action)
 //======== PER RISPONDERE SOAP NEL CASO DI FAILURE ========//
 function makeSoapedFailureResponse($advertise,$errorcode,$action="urn:ihe:iti:2007:ProvideAndRegisterDocumentSet-b")
 {
-	$response = "<?xml version='1.0' encoding='UTF-8'?>\r\n<soapenv:Envelope xmlns:soapenv=\"http://schemas.xmlsoap.org/soap/envelope/\" xmlns:wsa=\"http://www.w3.org/2005/08/addressing\">
+	$response = "<?xml version='1.0' encoding='UTF-8'?>\r\n<soapenv:Envelope xmlns:soapenv=\"http://www.w3.org/2003/05/soap-envelope\" xmlns:wsa=\"http://www.w3.org/2005/08/addressing\">
 	<soapenv:Header>
-	<wsa:MessageID>urn:uuid:".$_SESSION['messageID']."</wsa:MessageID>
+	<wsa:MessageID>".$_SESSION['messageID']."</wsa:MessageID>
 	<wsa:Action>".$action."Response</wsa:Action>
 	</soapenv:Header>
 	<soapenv:Body>
@@ -222,7 +276,7 @@ function SendError($file_input){
 	//HEADERS
 	header("HTTP/1.1 200 OK");
 	header("Path: ".$_SESSION['www_REP_path']);
-	header("Content-Type: text/xml;charset=UTF-8");
+	header("Content-Type: application/soap+xml;charset=UTF-8");
 	header("Content-Length: ".(string)filesize($file_input));
 		//CONTENUTO DEL FILE DI RISPOSTA
 	if($file = fopen($file_input,'rb'))

@@ -36,11 +36,8 @@ $rep_protocol = $res[0][2];
 //------------------------- LOCAL REPOSITORY HOST INFOS -------------------------//
 
 //------------------------- LOCAL FILE SYSTEM PATHS -------------------------//
-$tmp_path = "./tmp/";
-$tmp_retrieve_path = "./tmp_retrive/";
-//$tmpQuery_path = "./tmpQuery/";
+$ip_source=$_SERVER['REMOTE_ADDR'];
 $lib_path = "./lib/";
-   $tmp_path_2 = "tmp/";                         //nota: sempre con lo / finale!!!
 
 
 $relative_docs_path = "./Submitted_Documents/".date("Y")."/".date("m")."/".date("d")."/";   // come sopra
@@ -77,9 +74,24 @@ $clean_cache = $res_config[0][2];
 
 ##### True=Salva tutti i file False=Salva solo i file necessari
 
-if($res_config[0][3]=="A"){
-	$save_files = true;
+if($res_config[0][3]=="L"){
+	$save_files = false;
+	$tmp_path = "./tmp/";
+	$tmp_retrieve_path = "./tmp_retrive/";
 	}
+
+else if($res_config[0][3]=="M"){
+	$save_files = true;
+	$tmp_path = "./tmp/";
+	$tmp_retrieve_path = "./tmp_retrive/";
+	}
+else if($res_config[0][3]=="H"){
+	$save_files = true;
+	$tmp_path = "./tmp/".date("Y").date("m").date("d")."/".$ip_source."/";
+	$tmp_retrieve_path = "./tmp_retrive/".date("Y").date("m").date("d")."/".$ip_source."/";
+	}
+
+
 #### JAVA PATH
 $java_path = $res_config[0][4];
 

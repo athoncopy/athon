@@ -589,11 +589,11 @@ return $ret;
 
 
 
-function makeErrorFromRegistry($registry_response_log){
+function makeErrorFromRegistry($error,$message){
 
          	//RESTITUISCE IL MESSAGGIO DI ERRORE
-		$errorcode[] = "XDSMissingDocumentMetadata";
-		$error_message[] = "There are more attached file than ExtrinsicObject";
+		$errorcode[] = $error;
+		$error_message[] = $message;
 		$failure_response = makeSoapedFailureResponse($error_message,$errorcode);
 
 		$file_input=$_SESSION['tmp_path'].$_SESSION['idfile']."-Client_CONNECTION_ERROR-".$_SESSION['idfile'];

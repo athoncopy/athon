@@ -85,13 +85,21 @@ return false;
 </script>
 
 
+<title>
+<?php 
+
+$v_maris_repository="2.0.3";
+
+echo "MARIS XDS REPOSITORY-A v$v_maris_repository SETUP"; //."   (".$_SESSION["idcode"].")"; 
+	?></title>
+
 </HEAD>
 
 
 <?php
 
 $delete_active = $_GET['delete'];
-echo '<table width="100%" border=0 cellpadding="10" cellspacing="0"><tr bgcolor="black"><td><img src="logo+scritta.jpg"></td></tr>';
+echo '<table width="100%" border=0 cellpadding="10" cellspacing="0"><tr bgcolor="black"><td><img src="./img/logo+scritta.jpg"></td></tr>';
 echo '<tr bgcolor="#FF8F10"><td>';
 
 
@@ -129,7 +137,7 @@ $REP_port = $res_REP[0][1];
 $REP_http = $res_REP[0][2];
 
 
-echo "<h2>Setup Repository-b</h2>";
+echo "<h2>Repository-b v$v_maris_repository Setup</h2>";
 echo "The link to the repository you have to set in your software (XDS Source) is:";
 echo "<br><b>".$repository_link."</b>";
 echo "<br><br>";
@@ -203,16 +211,26 @@ else {
 	}
 
 
-if($REP_files=="A"){
-	echo "Save all tmp files: <select name=\"repository_files\">
-  	<option value=\"A\" selected=\"selected\">ON</option>
-   	<option value=\"O\">OFF</option>
+if($REP_files=="L"){
+	echo "Tmp Log Files: <select name=\"repository_files\">
+  	<option value=\"L\" selected=\"selected\">LOW</option>
+   	<option value=\"M\">MIDDLE</option>
+	<option value=\"H\">HIGH</option>
   	</select><br></br>";
 	}
+else if($REP_files=="M"){
+	echo "Tmp Log Files: <select name=\"repository_files\">
+   	<option value=\"L\">LOW</option>
+  	<option value=\"M\" selected=\"selected\">MIDDLE</option>	
+	<option value=\"H\">HIGH</option>
+  	</select><br></br>";
+	}
+
 else {
-	echo "Save all tmp files: <select name=\"repository_files\">
-   	<option value=\"A\">ON</option>
-  	<option value=\"O\" selected=\"selected\">OFF</option>
+	echo "Tmp Log Files: <select name=\"repository_files\">
+   	<option value=\"L\">LOW</option>
+  	<option value=\"M\">MIDDLE</option>
+	<option value=\"H\" selected=\"selected\">HIGH</option>
   	</select><br></br>";
 	}
 
@@ -345,7 +363,7 @@ echo "<tr><td></td><td><b>Source ID</b></td><td><b>Source Description</b></td></
 for($s=0;$s<count($res_REP_SOURCES);$s++)
 {
 echo "<form action=\"updatesource.php\" method=\"POST\">";
-echo "<tr><td><INPUT type=\"image\" title=\"Delete Known Source\"  src=\"delete.png\">
+echo "<tr><td><INPUT type=\"image\" title=\"Delete Known Source\"  src=\"./img/delete.png\">
 <INPUT type=\"hidden\" name=\"source_action\" value=\"delete\">
 <INPUT type=\"hidden\" name=\"source_id\" value=\"".$res_REP_SOURCES[$s][0]."\"></td><td>
 <INPUT type=\"text\" name=\"source_name\" value=\"".$res_REP_SOURCES[$s][1]."\" size=\"50\" maxlength=\"100\"></td><td>
@@ -353,7 +371,7 @@ echo "<tr><td><INPUT type=\"image\" title=\"Delete Known Source\"  src=\"delete.
 echo "</form>";
 }
 echo "<form action=\"updatesource.php\" method=\"POST\">";
-echo "<tr><td><INPUT type=\"image\" title=\"Insert Known Source\" src=\"add.png\">
+echo "<tr><td><INPUT type=\"image\" title=\"Insert Known Source\" src=\"./img/add.png\">
 <INPUT type=\"hidden\" name=\"source_action\" value=\"add\">
 <INPUT type=\"hidden\" name=\"source_id\" value=\"\"></td><td>
 <INPUT type=\"text\" name=\"source_name\" value=\"\" size=\"50\" maxlength=\"100\"></td><td>
@@ -379,7 +397,7 @@ echo "<h3>Setup User and password</h3>";
 
 echo "If you change login or password <br>you must fill the new login e the new password <br>immediately after you press update<br><br>";
 
-echo "<FORM name=\"myForm\" action=\"updateuser.php\" method=\"POST\"onSubmit=\"return validatePwd()\">";
+echo "<FORM action=\"updateuser.php\" method=\"POST\"onSubmit=\"return validatePwd()\">";
 echo "Login: <INPUT type=\"text\" name=\"login\" value=\"$USER_login\" size=\"20\" maxlength=\"30\"><br></br>";
 echo "Password: <INPUT type=\"password\" name=\"password\" value=\"\" size=\"10\" maxlength=\"20\"><br></br>";
 echo "Verify Password: <INPUT type=\"password\" name=\"password2\" value=\"\" size=\"10\" maxlength=\"20\"><br></br>";
