@@ -29,8 +29,12 @@ $_SESSION['logActive']=$logActive;
 $_SESSION['log_path']=$log_path;
 $_SESSION['tmpQueryService_path']=$tmpQueryService_path;
 
+if(!is_dir($tmpQueryService_path)){
+mkdir($tmpQueryService_path, 0777,true);
+}
+
 //PULISCO LA CACHE TEMPORANEA
-exec('rm -f '.$tmpQueryService_path."*");
+//exec('rm -f '.$tmpQueryService_path."*");
 
 //RECUPERO GLI HEADERS RICEVUTI DA APACHE
 $headers = apache_request_headers();
@@ -376,6 +380,7 @@ else if($returnType_a=="LeafClass")
 		writeSQLQueryService($select_Slots);
 		$Slot_arr_EO=$Slot_arr;
 		$repeat = true;
+		$repeatURI = true;
 		for($s=0;$s<count($Slot_arr);$s++)
 		{
 			$Slot = $Slot_arr[$s];
@@ -409,7 +414,37 @@ else if($returnType_a=="LeafClass")
 				$repeat=false;
 
 			}//END OF if($Slot_name=="sourcePatientInfo")
-			if($Slot_name!="sourcePatientInfo")
+
+			if($Slot_name=="URI" && $repeatURI)
+			{
+				$dom_ebXML_ExtrinsicObject_Slot=$dom_ebXML_ExtrinsicObject->create_element_ns($ns_rim3_path,"Slot");
+				$dom_ebXML_ExtrinsicObject_Slot=$dom_ebXML_ExtrinsicObject_root->append_child($dom_ebXML_ExtrinsicObject_Slot);
+
+				$select_sourcePatientInfo_Slots = "SELECT value FROM Slot WHERE Slot.parent = '$ExtrinsicObject_id' AND Slot.name = 'URI'";
+				$sourcePatientInfo_Slots=query_select($select_sourcePatientInfo_Slots);
+				writeSQLQueryService($sourcePatientInfo_Slots);
+				
+				$dom_ebXML_ExtrinsicObject_Slot->set_attribute("name",$Slot_name);
+				$dom_ebXML_ExtrinsicObject_Slot_ValueList=$dom_ebXML_ExtrinsicObject->create_element_ns($ns_rim3_path,"ValueList");
+				$dom_ebXML_ExtrinsicObject_Slot_ValueList=$dom_ebXML_ExtrinsicObject_Slot->append_child($dom_ebXML_ExtrinsicObject_Slot_ValueList);
+
+				for($r=0;$r<count($sourcePatientInfo_Slots);$r++)
+				{
+					$sourcePatientInfo_Slot=$sourcePatientInfo_Slots[$r];
+					$Slot_value = $sourcePatientInfo_Slot[0];
+
+					$dom_ebXML_ExtrinsicObject_Slot_ValueList_Value=$dom_ebXML_ExtrinsicObject->create_element_ns($ns_rim3_path,"Value");
+					$dom_ebXML_ExtrinsicObject_Slot_ValueList_Value=$dom_ebXML_ExtrinsicObject_Slot_ValueList->append_child($dom_ebXML_ExtrinsicObject_Slot_ValueList_Value);
+
+					$dom_ebXML_ExtrinsicObject_Slot_ValueList_Value->set_content($Slot_value);
+
+				}//END OF for($r=0;$r<count($sourcePatientInfo_Slots);$r++)
+
+				$repeatURI=false;
+
+			}//END OF if($Slot_name=="URI")
+
+			if($Slot_name!="sourcePatientInfo" && $Slot_name!="URI")
 			{
 				$dom_ebXML_ExtrinsicObject_Slot=$dom_ebXML_ExtrinsicObject->create_element_ns($ns_rim3_path,"Slot");
 				$dom_ebXML_ExtrinsicObject_Slot=$dom_ebXML_ExtrinsicObject_root->append_child($dom_ebXML_ExtrinsicObject_Slot);
@@ -956,6 +991,29 @@ else if($returnType_a=="LeafClass")
 
 
 			}//END OF for($t=0;$t<count($RegistryPackage_Classification_arr);$t++)
+
+
+
+
+
+
+
+
+		$dom_ebXML_RegistryPackage_Classification=$dom_ebXML_RegistryPackage->create_element_ns($ns_rim3_path,"Classification");
+		$dom_ebXML_RegistryPackage_Classification=$dom_ebXML_RegistryPackage_root->append_child($dom_ebXML_RegistryPackage_Classification);
+
+		$dom_ebXML_RegistryPackage_Classification->set_attribute("classificationNode",$RegistryPackage_Classification_classificationNode);
+		$dom_ebXML_RegistryPackage_Classification->set_attribute("classifiedObject",$RegistryPackage_Classification_classifiedObject);
+		$dom_ebXML_RegistryPackage_Classification->set_attribute("id","urn:uuid:18e31fd4-9368-4457-8a69-e7f3a372e9e3");
+		$dom_ebXML_RegistryPackage_Classification->set_attribute("objectType",$namespace_objectType.$RegistryPackage_Classification_objectType);
+
+
+
+
+
+
+
+
 
 			#### NODI EXTERNALIDENTIFIER
 			$get_RegistryPackage_ExternalIdentifier="SELECT identificationScheme,objectType,id,value,registryObject FROM ExternalIdentifier WHERE ExternalIdentifier.registryObject = '$RegistryPackage_id'";

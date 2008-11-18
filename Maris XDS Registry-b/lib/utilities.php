@@ -167,7 +167,7 @@ function makeSoapedSuccessResponse($logentry,$action,$docid)
 {
 
 	
-	/*$success_response ="<soapenv:Envelope xmlns:soapenv=\"http://www.w3.org/2003/05/soap-envelope\" xmlns:wsa=\"http://www.w3.org/2005/08/addressing\">
+	$success_response ="<soapenv:Envelope xmlns:soapenv=\"http://www.w3.org/2003/05/soap-envelope\" xmlns:wsa=\"http://www.w3.org/2005/08/addressing\">
   	<soapenv:Header>
     		<wsa:Action>".$action."Response</wsa:Action>
     		<wsa:RelatesTo>$docid</wsa:RelatesTo>
@@ -175,9 +175,9 @@ function makeSoapedSuccessResponse($logentry,$action,$docid)
   	<soapenv:Body>
     	<rs:RegistryResponse xmlns:rs=\"urn:oasis:names:tc:ebxml-regrep:xsd:rs:3.0\" status=\"urn:oasis:names:tc:ebxml-regrep:ResponseStatusType:Success\" />
   	</soapenv:Body>
-	</soapenv:Envelope>";*/
+	</soapenv:Envelope>";
 
-	$success_response ="<?xml version='1.0' encoding='UTF-8'?>\r\n<soapenv:Envelope xmlns:soapenv=\"http://schemas.xmlsoap.org/soap/envelope/\" xmlns:wsa=\"http://www.w3.org/2005/08/addressing\">
+	/*$success_response ="<?xml version='1.0' encoding='UTF-8'?>\r\n<soapenv:Envelope xmlns:soapenv=\"http://schemas.xmlsoap.org/soap/envelope/\" xmlns:wsa=\"http://www.w3.org/2005/08/addressing\">
 	<soapenv:Header>
     		<wsa:Action>".$action."Response</wsa:Action>
     		<wsa:RelatesTo>$docid</wsa:RelatesTo>
@@ -185,7 +185,7 @@ function makeSoapedSuccessResponse($logentry,$action,$docid)
 	<soapenv:Body>
 	<rs:RegistryResponse xmlns:rs=\"urn:oasis:names:tc:ebxml-regrep:xsd:rs:3.0\" status=\"urn:oasis:names:tc:ebxml-regrep:ResponseStatusType:Success\" />
 	</soapenv:Body>
-	</soapenv:Envelope>";
+	</soapenv:Envelope>";*/
 
 	return $success_response;
 
@@ -195,7 +195,7 @@ function makeSoapedSuccessResponse($logentry,$action,$docid)
 #### RICEVE IN INGRESSO <SQLQueryResult>      </SQLQueryResult>
 function makeSoapedSuccessQueryResponse($logentry,$QueryResult)
 {
-	$success_query_response = "<SOAP-ENV:Envelope xmlns:SOAP-ENV=\"http://schemas.xmlsoap.org/soap/envelope/\">
+	$success_query_response = "<SOAP-ENV:Envelope xmlns:SOAP-ENV=\"http://www.w3.org/2003/05/soap-envelope\">
 	<SOAP-ENV:Header>
 		<xdsheader SOAP-ENV:mustUnderstand=\"0\">
 			<logentry url=$logentry/>
@@ -222,7 +222,7 @@ function makeSoapedSuccessQueryResponse($logentry,$QueryResult)
 function makeSoapedSuccessStoredQueryResponse($action,$docid,$QueryResult)	
 {
 
-	$success_query_response ="<?xml version='1.0' encoding='UTF-8'?>\r\n<SOAP-ENV:Envelope xmlns:SOAP-ENV=\"http://schemas.xmlsoap.org/soap/envelope/\" xmlns:wsa=\"http://www.w3.org/2005/08/addressing\">
+	$success_query_response ="<?xml version='1.0' encoding='UTF-8'?>\r\n<SOAP-ENV:Envelope xmlns:SOAP-ENV=\"http://www.w3.org/2003/05/soap-envelope\" xmlns:wsa=\"http://www.w3.org/2005/08/addressing\">
   	<SOAP-ENV:Header>
     		<wsa:Action>".$action."Response</wsa:Action>
     		<wsa:RelatesTo>$docid</wsa:RelatesTo>
@@ -237,6 +237,7 @@ function makeSoapedSuccessStoredQueryResponse($action,$docid,$QueryResult)
   	</SOAP-ENV:Body>
 	</SOAP-ENV:Envelope>";
 
+
 	return $success_query_response;
 
 }//END OF makeSoapedSuccessQueryResponse($logentry,$AdhocQueryResponse)
@@ -245,7 +246,8 @@ function makeSoapedSuccessStoredQueryResponse($action,$docid,$QueryResult)
 function makeSoapedFailureStoredQueryResponse($failure_response,$errorcode,$action,$docid)
 {
 
-	$response ="<?xml version='1.0' encoding='UTF-8'?>\r\n<SOAP-ENV:Envelope xmlns:SOAP-ENV=\"http://schemas.xmlsoap.org/soap/envelope/\" xmlns:wsa=\"http://www.w3.org/2005/08/addressing\">
+
+	$response ="<?xml version='1.0' encoding='UTF-8'?>\r\n<SOAP-ENV:Envelope xmlns:SOAP-ENV=\"http://www.w3.org/2003/05/soap-envelope\" xmlns:wsa=\"http://www.w3.org/2005/08/addressing\">
   	<SOAP-ENV:Header>
     		<wsa:Action>".$action."Response</wsa:Action>
     		<wsa:RelatesTo>$docid</wsa:RelatesTo>
@@ -401,7 +403,7 @@ function SendResponse($file_input){
 	//HEADERS
 	header("HTTP/1.1 200 OK");
 	header("Path: ".$_SESSION['www_REG_path']);
-	header("Content-Type: text/xml;charset=UTF-8");
+	header("Content-Type: application/soap+xml;charset=UTF-8");
 	header("Content-Length: ".(string)filesize($file_input));
 		//CONTENUTO DEL FILE DI RISPOSTA
 	if($file = fopen($file_input,'rb'))

@@ -37,6 +37,11 @@ $log->setCurrentLogPath($log_path);*/
 
 writeTimeFile($idfile."--Registry: Rimuovo la cache temporanea");
 
+if(!is_dir($tmp_path)){
+mkdir($tmp_path, 0777,true);
+}
+
+
 
 //RECUPERO GLI HEADERS RICEVUTI DA APACHE
 $headers = apache_request_headers();
@@ -398,8 +403,9 @@ if($http=="TLS")
 	##### NEL CASO TLS AGGIUNGO LA DICITURA SECURE
 	$path_header = $path_header."; Secure";
 }
-header($path_header);
-header("Content-Type: text/xml; charset=UTF-8");
+//header($path_header);
+//cambiato il content type da text/xml a application/soap+xml
+header("Content-Type: application/soap+xml; charset=UTF-8");
 //header("Content-Type: application/soap+xml; action=\"urn:ihe:iti:2007:$Action\"; charset=UTF-8");
 header("Content-Length: ".(string)filesize($tmp_path.$idfile."-registry_response.xml"));
 
@@ -561,14 +567,13 @@ $system=PHP_OS;
 $windows=substr_count(strtoupper($system),"WIN");
 
 
-if($clean_cache=="A")
+if($clean_cache=="O")
 {
 	if ($windows>0){
 	exec('del tmp\\'.$idfile."* /q");	
 	}
 	else{	
 	exec('rm -f '.$tmp_path.$idfile."*");
-	exec('rm -f '.$tmpQuery_path."*");
 	}
 
 }
