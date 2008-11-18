@@ -4,6 +4,11 @@
 # Copyright (C) 2007 - 2010  MARiS Project
 # Dpt. Medical and Diagnostic Sciences, University of Padova - csaccavini@rad.unipd.it
 # This program is distributed under the terms and conditions of the GPL
+
+# Contributor(s):
+# A-thon srl <info@a-thon.it>
+# Alberto Castellini
+
 # See the LICENSE files for details
 # ------------------------------------------------------------------------------------
 
@@ -44,6 +49,7 @@ while($tmp = mysql_fetch_array($risultato, MYSQL_BOTH))//INDICIZZA L'ARRAY DI RI
 
 function query_select2($query,$connessione)
 {
+   $rec=array();
    $risultato = mysql_query($query);
 
 # put the result recordset into $rec
@@ -61,8 +67,24 @@ if ($risultato){
 // Se non riesce ad eseguire la query prova a riconnettersi
 else {
 	include('./config/registry_mysql_db.php');
-    	$connessione = mysql_connect($ip_q,$user_db_q,$password_db_q)
-        or die("Connessione non riuscita: " . mysql_error());
+    	$connessione = mysql_connect($ip_q,$user_db_q,$password_db_q);
+	if(!$connessione){
+	
+		$errorcode=array();
+		$error_message=array();
+
+		$errorcode[]="XDSRegistryError";
+		$error_message[] = mysql_error();
+		$database_error_response = makeSoapedFailureResponse($error_message,$errorcode);
+		writeTimeFile($_SESSION['idfile']."--Registry: database_error_response");
+			
+		$file_input=$_SESSION['idfile']."-database_error_response-".$_SESSION['idfile'];
+		writeTmpFiles($database_error_response,$file_input);
+
+		SendResponse($database_error_response,"text/xml");
+		exit;
+	}
+        //or die("Connessione non riuscita: " . mysql_error());
 	# open  db
    	mysql_select_db($db_name_q);
 	# execute the SELECT query
@@ -81,7 +103,19 @@ else {
 	// Se non riesce nemmeno adesso ritorna un errore
 	else {
 		
-	return "FALSE";
+		$errorcode=array();
+		$error_message=array();
+
+		$errorcode[]="XDSRegistryError";
+		$error_message[] = mysql_error();
+		$database_error_response = makeSoapedFailureResponse($error_message,$errorcode);
+		writeTimeFile($_SESSION['idfile']."--Registry: database_error_response");
+			
+		$file_input=$_SESSION['idfile']."-database_error_response-".$_SESSION['idfile'];
+		writeTmpFiles($database_error_response,$file_input);
+
+		SendResponse($database_error_response);
+		exit;
 	}
 
 }
@@ -99,7 +133,7 @@ and returns an array $rec with the result recordset.
 Use this function ONLY with SELECT statements, if you want to execute  INSERT or UPDATE
 use the function query_execute().
 */
-//echo getcwd();
+$rec=array();
 include('./config/registry_mysql_db.php');
 # open connection to db
     $connessione = mysql_connect($ip_q,$user_db_q,$password_db_q)
@@ -161,9 +195,23 @@ function query_exec2($query,$connessione) //ERA LA query_execute($query)
 	// Se non riesce ad eseguire la query prova a riconnettersi
 	else {
 		include('./config/registry_mysql_db.php');
-    		$connessione = mysql_connect($ip_q,$user_db_q,$password_db_q)
-        	or die("Connessione non riuscita: " . mysql_error());
-
+    		$connessione = mysql_connect($ip_q,$user_db_q,$password_db_q);
+		if(!$connessione){
+	
+			$errorcode=array();
+			$error_message=array();
+	
+			$errorcode[]="XDSRegistryError";
+			$error_message[] = mysql_error();
+			$database_error_response = makeSoapedFailureResponse($error_message,$errorcode);
+			writeTimeFile($_SESSION['idfile']."--Registry: database_error_response");
+				
+			$file_input=$_SESSION['idfile']."-database_error_response-".$_SESSION['idfile'];
+			writeTmpFiles($database_error_response,$file_input);
+	
+			SendResponse($database_error_response);
+			exit;
+		}
 		# open  db
    		mysql_select_db($db_name_q);
 
@@ -176,7 +224,21 @@ function query_exec2($query,$connessione) //ERA LA query_execute($query)
 		}
 	// Se non riesce nemmeno adesso ritorna un errore
 		else {
-			return "FALSE";
+			//die(mysql_error());
+			
+			$errorcode=array();
+			$error_message=array();
+
+			$errorcode[]="XDSRegistryError";
+			$error_message[] = mysql_error();
+			$database_error_response = makeSoapedFailureResponse($error_message,$errorcode);
+			writeTimeFile($_SESSION['idfile']."--Registry: database_error_response");
+			
+			$file_input=$_SESSION['idfile']."-database_error_response-".$_SESSION['idfile'];
+			writeTmpFiles($database_error_response,$file_input);
+
+			SendResponse($database_error_response,"text/xml");
+			exit;
 		}
      	}
 
@@ -188,13 +250,29 @@ function connectDB(){
 
 # IMPORT MYSQL PARAMETERS (NOTE: IT WORKS WITH ABSOLUTE PATH ONLY !!)
 include('./config/registry_mysql_db.php');
-
+//ob_start();//OKKIO FONADAMENTALE!!!!!!!!!!
 # open connection to db
-    $connessione = mysql_connect($ip_q,$user_db_q,$password_db_q)
-        or die("Connessione non riuscita: " . mysql_error());
+    $connessione = mysql_connect($ip_q,$user_db_q,$password_db_q);
+       // or die("Connessione non riuscita: " . mysql_error());
+	if(!$connessione){
+	
+		$errorcode=array();
+		$error_message=array();
+
+		$errorcode[]="XDSRegistryError";
+		$error_message[] = mysql_error();
+		$database_error_response = makeSoapedFailureResponse($error_message,$errorcode);
+		writeTimeFile($_SESSION['idfile']."--Registry: database_error_response");
+			
+		$file_input=$_SESSION['idfile']."-database_error_response-".$_SESSION['idfile'];
+		writeTmpFiles($database_error_response,$file_input);
+
+		SendResponse($database_error_response,"text/xml");
+		exit;
+	}	
 
 # open  db
-   mysql_select_db($db_name_q);
+   //mysql_select_db($db_name_q);
 
 return $connessione;
 }
@@ -202,7 +280,7 @@ return $connessione;
 
 function disconnectDB($conn){
 
-    mysql_close($conn);
+    mysql_close();
 
 }
 

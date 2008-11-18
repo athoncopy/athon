@@ -1,46 +1,86 @@
 <?php
-
 # ------------------------------------------------------------------------------------
 # MARIS XDS REGISTRY
 # Copyright (C) 2007 - 2010  MARiS Project
 # Dpt. Medical and Diagnostic Sciences, University of Padova - csaccavini@rad.unipd.it
 # This program is distributed under the terms and conditions of the GPL
+
+# Contributor(s):
+# A-thon srl <info@a-thon.it>
+# Alberto Castellini
+
 # See the LICENSE files for details
 # ------------------------------------------------------------------------------------
 
 //BLOCCO IL BUFFER DI USCITA
 ob_start();//OKKIO FONADAMENTALE!!!!!!!!!!
 
+
 ##### CONFIGURAZIONE DEL REPOSITORY
 include("REGISTRY_CONFIGURATION/REG_configuration.php");
 #######################################
 
-//include('./config/registry_QUERY_mysql_db.php');
-include_once($lib_path."domxml-php4-to-php5.php");
-include($lib_path."utilities.php");
+if($statActive=="A") {
+	//Parte per calcolare i tempi di esecuzione
+	$mtime = microtime();
+	$mtime = explode(" ",$mtime);
+	$mtime = $mtime[1] + $mtime[0];
+	$starttime = $mtime;
+}
+
+
 
 $idfile = idrandom_file();
 
+
+$script = $_SERVER['PHP_SELF'];
+$www_REG_path=str_replace('registry.php', '',$script);
+
 $_SESSION['tmp_path']=$tmp_path;
+$_SESSION['tmpQueryService_path']=$tmpQueryService_path;
 $_SESSION['idfile']=$idfile;
 $_SESSION['logActive']=$logActive;
 $_SESSION['log_path']=$log_path;
+$_SESSION['www_REG_path']=$www_REG_path;
 
-include_once("./lib/log.php");
-//$log = new Log_REG("REG");
-/*$log = new Log_REG();
-$log->set_tmp_path($tmp_path);
-$log->set_idfile($idfile);
-$log->setLogActive($logActive);
-$log->setCurrentLogPath($log_path);*/
+
+// Creo la cartella per i file temporanei
+if(!is_dir($tmp_path)){
+	$createtmpdir=false;
+	$ntmpdir=0;
+	while(!$createtmpdir && $ntmpdir<10){
+		$cmdtmpdir=mkdir($tmp_path, 0777,true);
+		if($cmdtmpdir){
+			// Caso OK Riesce a creare il folder correttamente
+			writeTimeFile($idfile."--Ho creato il folder tmp correttamente");
+			$createtmpdir=true;
+			}
+		else {
+			sleep(1);
+			$ntmpdir++;
+		}
+	} //Fine while
+
+
+	// Se dopo 10 volte non sono riuscito a creare il folder riporto un errore
+	if(!$createtmpdir){
+		$errorcode[]="XDSRegistryError";
+		$error_message[] = "Registry can't create tmp folder. ";
+		$folder_response = makeSoapedFailureResponse($error_message,$errorcode);
+		writeTimeFile($_SESSION['idfile']."--Registry: Folder error");
+		
+		$file_input=$idfile."-folder_failure_response-".$idfile;
+		writeTmpFiles($folder_response,$file_input);
+		//SendResponse($tmp_path.$file_input);
+		SendResponse($folder_response);
+		exit;
+	
+	}
+	
+}
 
 
 writeTimeFile($idfile."--Registry: Rimuovo la cache temporanea");
-
-if(!is_dir($tmp_path)){
-mkdir($tmp_path, 0777,true);
-}
-
 
 
 //RECUPERO GLI HEADERS RICEVUTI DA APACHE
@@ -48,65 +88,30 @@ $headers = apache_request_headers();
 $input=$HTTP_RAW_POST_DATA;
 
 //COPIO IN LOCALE TUTTI GLI HEADERS RICEVUTI
-$fp_headers_received = fopen($tmp_path.$idfile."-headers_received-".$idfile, "w+");
-foreach ($headers as $header => $value)
-{
-   fwrite ($fp_headers_received, "$header = $value  \n");
+if($clean_cache!="O"){
+writeTmpFiles($headers,$idfile."-headers_received-".$idfile);
 }
-fclose($fp_headers_received);
 
 
 
 if(stripos($headers["Content-Type"],"boundary")){
 	writeTimeFile($idfile."--Registry: Il boundary e' presente");
-	if (preg_match('(boundary="[^\t\n\r\f\v";]+")',$headers["Content-Type"])) {
-		writeTimeFile($idfile."--Repository: Ho trovato il boundary di tipo boundary=\"bvdwetrct637crtv\"");
+	$boundary = giveboundary($headers);
 
-		$content_type = stristr($headers["Content-Type"],'boundary');
-		$pre_boundary = substr($content_type,strpos($content_type,'"')+1);
-
-		$fine_boundary = strpos($pre_boundary,'"')+1;
-		//BOUNDARY ESATTO
-		$boundary = '';
-		$boundary = substr($pre_boundary,0,$fine_boundary-1);
-
-		writeTimeFile($idfile."--Registry: Il boundary ".$boundary);
-	}
-
-	else if (preg_match('(boundary=[^\t\n\r\f\v";]+[;])',$headers["Content-Type"])) {
-		writeTimeFile($idfile."--Registry: Ho trovato il boundary di tipo boundary=bvdwetrct637crtv;");
-		$content_type = stristr($headers["Content-Type"],'boundary');
-		$pre_boundary = substr($content_type,strpos($content_type,'=')+1);
-		$fine_boundary = strpos($pre_boundary,';');
-		//BOUNDARY ESATTO
-		$boundary = '';
-		$boundary = substr($pre_boundary,0,$fine_boundary);
-
-		writeTimeFile($idfile."--Registry: Il boundary ".$boundary);
-
-	}
-
-	else {
-		writeTimeFile($idfile."--Repository: Il boundary non e' del tipo boundary=\"bvdwetrct637crtv\" o boundary=bvdwetrct637crtv;");
-
- 	}
-
-
-
+	//PASSO A DECODARE IL FILE CREATO
+	$input = $HTTP_RAW_POST_DATA;
 
 	if (preg_match('([^\t\n\r\f\v";][:]*+ENVELOPE)',strtoupper($input))) {
-		writeTimeFile($idfile."--Repository: Ho trovato SOAPENV:ENVELOPE");
+		writeTimeFile($idfile."--Registry: Ho trovato SOAPENV:ENVELOPE");
 
 		preg_match('(<([^\t\n\r\f\v";<]+:)?(ENVELOPE))',strtoupper($input),$matches);
 
 		$presoap=$matches[1];
-		writeTimeFile($idfile."--Repository: Ho trovato $presoap");
+		writeTimeFile($idfile."--Registry: Ho trovato $presoap");
 		$body = substr($input,strpos(strtoupper($input),"<".$presoap."ENVELOPE"));
 		$ebxml_imbustato_soap = rtrim(rtrim(substr($body,0,strpos($body,$boundary)-2),"\n"),"\r");
 
-		$fp_ebxml_imbustato_soap = fopen($tmp_path.$idfile."-ebxml_imbustato_soap-".$idfile, "w+");
-    		   fwrite($fp_ebxml_imbustato_soap,$ebxml_imbustato_soap);
-		fclose($fp_ebxml_imbustato_soap);
+		writeTmpFiles($ebxml_imbustato_soap,$idfile."-ebxml_imbustato_soap-".$idfile.".xml");
 
 
 	}
@@ -115,11 +120,7 @@ if(stripos($headers["Content-Type"],"boundary")){
 
 //Caso MTOM
 else {
-
-	$fp_ebxml_imbustato_soap = fopen($tmp_path.$idfile."-ebxml_imbustato_soap-".$idfile, "w+");
-    	     fwrite($fp_ebxml_imbustato_soap,$input);
-	fclose($fp_ebxml_imbustato_soap);
-//$boundary = "--boundary_per_MTOM";
+	writeTmpFiles($input,$idfile."-ebxml_imbustato_soap-".$idfile.".xml");
 }
 
 //ebXML IMBUSTATO
@@ -128,7 +129,7 @@ else {
 $errorcode=array();
 $failure_response=array();
 
-$ebxml_imbustato_soap_STRING = file_get_contents($tmp_path.$idfile."-ebxml_imbustato_soap-".$idfile);
+$ebxml_imbustato_soap_STRING = file_get_contents($tmp_path.$idfile."-ebxml_imbustato_soap-".$idfile.".xml");
 
 
 
@@ -176,22 +177,16 @@ for($i = 0;$i<count($dom_SOAP_ebXML_node_array);$i++)
 	$ebxml_STRING = $dom_ebxml_imbustato_soap->dump_node($node);
 }
 //SCRIVO L'ebXML SBUSTATO
-$fp_ebxml = fopen($tmp_path.$idfile."-ebxml-".$idfile,"w+");
-	fwrite($fp_ebxml,$ebxml_STRING);
-fclose($fp_ebxml);
-
-
-
-
-
-
+if($clean_cache!="O"){
+writeTmpFiles($ebxml_STRING,$idfile."-ebxml-".$idfile.".xml");
+}
 
 
 //SCRIVO L'ebXML DA VALIDARE (urn:uuid: ---> urn-uuid-)
 $ebxml_STRING_VALIDATION = adjustURN_UUIDs($ebxml_STRING);
-$fp_ebxml_val = fopen($tmp_path.$idfile."-ebxml_for_validation-".$idfile,"w+");
-	fwrite($fp_ebxml_val,$ebxml_STRING_VALIDATION);
-fclose($fp_ebxml_val);
+if($clean_cache!="O"){
+writeTmpFiles($ebxml_STRING_VALIDATION,$idfile."-ebxml_for_validation-".$idfile);}
+
 
 
 $schema='schemas3/lcm.xsd';
@@ -273,9 +268,16 @@ if($SubmissionSetUniqueId_valid_array[0]){
 writeTimeFile($idfile."--Registry: Ho validato XDSSubmissionSetUniqueId");}
 
 ############ CHECK OF XDSFolder.uniqueID
-$FolderUniqueId_valid_array = validate_XDSFolderUniqueId($dom_ebXML,$connessione);
-if($FolderUniqueId_valid_array[0]){
-writeTimeFile($idfile."--Registry: Ho validato XDSFolderUniqueId");}
+if($controlFolderUniqueId=="A") {
+	$FolderUniqueId_valid_array = validate_XDSFolderUniqueId($dom_ebXML,$connessione);
+	if($FolderUniqueId_valid_array[0]){
+	writeTimeFile($idfile."--Registry: Ho validato XDSFolderUniqueId");}
+}
+else {
+	$FolderUniqueId_valid_array = validate_XDSFolderUniqueIdInsert($dom_ebXML,$connessione);
+	if($FolderUniqueId_valid_array[0]){
+	writeTimeFile($idfile."--Registry: Ho validato XDSFolderUniqueIdInsert");}
+}
 
 ########### CHECK OF HASH + SIZE + URI
 $hsu = arePresent_HASH_SIZE_repositoryUniqueId($dom_ebXML);
@@ -323,12 +325,10 @@ if($ExtrinsicObject_mimeType_array[0] || $DocumentEntryPatientId_valid_array[0] 
     	$SOAPED_failure_response = makeSoapedFailureResponse($failure_response_array,$error_code_array,$Action,$MessageID);
 
 	### SCRIVO LA RISPOSTA IN UN FILE
-	$file_input=$tmp_path.$idfile."-SOAPED_failure_response-".$idfile;
-	 $fp = fopen($file_input,"w+");
-           fwrite($fp,$SOAPED_failure_response);
-         fclose($fp);
+	$file_input=$idfile."-SOAPED_failure_response.xml";
+	writeTmpFiles($SOAPED_failure_response,$file_input);
 
-	SendResponse($file_input);
+	SendResponse($SOAPED_failure_response);
 	exit;
 
 }######## END OF VALIDAZIONE ===NON=== PASSATA
@@ -349,6 +349,7 @@ writeTimeFile($idfile."--Registry: Inizio a riempire il Database");
 		$RETURN_from_ExtrinsicObject_id_array=fill_ExtrinsicObject_tables($dom_ebXML,$connessione);
 		#### ARRAY DEGLI EXTRINSICOBJECTS ID
 		$ExtrinsicObject_id_array=$RETURN_from_ExtrinsicObject_id_array[0];
+		$simbolic_ExtrinsicObject_id_array=$RETURN_from_ExtrinsicObject_id_array[3];
 		#### LANGUAGE CODE
 		$language=$RETURN_from_ExtrinsicObject_id_array[1];
 		
@@ -359,20 +360,45 @@ writeTimeFile($idfile."--Registry: Inserito nel Database ExtrinsicObject");
 	include_once('RegistryPackage_2.php');
 		$RegistryPackage_id_array2=fill_RegistryPackage_tables($dom_ebXML,$language,$connessione);
 		$RegistryPackage_id_array=$RegistryPackage_id_array2[0];
+		$simbolic_RegistryPackage_id_array=$RegistryPackage_id_array2[2];
+		$simbolic_RegistryPackage_FOL_id_array=$RegistryPackage_id_array2[3];
 
 writeTimeFile($idfile."--Registry: Inserito nel Database RegistryPackage");
 
 	### 3 - Classification
 	include_once('Classification_2.php');
-		fill_Classification_tables($dom_ebXML,$RegistryPackage_id_array,$connessione);
+		fill_Classification_tables($dom_ebXML,$RegistryPackage_id_array,$simbolic_RegistryPackage_FOL_id_array,$connessione);
 
 writeTimeFile($idfile."--Registry: Inserito nel Database Classification");
 
 	### 4 - Association
 	include_once('Association_2.php');
-		fill_Association_tables($dom_ebXML,$RegistryPackage_id_array,$ExtrinsicObject_id_array,$connessione);
+		fill_Association_tables($dom_ebXML,$RegistryPackage_id_array,$ExtrinsicObject_id_array,$simbolic_RegistryPackage_FOL_id_array,$connessione);
 
 writeTimeFile($idfile."--Registry: Inserito nel Database Association");
+
+
+####### Se arrivo a questo punto cambio lo stato del documento da NotCompleted a Approved
+//Aggiorno lo stato di ExtrinsicObject
+for($e=0;$e<count($ExtrinsicObject_id_array);$e++){
+	$simbolic_ExtrinsicObject_id=$simbolic_ExtrinsicObject_id_array[$e];
+	$UPDATE_ExtrinsicObject = "UPDATE ExtrinsicObject SET status='Approved' where id='".$ExtrinsicObject_id_array[$simbolic_ExtrinsicObject_id]."' AND status = 'NotCompleted'";
+
+	$ris = query_exec2($UPDATE_ExtrinsicObject,$connessione);
+	writeSQLQuery($ris.": ".$UPDATE_ExtrinsicObject);
+}
+
+//Aggiorno lo stato di RegistryPackage
+for($s=0;$s<count($RegistryPackage_id_array);$s++){
+	$simbolic_RegistryPackage_id=$simbolic_RegistryPackage_id_array[$s];
+	if($simbolic_RegistryPackage_id!=''){
+		$UPDATE_RegistryPackage = "UPDATE RegistryPackage SET status='Approved' where id='".$RegistryPackage_id_array[$simbolic_RegistryPackage_id]."' AND status = 'NotCompleted'";
+
+		$ris = query_exec2($UPDATE_RegistryPackage,$connessione);
+		writeSQLQuery($ris.": ".$UPDATE_RegistryPackage);
+	}
+}
+
 
 ####### FINE RIEMPIMENTO DATABASE DEL REGISTRY ########
 #######################################################
@@ -381,12 +407,10 @@ writeTimeFile($idfile."--Registry: Inserito nel Database Association");
 //============ REGISTRY RESPONSE  ==============//
 
 ####### RISPOSTA POSITIVA
-$registry_response = makeSoapedSuccessResponse($logentry,$Action,$MessageID);
+$registry_response = makeSoapedSuccessResponse($Action,$MessageID);
 
 //SCRIVO LA RISPOSTA IN UN FILE
-$fp_registry_response = fopen($tmp_path.$idfile."-registry_response.xml","wb+");
-	fwrite($fp_registry_response,$registry_response);
-fclose($fp_registry_response);
+writeTmpFiles($registry_response,$idfile."-registry_response.xml",true);
 
 writeTimeFile($idfile."--Registry: Scrivo la risposta positiva in un file");
 
@@ -416,7 +440,7 @@ if($file = fopen($tmp_path.$idfile."-registry_response.xml",'rb'))
    while((!feof($file)) && (connection_status()==0))
    {
       	print(fread($file, 1024*8));
-      	flush();//NOTA BENE!!!!!!!!!
+      	//flush();//NOTA BENE!!!!!!!!!
    }
 
    fclose($file);
@@ -468,7 +492,7 @@ $msg_mail .= "<Signature Id=\"signatureID\" xmlns=\"http://www.w3.org/2000/09/xm
 <Object>
 <SignatureProperties>
 <SignatureProperty Id=\"recommendedRegistry\"
-target=\"signatureID\">http://".$_SERVER['SERVER_NAME'].$www_REG_path.$service_query."</SignatureProperty>
+target=\"signatureID\">http://".$_SERVER['SERVER_NAME'].$www_REG_path."storedquery.php</SignatureProperty>
 <SignatureProperty Id=\"sendAcknowledgementTo\"
 target=\"signatureID\">".$NAV_to."</SignatureProperty>
 </SignatureProperties>
@@ -497,9 +521,9 @@ $msg_mail .= "--".$bound_mail."--";
 
 mail($NAV_to, "Notification of Document Availability",$msg_mail, $headers_mail);
 
-$fp_mail = fopen($tmp_path.$idfile."-mail-".$idfile,"w+");
-	fwrite($fp_mail,$NAV_to."Notification of Document Availability".$msg_mail.$headers_mail);
-fclose($fp_mail);
+if($clean_cache!="O"){
+	writeTmpFiles($msg_mail,$idfile."-mail-".$idfile);
+}
 
 
 }
@@ -546,20 +570,37 @@ $message_import="<AuditMessage>
 
         $logSyslog=$syslog->Send($ATNA_host,$ATNA_port,$message_import);
 
-
+if($clean_cache!="O"){
+	writeTmpFiles($message_import,$idfile."-atna_import.xml");
+}
 
 writeTimeFile($idfile."--Registry: Ho spedito i messaggi di ATNA");
 
 
 }
 
+//Statistiche
+if($statActive=="A") {
 
-//disconnectDB($connessione);
+	//Parte per calcolare i tempi di esecuzione
+	$mtime = microtime();
+	$mtime = explode(" ",$mtime);
+	$mtime = $mtime[1] + $mtime[0];
+	$endtime = $mtime;
+	$totaltime = number_format($endtime - $starttime,15);
+
+	$STAT_SUBMISSION="INSERT INTO STATS (REPOSITORY,DATA,EXECUTION_TIME,OPERATION) VALUES ('".$_SERVER['REMOTE_ADDR']."',CURRENT_TIMESTAMP,'$totaltime','SUBMISSION-B')";
+	$ris = query_exec2($STAT_SUBMISSION,$connessione);
+	writeSQLQuery($ris.": ".$STAT_SUBMISSION);
+}
+disconnectDB($connessione);
 
 unset($_SESSION['tmp_path']);
 unset($_SESSION['idfile']);
 unset($_SESSION['logActive']);
 unset($_SESSION['log_path']);
+unset($_SESSION['tmpQueryService_path']);
+unset($_SESSION['www_REG_path']);
 
 // Clean tmp folder
 $system=PHP_OS;
