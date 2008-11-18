@@ -14,7 +14,7 @@ include_once('./lib/functions_'.$database.'.php');
 $token=$_GET["token"];
 $get_token="SELECT URI FROM DOCUMENTS WHERE KEY_PROG=$token";
 $uri_token=query_select($get_token);
-
+/*
 if($ATNA_active=='A'){
 include_once("rep_atna.php");
 
@@ -46,7 +46,7 @@ $ris_export = query_execute($INSERT_atna_export);
 
 
 }
-
+*/
 
 header("Location: ".$www_REP_path.$uri_token[0][0]);
 ?>

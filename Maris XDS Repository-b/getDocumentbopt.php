@@ -49,7 +49,7 @@ $input = $HTTP_RAW_POST_DATA;
 
 
 if($save_files)
-$log->writeLogFileS($input,$idfile."-pre_decode_received-".$idfile,"M");
+$log->writeLogFileS($input,$idfile."-pre_decode_received-".$idfile.".xml","M");
 
 preg_match('(<([^\t\n\r\f\v";<]+:)?(ENVELOPE))',strtoupper($input),$matches);
 
@@ -108,7 +108,7 @@ if($Action=="urn:ihe:iti:2007:RetrieveDocumentSet"){
 		$file[$i] = file_get_contents("./".$res_DocUniqueId[0][1], "r");
 		$log->writeLogFileS($file[$i],$idfile."-file-".$i."-".$idfile,"M");
 		
-		writeTimeFile($idfile."--GetDocument Retrieve: File $i: ".$file[$i]);
+		//writeTimeFile($idfile."--GetDocument Retrieve: File $i: ".$file[$i]);
 
 		writeTimeFile($idfile."--GetDocument Retrieve: La dimensione del file è:".filesize($tmp_retrieve_path.$idfile."-file-".$i."-".$idfile));
 
@@ -172,7 +172,7 @@ $SOAP_stringaxml.="
 	$SOAP_stringaxml.="
         </xdsb:RetrieveDocumentSetResponse>
     </soapenv:Body>
-</soapenv:Envelope>".CRLF;
+</soapenv:Envelope>".CRLF.CRLF;
        $lista_file='';
 	for($a=0;$a<sizeof($numero_documenti);$a++){
        	$lista_file.="--".$boundary; 
@@ -191,13 +191,14 @@ $SOAP_stringaxml.="
 
 	//$data_length=filesize($tmp_retrieve_path."submission");
 	
-
-
 	ob_get_clean();
-	header("HTTP/1.1 200 OK");
+	//header("HTTP/1.1 200 OK");
 	//$path_header = "Path: $www_REG_path";
-	$head_content_type="Content-Type: multipart/related; boundary=\"".$boundary."\"; type=\"application/xop+xml\"; start=\"0.urn:uuid:".$Content_ID."@apache.org\"; start-info=\"application/soap+xml\"; SOAPAction = \"urn:ihe:iti:2007:RetrieveDocumentSetResponse\"";
+	$head_content_type="Content-Type: multipart/related; boundary=\"".$boundary."\"; type=\"application/xop+xml\"; start=\"0.urn:uuid:".$Content_ID."@apache.org\"; start-info=\"application/soap+xml\";";
+	$head_soap_action="SOAPAction = \"urn:ihe:iti:2007:RetrieveDocumentSetResponse\"";
 	header($head_content_type);
+	header($head_soap_action);
+	//header("Transfer-Encoding = chunked");
 	//header("Content-Length: ".(string)filesize($tmp_retrieve_path.$idfile."-repositoryGet_response-".$idfile));
 
 
@@ -219,7 +220,7 @@ if($file = fopen($tmp_retrieve_path.$idfile."-repositoryGet_response-".$idfile,'
 {
    while((!feof($file)) && (connection_status()==0))
    {	
-	//writeTimeFile($idfile."--Repository Sto inviando il file");
+	writeTimeFile($idfile."--Repository Sto inviando il file");
       	print(fread($file, 1024*8));
       	flush();//NOTA BENE!!!!!!!!!
    }
