@@ -1,11 +1,11 @@
 -- phpMyAdmin SQL Dump
--- version 2.10.3deb1
+-- version 2.10.3deb1ubuntu0.2
 -- http://www.phpmyadmin.net
 -- 
 -- Host: localhost
--- Generato il: 21 Nov, 2007 at 11:51 AM
+-- Generato il: 05 Giu, 2008 at 11:47 AM
 -- Versione MySQL: 5.0.45
--- Versione PHP: 5.2.3-1ubuntu6
+-- Versione PHP: 5.2.3-1ubuntu6.3
 
 SET SQL_MODE="NO_AUTO_VALUE_ON_ZERO";
 
@@ -357,19 +357,19 @@ INSERT INTO `confidentialityCode` (`code`, `display`, `codingScheme`) VALUES
 -- 
 
 CREATE TABLE IF NOT EXISTS `CONFIG` (
-  `WWW` varchar(100) NOT NULL default '',
   `CACHE` char(1) NOT NULL default '',
   `PATIENTID` char(1) NOT NULL default '',
   `LOG` char(1) NOT NULL,
-  `JAVA_PATH` varchar(255) NOT NULL
+  `STAT` char(1) NOT NULL,
+  `FOLDER` char(1) NOT NULL
 ) ENGINE=MyISAM DEFAULT CHARSET=latin1;
 
 -- 
 -- Dump dei dati per la tabella `CONFIG`
 -- 
 
-INSERT INTO `CONFIG` (`WWW`, `CACHE`, `PATIENTID`, `LOG`, `JAVA_PATH`) VALUES 
-('/MARIS_XDS/registry-b/', 'O', 'O', 'A', '/usr/lib/jvm/java-1.5.0-sun-1.5.0.13/bin/');
+INSERT INTO `CONFIG` (`CACHE`, `PATIENTID`, `LOG`, `STAT`, `FOLDER`) VALUES 
+('H', 'O', 'A', 'A', 'O');
 
 -- --------------------------------------------------------
 
@@ -702,7 +702,7 @@ CREATE TABLE IF NOT EXISTS `NAV` (
 -- 
 
 INSERT INTO `NAV` (`NAV`, `NAV_FROM`, `NAV_TO`) VALUES 
-('O', 'from@dominio.it', 'to@dominio.it');
+('O', 'xxx@email.com', 'yyy@email.com');
 
 -- --------------------------------------------------------
 
@@ -739,7 +739,7 @@ CREATE TABLE IF NOT EXISTS `Patient` (
   PRIMARY KEY  (`ID`),
   KEY `PID3` (`PID3`),
   KEY `PriorPID3` (`PriorPID3`)
-) ENGINE=MyISAM  DEFAULT CHARSET=latin1 AUTO_INCREMENT=19 ;
+) ENGINE=MyISAM  DEFAULT CHARSET=latin1 AUTO_INCREMENT=39 ;
 
 
 -- --------------------------------------------------------
@@ -824,32 +824,6 @@ INSERT INTO `practiceSettingCode` (`code`, `display`, `codingScheme`) VALUES
 ('Tumor Board', 'Tumor Board', 'Connect-a-thon practiceSettingCodes'),
 ('Urology', 'Urology', 'Connect-a-thon practiceSettingCodes'),
 ('Veterinary Medicine', 'Veterinary Medicine', 'Connect-a-thon practiceSettingCodes');
-
--- --------------------------------------------------------
-
--- 
--- Struttura della tabella `REGISTRY`
--- 
-
-CREATE TABLE IF NOT EXISTS `REGISTRY` (
-  `ID` bigint(30) NOT NULL auto_increment,
-  `host` varchar(255) NOT NULL default '',
-  `port` int(100) NOT NULL default '8090',
-  `SERVICE` varchar(255) NOT NULL default '',
-  `ACTIVE` char(1) NOT NULL default 'A',
-  `HTTP` varchar(30) NOT NULL default 'NORMAL',
-  PRIMARY KEY  (`ID`),
-  KEY `SERVICE` (`SERVICE`,`ACTIVE`),
-  KEY `HTTP` (`HTTP`)
-) ENGINE=MyISAM  DEFAULT CHARSET=latin1 AUTO_INCREMENT=3 ;
-
--- 
--- Dump dei dati per la tabella `REGISTRY`
--- 
-
-INSERT INTO `REGISTRY` (`ID`, `host`, `port`, `SERVICE`, `ACTIVE`, `HTTP`) VALUES 
-(1, '10.135.0.92', 80, 'SUBMISSION', 'A', 'NORMAL'),
-(2, '10.135.0.92', 80, 'QUERY', 'A', 'NORMAL');
 
 -- --------------------------------------------------------
 
@@ -963,6 +937,23 @@ CREATE TABLE IF NOT EXISTS `SpecificationLink` (
 -- 
 -- Dump dei dati per la tabella `SpecificationLink`
 -- 
+
+
+-- --------------------------------------------------------
+
+-- 
+-- Struttura della tabella `STATS`
+-- 
+
+CREATE TABLE IF NOT EXISTS `STATS` (
+  `ID` int(11) NOT NULL auto_increment,
+  `REPOSITORY` varchar(20) NOT NULL,
+  `DATA` datetime NOT NULL,
+  `EXECUTION_TIME` varchar(20) NOT NULL,
+  `OPERATION` varchar(50) NOT NULL,
+  PRIMARY KEY  (`ID`)
+) ENGINE=MyISAM  DEFAULT CHARSET=latin1 AUTO_INCREMENT=9 ;
+
 
 
 -- --------------------------------------------------------

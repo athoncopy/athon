@@ -4,6 +4,11 @@
 # Copyright (C) 2007 - 2010  MARiS Project
 # Dpt. Medical and Diagnostic Sciences, University of Padova - csaccavini@rad.unipd.it
 # This program is distributed under the terms and conditions of the GPL
+
+# Contributor(s):
+# A-thon srl <info@a-thon.it>
+# Alberto Castellini
+
 # See the LICENSE files for details
 # ------------------------------------------------------------------------------------
 
@@ -118,32 +123,10 @@ function unhtmlentities($string)
 	
 }//END OF function unhtmlentities($string)
 
-
-//== PER IMBUSTARE SOAP UNA STRINGA PASSATA ==//
-function makeSoapEnvelope($stringToSoap,$logentry)
-{
-	//$string_soap = '';
-		
-	$string_soap = "<SOAP-ENV:Envelope xmlns:SOAP-ENV=\"http://schemas.xmlsoap.org/soap/envelope/\">
-	<SOAP-ENV:Header>
-		<xdsheader SOAP-ENV:mustUnderstand=\"0\">
-			<logentry url=\"".$logentry."\"/>
-		</xdsheader>
-	</SOAP-ENV:Header>
-	<SOAP-ENV:Body>".$stringToSoap."</SOAP-ENV:Body>
-	</SOAP-ENV:Envelope>";
-		
-	######################
-	return $string_soap;
-	
-}//END OF function makeSoapEnvelope($stringToSoap)
-
-//== PER IMBUSTARE SOAP UNA STRINGA PASSATA ==//
-
-function makeSoapedFailureResponse($failure_response,$errorcode,$action,$docid)
+function makeSoapedFailureResponse($failure_response,$errorcode)
 {
 
-	$response = "<?xml version='1.0' encoding='UTF-8'?>\r\n<soapenv:Envelope xmlns:soapenv=\"http://schemas.xmlsoap.org/soap/envelope/\" xmlns:wsa=\"http://www.w3.org/2005/08/addressing\">
+	$response = "<?xml version='1.0' encoding='UTF-8'?>\r\n<soapenv:Envelope xmlns:soapenv=\"http://www.w3.org/2003/05/soap-envelope\" xmlns:wsa=\"http://www.w3.org/2005/08/addressing\">
 	<soapenv:Header>
 	<wsa:MessageID>".$docid."</wsa:MessageID>
 	<wsa:Action>".$action."Response</wsa:Action>
@@ -163,7 +146,7 @@ function makeSoapedFailureResponse($failure_response,$errorcode,$action,$docid)
 }//END OF makeSoapedFailureResponse
 
 ########## COMPONE LA RISPOSTA DI SUCCESS DEL REGISTRY
-function makeSoapedSuccessResponse($logentry,$action,$docid)
+function makeSoapedSuccessResponse($action,$docid)
 {
 
 	
@@ -189,18 +172,13 @@ function makeSoapedSuccessResponse($logentry,$action,$docid)
 
 	return $success_response;
 
-}//END OF makeSoapedSuccessResponse($logentry)
+}//END OF makeSoapedSuccessResponse()
 
 #### PER LE RISPOSTE ALLE QUERY
 #### RICEVE IN INGRESSO <SQLQueryResult>      </SQLQueryResult>
-function makeSoapedSuccessQueryResponse($logentry,$QueryResult)
+function makeSoapedSuccessQueryResponse($QueryResult)
 {
 	$success_query_response = "<SOAP-ENV:Envelope xmlns:SOAP-ENV=\"http://www.w3.org/2003/05/soap-envelope\">
-	<SOAP-ENV:Header>
-		<xdsheader SOAP-ENV:mustUnderstand=\"0\">
-			<logentry url=$logentry/>
-		</xdsheader>
-	</SOAP-ENV:Header>
 	<SOAP-ENV:Body>
 		<RegistryResponse 
    		status=\"Success\" 
@@ -214,7 +192,7 @@ function makeSoapedSuccessQueryResponse($logentry,$QueryResult)
 
 	return $success_query_response;
 
-}//END OF makeSoapedSuccessQueryResponse($logentry,$AdhocQueryResponse)
+}//END OF makeSoapedSuccessQueryResponse($AdhocQueryResponse)
 
 
 #### PER LE RISPOSTE ALLE STORED QUERY
@@ -240,7 +218,7 @@ function makeSoapedSuccessStoredQueryResponse($action,$docid,$QueryResult)
 
 	return $success_query_response;
 
-}//END OF makeSoapedSuccessQueryResponse($logentry,$AdhocQueryResponse)
+}//END OF makeSoapedSuccessQueryResponse($AdhocQueryResponse)
 
 
 function makeSoapedFailureStoredQueryResponse($failure_response,$errorcode,$action,$docid)
@@ -273,6 +251,7 @@ function idrandom()
 {
    if(function_exists('com_create_guid'))
    {
+       // devo eliminare le parentesi {}
        return com_create_guid();
    }else{
 
@@ -396,6 +375,47 @@ return $namespace;
 }
 
 
+function giveboundary($headers){
+
+		writeTimeFile($_SESSION['idfile']."--Registry: Il boundary e' presente");
+
+		if (preg_match('(boundary="[^\t\n\r\f\v";]+")',$headers["Content-Type"])) {
+			writeTimeFile($_SESSION['idfile']."--Registry: Ho trovato il boundary di tipo boundary=\"bvdwetrct637crtv\"");
+
+			$content_type = stristr($headers["Content-Type"],'boundary');
+			$pre_boundary = substr($content_type,strpos($content_type,'"')+1);
+
+			$fine_boundary = strpos($pre_boundary,'"')+1;
+			//BOUNDARY ESATTO
+			$boundary = '';
+			$boundary = substr($pre_boundary,0,$fine_boundary-1);
+
+			writeTimeFile($idfile."--Registry: Il boundary ".$boundary);
+		}
+
+		else if (preg_match('(boundary=[^\t\n\r\f\v";]+[;])',$headers["Content-Type"])) {
+			writeTimeFile($_SESSION['idfile']."--Registry: Ho trovato il boundary di tipo boundary=bvdwetrct637crtv;");
+			$content_type = stristr($headers["Content-Type"],'boundary');
+			$pre_boundary = substr($content_type,strpos($content_type,'=')+1);
+			$fine_boundary = strpos($pre_boundary,';');
+			//BOUNDARY ESATTO
+			$boundary = '';
+			$boundary = substr($pre_boundary,0,$fine_boundary);
+
+			writeTimeFile($_SESSION['idfile']."--Registry: Il boundary ".$boundary);
+
+		}
+
+		else {
+			//Qui devo riportare un errore perché viene dichiarato un boudary con un formato non conosciuto
+			writeTimeFile($_SESSION['idfile']."--Registry: Il boundary non e' del tipo boundary=\"bvdwetrct637crtv\" o boundary=bvdwetrct637crtv;");
+	
+ 		}
+
+ return $boundary;
+}
+
+/*
 function SendResponse($file_input){
 
 	ob_get_clean();//OKKIO FONDAMENTALE!!!!!
@@ -416,6 +436,27 @@ function SendResponse($file_input){
 
    		fclose($file);
 	}
+
+	//SPEDISCO E PULISCO IL BUFFER DI USCITA
+	ob_end_flush();
+	//BLOCCO L'ESECUZIONE DELLO SCRIPT
+	exit;
+
+}*/
+
+// Funzione che invia la risposta da stringa
+function SendResponse($string_input,$content_type="application/soap+xml"){
+
+	ob_get_clean();//OKKIO FONDAMENTALE!!!!!
+
+	//HEADERS
+	header("HTTP/1.1 200 OK");
+	header("Path: ".$_SESSION['www_REG_path']);
+	header("Content-Type: $content_type;charset=UTF-8");
+	header("Content-Length: ");
+		//CONTENUTO DEL FILE DI RISPOSTA
+	
+	print($string_input);
 
 	//SPEDISCO E PULISCO IL BUFFER DI USCITA
 	ob_end_flush();
