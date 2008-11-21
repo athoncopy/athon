@@ -1,6 +1,7 @@
 <?php
+
 # ------------------------------------------------------------------------------------
-# MARIS XDS REGISTRY
+# MARIS XDS REPOSITORY
 # Copyright (C) 2007 - 2010  MARiS Project
 # Dpt. Medical and Diagnostic Sciences, University of Padova - csaccavini@rad.unipd.it
 # This program is distributed under the terms and conditions of the GPL
@@ -18,9 +19,6 @@ ob_start();//OKKIO FONADAMENTALE!!!!!!!!!!
 ##### CONFIGURAZIONE DEL REPOSITORY
 require("config/REP_configuration.php");
 #######################################
-include_once($lib_path."domxml-php4-to-php5.php");
-include_once($lib_path."utilities.php");
-include_once($lib_path."log.php");
 
 $system=PHP_OS;
 
@@ -38,13 +36,69 @@ $log->setLogActive($logActive);
 $log->setCurrentLogPath($log_path);
 $log->setCurrentFileSLogPath($tmp_path);
 
+$_SESSION['tmp_path']=$tmp_path;
+$_SESSION['idfile']=$idfile;
+$_SESSION['logActive']=$logActive;
+$_SESSION['log_path']=$log_path;
+$_SESSION['www_REP_path']=$www_REP_path;
+$_SESSION['save_files']=$save_files;
+$_SESSION['reg_host']=$reg_host;
+$_SESSION['reg_port']=$reg_port;
+$_SESSION['reg_path']=$reg_path;
+
 
 $errorcode=array();
 $advertise=array();
 
-if(!is_dir($tmp_path)){
-	mkdir($tmp_path, 0777,true);
+
+if($repository_status=="O") {
+	$errorcode[]="XDSRepositoryNotAvailable";
+	$error_message[] = "Repository is down for maintenance";
+	$status_response = makeSoapedFailureResponse($error_message,$errorcode);
+	writeTimeFile($_SESSION['idfile']."--Repository: Repository is down");
+	
+	$file_input=$idfile."-down_failure_response.xml";
+	writeTmpFiles($status_response,$file_input,true);
+	//SendResponseFile($tmp_path.$file_input);
+	SendResponse($status_response);
+	exit;
 }
+
+
+// Creo la cartella per i file temporanei
+if(!is_dir($tmp_path)){
+	$createtmpdir=false;
+	$ntmpdir=0;
+	while(!$createtmpdir && $ntmpdir<10){
+		$cmdtmpdir=mkdir($tmp_path, 0777,true);
+		if($cmdtmpdir){
+			// Caso OK Riesce a creare il folder correttamente
+			writeTimeFile($idfile."--Ho creato il folder tmp correttamente");
+			$createtmpdir=true;
+			}
+		else {
+			sleep(1);
+			$ntmpdir++;
+		}
+	} //Fine while
+
+
+	// Se dopo 10 volte non sono riuscito a creare il folser riporto un errore
+	if(!$createtmpdir){
+		$errorcode[]="XDSRepositoryError";
+		$error_message[] = "Repository can't create tmp folder. ";
+		$folder_response = makeSoapedFailureResponse($error_message,$errorcode);
+		writeTimeFile($_SESSION['idfile']."--Repository: Folder error");
+		
+		$file_input=$idfile."-folder_failure_response-".$idfile;
+		writeTmpFiles($folder_response,$file_input);
+		SendResponse($folder_response);
+		exit;
+	
+	}
+	
+}
+
 
 if(!is_dir($tmp_retrieve_path)){
 	mkdir($tmp_retrieve_path, 0777,true);
@@ -52,14 +106,7 @@ if(!is_dir($tmp_retrieve_path)){
 
 
 
-$_SESSION['tmp_path']=$tmp_path;
-$_SESSION['tmp_retrieve_path']=$tmp_retrieve_path;
-$_SESSION['idfile']=$idfile;
-$_SESSION['logActive']=$logActive;
-$_SESSION['log_path']=$log_path;
-$_SESSION['reg_host']=$reg_host;
-$_SESSION['reg_port']=$reg_port;
-$_SESSION['reg_path']=$reg_path;
+
 
 
 
@@ -76,7 +123,8 @@ $log->writeLogFile("RECEIVED:",1);
 $log->writeLogFile($headers,0);
 
 if($save_files){
-$log->writeLogFileS($headers,$idfile."-headers_received-".$idfile,"M");}
+writeTmpFiles($headers,$idfile."-headers_received-".$idfile);
+}
 
 
 writeTimeFile($idfile."--Repository: Scrivo headers_received");
@@ -86,7 +134,7 @@ $log->writeLogFile("RECEIVED:",1);
 $log->writeLogFile($input,0);
 
 // File da scrivere
-$log->writeLogFileS($input,$idfile."-pre_decode_received-".$idfile,"M");
+writeTmpFiles($input,$idfile."-pre_decode_received-".$idfile);
 
 writeTimeFile($idfile."--Repository: Scrivo pre_decode_received");
 
@@ -95,6 +143,8 @@ writeTimeFile($idfile."--Repository: Scrivo pre_decode_received");
 $giveboundary = giveboundary($headers);
 $boundary = $giveboundary[0];
 $MTOM = $giveboundary[1];
+
+
 include('rep_validation.php');
 
 
@@ -107,15 +157,14 @@ $log->writeLogFile("BOUNDARY:",1);
 $log->writeLogFile($boundary,0);
 
 
-if($save_files)
-$log->writeLogFileS($boundary,$idfile."-boundary-".$idfile,"N");
+if($save_files){
+writeTmpFiles($boundary,$idfile."-boundary-".$idfile);
+}
+
+
 
 writeTimeFile($idfile."--Repository: Scrivo boundary");
 
-
-###### CASO DI PRESENZA DI ATTACHMENTS
-if($boundary != "--")
-{
 //////////////////nuovo/////////////////////////
 #### PRIMA OCCORRENZA DELL'ENVELOPE SOAP
 
@@ -128,7 +177,7 @@ $presoap=$matches[1];
 writeTimeFile($idfile."--Repository: Ho trovato $presoap");
 $body = substr($input,strpos(strtoupper($input),"<".$presoap."ENVELOPE"));
 }
-
+// Body è una stringa e che va <soap:env alla fine del documento
 
 
 
@@ -137,7 +186,8 @@ $log->writeLogFile("RECEIVED:",1);
 $log->writeLogFile($body,0);
 
 
-$log->writeLogFileS($body,$idfile."-body-".$idfile,"N");
+if($save_files){
+writeTmpFiles($body,$idfile."-body-".$idfile);}
 ///////////////////////////////////////////
 
 #### ebXML IMBUSTATO SOAP
@@ -151,8 +201,8 @@ $ebxml_imbustato_soap = rtrim(rtrim(substr($body,0,strpos($body,$boundary)),"\n"
 $log->writeLogFile("RECEIVED:",1);
 $log->writeLogFile($ebxml_imbustato_soap,0);
 
-if($save_files)
-$log->writeLogFileS($ebxml_imbustato_soap,$idfile."-ebxml_imbustato_soap-".$idfile,"N");
+if($save_files){
+writeTmpFiles($ebxml_imbustato_soap,$idfile."-ebxml_imbustato_soap-".$idfile);}
 
 
 
@@ -165,6 +215,28 @@ $root_completo = $dom_XML_completo->document_element();
 $Action_array = $root_completo->get_elements_by_tagname("Action");
 $Action_node = $Action_array[0];
 $Action=$Action_node->get_content();
+
+
+
+if($Action==""){
+	$failure_response=array("You must set the Action of the Request");
+	$error_code=array("XDSRepositoryActionError");
+	$SOAPED_failure_response = makeSoapedFailureResponse($failure_response,$error_code,$Action,$MessageID);
+	$file_input=$idfile."-SOAPED_Action_failure.xml";
+	writeTmpQueryFiles($SOAPED_failure_response,$file_input,true);
+	SendResponseFile($_SESSION['tmpQueryService_path'].$file_input);
+	exit;
+}
+elseif($Action!="urn:ihe:iti:2007:ProvideAndRegisterDocumentSet-b"){
+	$failure_response=array("This is a Provide And Register Document Set-b transaction and you don't use the Action urn:ihe:iti:2007:ProvideAndRegisterDocumentSet-b");
+	$error_code=array("XDSRepositoryActionError");
+	$SOAPED_failure_response = makeSoapedFailureResponse($failure_response,$error_code,$Action,$MessageID);
+	$file_input=$idfile."-SOAPED_Action_failure.xml";
+	writeTmpFiles($SOAPED_failure_response,$file_input,true);
+	SendResponseFile($_SESSION['tmp_path'].$file_input);
+	exit;
+}
+
 
 //Ottengo MessageID
 $MessageID_array = $root_completo->get_elements_by_tagname("MessageID");
@@ -188,8 +260,8 @@ for($i = 0;$i<count($dom_SOAP_ebXML_node_array);$i++)
 $log->writeLogFile("RECEIVED:",1);
 $log->writeLogFile($ebxml_STRING,0);
 
-if($save_files)
-$log->writeLogFileS($ebxml_STRING,$idfile."-ebxml-".$idfile,"N");
+if($save_files){
+writeTmpFiles($ebxml_STRING,$idfile."-ebxml-".$idfile);}
 
 
 
@@ -197,9 +269,8 @@ $log->writeLogFileS($ebxml_STRING,$idfile."-ebxml-".$idfile,"N");
 $ebxml_STRING_VALIDATION = adjustURN_UUIDs($ebxml_STRING);
 
 //file da scrivere!!!!!
-$fp_ebxml_val = fopen($tmp_path.$idfile."-ebxml_for_validation-".$idfile,"w+");
-	fwrite($fp_ebxml_val,$ebxml_STRING_VALIDATION);
-fclose($fp_ebxml_val);
+if($save_files){
+writeTmpFiles($ebxml_STRING_VALIDATION,$idfile."-ebxml_for_validation-".$idfile);}
 
 
 $isValid = isValid($ebxml_STRING_VALIDATION);
@@ -207,6 +278,7 @@ $isValid = isValid($ebxml_STRING_VALIDATION);
 
 if ($isValid){
 writeTimeFile($idfile."--Repository: Ho superato la validazione dell'ebxml");}
+
 $connessione=connectDB();
 
 
@@ -227,11 +299,13 @@ writeTimeFile($idfile."--Repository: XDSSubmissionSetSourceId valido");}
 
 #### SE SONO QUI HO PASSATO IL VINCOLO DI VALIDAZIONE SU sourceId
 
-
-
+#### CONTROLLO CHE CI SIANO DOCUMENTI IN ALLEGATO
+$ExtrinsicObject_array = $dom_ebXML->get_elements_by_tagname("ExtrinsicObject");
+$conta_EO = count($ExtrinsicObject_array);
 
 
 //Se siamo nel caso di MTOM/XOP allora devo guardare i boundary
+//if($conta_EO>0){
 if(!$MTOM){
 
 	$allegato_array=array();
@@ -241,11 +315,11 @@ if(!$MTOM){
 		$allegato_array=array_merge($allegato_array,array($busta_array[$ce]));
 	}
 
-$AllegatiExtrinsicObject = verificaContentMimeExtrinsicObject($dom_XML_completo,$allegato_array);
+	$AllegatiExtrinsicObject = verificaContentMimeExtrinsicObject($dom_XML_completo,$allegato_array);
 
 }
 //Se siamo nel caso di MTOM/XOP allora devo guardare solo Document id
-else {
+else{
 
 $AllegatiExtrinsicObject = verificaContentMimeExtrinsicObjectMTOM($dom_XML_completo);
 
@@ -258,9 +332,6 @@ if($AllegatiExtrinsicObject[0]){
 ####SE SONO QUI HO PASSATO IL VINCOLO DI VALIDAZIONE SU DocumentEntryUniqueId
 $log->writeLogFile('SUPERATO I VINCOLI DI VALIDAZIONE',1);
 
-if($save_files){
-$log->writeLogFileS('SUPERATO I VINCOLI DI VALIDAZIONE',$idfile."-post_validation-".$idfile,"N");}
-
 writeTimeFile($idfile."--Repository: Ho superato la validazione del messaggio");
 }
 
@@ -270,8 +341,7 @@ writeTimeFile($idfile."--Repository: Ho superato la validazione del messaggio");
 
 
 
-#### CONTROLLO CHE CI SIANO DOCUMENTI IN ALLEGATO
-$ExtrinsicObject_array = $dom_ebXML->get_elements_by_tagname("ExtrinsicObject");
+
 ##### SOLO NEL CASO CHE CI SIANO DOCUMENTI IN ALLEGATO
 #### TERZA COSA: DEVO VALIDARE XDSDocumentEntry.uniqueId
 
@@ -288,7 +358,7 @@ $namespacerim=givenamescape($namespacerim_path,$ebxml_STRING);
 
 $submission_uniqueID = getSubmissionUniqueID($dom_ebXML);
 
-$conta_EO = count($ExtrinsicObject_array);
+
 $conta_Document_id = count($Document_array);
 
 // $ExtrinsicObject_array = $dom_ebXML->get_elements_by_tagname("ExtrinsicObject");
@@ -320,6 +390,7 @@ for($o = 0 ; $o < $conta_EO ; $o++)
 #######################################################################
 
 if($MTOM==true){
+$trovato_id=false;
 	for($s=0;$s<$conta_Document_id && !$trovato_id;$s++){
 		$Document_node = $Document_array[$s];
 		$Document_id_attr = $Document_node->get_attribute('id');
@@ -355,16 +426,79 @@ else {
 }
 
 	if(!is_dir($relative_docs_path)){
-		mkdir('./Submitted_Documents/'.date("Y").'/'.date("m").'/'.date("d").'/', 0777,true);
+		$createdir=false;
+		$ndir=0;
+		while(!$createdir && $ndir<10){
+			$cmddir=mkdir('./Submitted_Documents/'.date("Y").'/'.date("m").'/'.date("d").'/', 0777,true);
+			if($cmddir){
+				// Caso OK Riesce a creare il folder correttamente
+				writeTimeFile($idfile."--Ho creato il folder correttamente");
+				$createdir=true;
+				}
+			else {
+				sleep(1);
+				$ndir++;
+			}
+		} //Fine while
+
+		// Se dopo 10 volte non sono riuscito a creare il folser riporto un errore
+		if(!$createdir){
+			$errorcode[]="XDSRepositoryError";
+			$error_message[] = "Repository can't create folder. ";
+			$folder_response = makeSoapedFailureResponse($error_message,$errorcode);
+			writeTimeFile($_SESSION['idfile']."--Repository: Folder error");
+			
+			$file_input=$idfile."-folder_failure_response-".$idfile;
+			writeTmpFiles($folder_response,$file_input);
+
+			SendResponse($folder_response);
+			exit;
+	
+		}
+		
 	}
 
 	$document_URI = $relative_docs_path.$file_name;
 	$document_URI2 = $relative_docs_path_2.$file_name;
 	######### SALVO IL DOCUMENTO IN ALLEGATO: SCRIVO SUL FILESYSTEM
 	##### NON MODIFICARE
-	$fp_allegato = fopen($document_URI,"wb+");
-		fwrite($fp_allegato,$allegato_STRING);
-	fclose($fp_allegato);
+		$writef=false;
+		$nfile=0;
+		while(!$writef && $nfile<10){
+			if($fp_allegato = fopen($document_URI,"wb+")){
+	
+				if (fwrite($fp_allegato,$allegato_STRING) === FALSE) {
+					sleep(1);
+					$nfile++;
+				}
+				else {
+					// Caso OK Riesce a aprire e scrivere il file correttamente
+					writeTimeFile($idfile."--Ho creato il file correttamente");
+					$writef=true;
+				}
+			} // Fine if($handler_log = fopen($pathToFile,"wb+"))
+			else {
+				sleep(1);
+				$nfile++;
+			}
+		} //Fine while
+		#### CHIUDO L'HANDLER
+		fclose($fp_allegato);
+
+	// Se dopo 10 volte non sono riuscito a salvare il file riporto un errore
+	if(!$writef){
+			$errorcode[]="XDSRepositoryError";
+			$error_message[] = "Repository can't save files. ";
+			$File_response = makeSoapedFailureResponse($error_message,$errorcode);
+			writeTimeFile($_SESSION['idfile']."--Repository: File error");
+			
+			$file_input=$idfile."-file_failure_response-".$idfile;
+			writeTmpFiles($File_response,$file_input);
+
+			SendResponse($File_response);
+			exit;
+	
+		}
 ##############################################À
 
 ### SALVATAGGIO DELL'ALLEGATO SU FILESYSTEM
@@ -455,8 +589,8 @@ $_SESSION['idDoc']=md5(time()+1);
 $_SESSION['Content_ID']=md5(time()+2);
 //$_SESSION['messageID']=md5(time()+3);
 
-if($save_files)
-$file_written3 = $log->writeLogFileS($submissionToForward,$idfile."-ebxmlToForward-".$idfile.".xml","N");
+if($save_files){
+writeTmpFiles($submissionToForward,$idfile."-ebxmlToForward-".$idfile);}
 
 
 ## 1- elimino la stringa <?amp;xml version="1.0"?amp;>  dall'ebxmlToForward
@@ -466,28 +600,22 @@ $ebxmlToForward_string = substr($submissionToForward,21);
 $post_data = makeSoapEnvelope($ebxmlToForward_string,"RegisterDocumentSet-b");
 
 
-
+/*
 }//END OF if($boundary != "--")
-
-else if($boundary == "--")
+## NO ALLEGATI PERCIO' FORWARDO DIRETTAMENTE AL REG
+else if($conta_EO==0){
 {
-	## NO ALLEGATI PERCIO' FORWARDO DIRETTAMENTE AL REG
-	## Devo verificare che non ci siano ExtrinsicObject
-	$validExtrinsicObject = verificaExtrinsicObject(domxml_open_mem($input));
-	## Se non ci sono ExtrinsicObject posso inoltrare al registry
-	if($validExtrinsicObject){
-		$post_data = $input;
-	## NO ALLEGATI PERCIO' FORWARDO DIRETTAMENTE AL REG
-	$post_data = file_get_contents($tmp_path.$idfile."-body-".$idfile);
+	$post_data = makeSoapEnvelope($ebxml_STRING,"RegisterDocumentSet-b");
 
 }//END OF else if($boundary == "--")
 }
+*/
 ## 3- METTO SU FILE CIO' CHE FORWARDO AL REG
 $log->writeLogFile("SENT:",1);
 $log->writeLogFile($post_data,0);
 
 //File da scrivere!!!!
-$file_forwarded_written = $log->writeLogFileS($post_data,$idfile."-forwarded-".$idfile,"N");
+$file_forwarded_written = writeTmpFiles($post_data,$idfile."-forwarded-".$idfile,true);
 $size_doc=filesize($file_forwarded_written);
 
 ## 4- SPEDISCO IL MESSAGGIO AL REGISTRY E RICAVO LA RESPONSE
@@ -548,32 +676,20 @@ makeErrorFromRegistry("XDSRegistryError",$registry_response_log);
 }//END OF if($registry_response_log!="")
 
 
-if($save_files){
-
 #### SONO FUORI DAL CASO DI ERRORE
 $registry_response = $registry_response_arr[0];
 
+if($save_files){
+#### N.B. NELLA RISPOSTA DAL REGISTRY HO HEADERS + BODY
 ## 5- scrivo in locale la RISPOSTA DAL REGISTRY
-
-$fp_da_registry = fopen($tmp_path.$idfile."-da_registry-".$idfile, "wb+");
-		fwrite($fp_da_registry,$registry_response);
-fclose($fp_da_registry);
+writeTmpFiles($registry_response,$idfile."-da_registry-".$idfile);
 
 //============= END OF FORWARDING AL REGISTRY del NIST ===============//
 
 }
 
-##### N.B. NELLA RISPOSTA DAL REGISTRY HO HEADERS + BODY
-//$da_registry = file_get_contents($tmp_path.$idfile."-da_registry-".$idfile);//Stringa
-
-$da_registry = $registry_response_arr[0];//Stringa
-
-
-
-
 // Se la risposta del registry è errata cancello il documento creato nel repository
-if(false){
-//if(strpos(strtoupper($da_registry),"ERROR")||strpos(strtoupper($da_registry),"FAILURE")){
+if(strpos(strtoupper($registry_response),"ERROR")||strpos(strtoupper($registry_response),"FAILURE")){
 	if ($windows>0) {
 		exec('del '.$document_URI2.' /q');	
 		}
@@ -590,51 +706,49 @@ if(false){
 #### XML RICEVUTO IN RISPOSTA DAL REGISTRY
 //$body = trim((substr($da_registry,strpos($da_registry,"<SOAP-ENV:Envelope"))));
 
-if (preg_match('([^\t\n\r\f\v";][:]*+ENVELOPE)',strtoupper($da_registry))) {
-writeTimeFile($idfile."--Repository: Ho trovato SOAPENV:ENVELOPE");
+if (preg_match('([^\t\n\r\f\v";][:]*+ENVELOPE)',strtoupper($registry_response))) {
+	writeTimeFile($idfile."--Repository: Ho trovato SOAPENV:ENVELOPE");
 
-preg_match('(<([^\t\n\r\f\v";<]+:)?(ENVELOPE))',strtoupper($da_registry),$matches_reg);
+	preg_match('(<([^\t\n\r\f\v";<]+:)?(ENVELOPE))',strtoupper($registry_response),$matches_reg);
 
-$presoap_reg=$matches_reg[1];
-writeTimeFile($idfile."--Repository: Ho trovato $presoap");
-$body = substr($da_registry,strpos(strtoupper($da_registry),"<".$presoap_reg."ENVELOPE"));
-
-
-//risposta DEL REGISTRY
-$fp_body = fopen($tmp_path.$idfile."-body_response_reg-".$idfile, "wb+");
-		fwrite($fp_body,$body);
-fclose($fp_body);
+	$presoap_reg=$matches_reg[1];
+	writeTimeFile($idfile."--Repository: Ho trovato $presoap");
+	$body = substr($registry_response,strpos(strtoupper($registry_response),"<".$presoap_reg."ENVELOPE"));
 
 
-// Devo sostituire urn:ihe:iti:2007:RegisterDocumentSet-bResponse con urn:ihe:iti:2007:ProvideAndRegisterDocumentSet-bResponse
-$search="urn:ihe:iti:2007:RegisterDocumentSet-bResponse";
-$replace="urn:ihe:iti:2007:ProvideAndRegisterDocumentSet-bResponse";
+	//risposta DEL REGISTRY
+	writeTmpFiles($body,$idfile."-body_response_reg-".$idfile);
 
 
-$body_response = str_replace($search,$replace,$body);
-$body_response="<?xml version='1.0' encoding='UTF-8'?>\r\n".$body_response;
+	// Devo sostituire urn:ihe:iti:2007:RegisterDocumentSet-bResponse con urn:ihe:iti:2007:ProvideAndRegisterDocumentSet-bResponse
+	$search="urn:ihe:iti:2007:RegisterDocumentSet-bResponse";
+	$replace="urn:ihe:iti:2007:ProvideAndRegisterDocumentSet-bResponse";
+	
+	
+	$body_response = str_replace($search,$replace,$body);
+	$body_response="<?xml version='1.0' encoding='UTF-8'?>\r\n".$body_response;
 }
 
 //Risposta modificata!!!!!
-$fp_body_response = fopen($tmp_path.$idfile."-body_response-".$idfile, "wb+");
-		fwrite($fp_body_response,$body_response);
-fclose($fp_body_response);
+
+writeTmpFiles($body_response,$idfile."-body_response-".$idfile);
 
 
 header("HTTP/1.1 200 OK");
 header("Content-Type: application/soap+xml;charset=UTF-8");
-header("Content-Length: ".(string)filesize($tmp_path.$idfile."-body_response-".$idfile));
+//header("Content-Length: ".(string)filesize($tmp_path.$idfile."-body_response-".$idfile));
 
 
 ##### PULISCO IL BUFFER DI USCITA
 ob_get_clean();//OKKIO FONDAMENTALE!!!!!
+//print($body_response);
 
 if($file = fopen($tmp_path.$idfile."-body_response-".$idfile,'rb'))
 {
    while((!feof($file)) && (connection_status()==0))
    {
        print(fread($file, 1024*8));
-       flush();//NOTA BENE!!!!!!!!!
+      // flush();//NOTA BENE!!!!!!!!!
 
    }//END OF while((!feof($file)) && (connection_status()==0))
 

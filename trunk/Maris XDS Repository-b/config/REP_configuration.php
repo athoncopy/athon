@@ -1,6 +1,6 @@
 <?php
 # ------------------------------------------------------------------------------------
-# MARIS XDS REGISTRY
+# MARIS XDS REPOSITORY
 # Copyright (C) 2007 - 2010  MARiS Project
 # Dpt. Medical and Diagnostic Sciences, University of Padova - csaccavini@rad.unipd.it
 # This program is distributed under the terms and conditions of the GPL
@@ -16,7 +16,10 @@
 require('config/config.php');
 ### QUERY FOR HTTP kind of CONNECTION WITH REGISTRY (NORMAL or TLS)
 //$http_con = "SELECT HTTPD FROM HTTP WHERE HTTP.ACTIVE = 'A'";
-include_once('./lib/functions_'.$database.'.php');
+require_once('./lib/functions_'.$database.'.php');
+require_once('./lib/utilities.php');
+require_once("./lib/log.php");
+require_once("./lib/domxml-php4-to-php5.php");
 define("CRLF","\r\n");
 $connessione=connectDB();
 //$res_http = query_select2($http_con,$connessione);
@@ -45,20 +48,56 @@ $ip_source=$_SERVER['REMOTE_ADDR'];
 $lib_path = "./lib/";
 
 
-$relative_docs_path = "./Submitted_Documents/".date("Y")."/".date("m")."/".date("d")."/";   // come sopra
 
-
-$relative_docs_path_2 = "Submitted_Documents/".date("Y")."/".date("m")."/".date("d")."/";//PER COMPORRE L'URI
-
-
-$select_config = "SELECT WWW,LOG,CACHE,FILES,JAVA_PATH,UNIQUEID FROM CONFIG";
+$select_config = "SELECT WWW,LOG,CACHE,FILES,UNIQUEID,STORAGE,STORAGESIZE,STATUS FROM CONFIG_B";
 $res_config = query_select2($select_config,$connessione);
 
 //$www_REP_path = "/MARIS_xds3/xdsServices2/repository/";
 $www_REP_path=$res_config[0][0];
 
+$Storage_number=$res_config[0][5];
+$Storage_size=$res_config[0][6];
+if($Storage_number==0){
+	$storage_directory="./Submitted_Documents";
+}
+else {
+	$storage_directory="./Submitted_Documents/disk-".$Storage_number;
+}
+$spaziolibero = disk_free_space($storage_directory);
+writeTimeFile($_SESSION['idfile']."--Repository: Spazio disponibile: $spaziolibero");
+if($spaziolibero<$Storage_size && $Storage_number!=0){
+$Storage_number++;
+$storage_directory="./Submitted_Documents/disk-".$Storage_number;
+	if(!is_dir($storage_directory) && strpos($_SERVER['PHP_SELF'],"repository.php")){
+		$errorcode[]="XDSRepositoryError";
+		$error_message[] = "Repository disk is FULL ";
+		$File_response = makeSoapedFailureResponse($error_message,$errorcode);
+		writeTimeFile($_SESSION['idfile']."--Repository: Disk error");
+		
+		$file_input=$idfile."-disk_failure_response-".$idfile;
+		writeTmpFiles($File_response,$file_input);
 
-$www_docs_path = $www_REP_path.$relative_docs_path_2;//PER COMPORRE L'URI
+		SendResponse($File_response);
+		exit;
+	}
+
+$updateconfig = "UPDATE CONFIG SET STORAGE = $Storage_number";
+$updateconfig_res = query_execute2($updateconfig,$connessione);
+}
+
+if($Storage_number==0){
+$relative_docs_path = "./Submitted_Documents/".date("Y")."/".date("m")."/".date("d")."/";   // come sopra
+
+
+$relative_docs_path_2 = "Submitted_Documents/".date("Y")."/".date("m")."/".date("d")."/";//PER COMPORRE L'URI
+}
+else {
+$relative_docs_path = "./Submitted_Documents/disk-".$Storage_number."/".date("Y")."/".date("m")."/".date("d")."/";   // come sopra
+
+$relative_docs_path_2 = "Submitted_Documents/disk-".$Storage_number."/".date("Y")."/".date("m")."/".date("d")."/";//PER COMPORRE L'URI
+}
+
+
 
 #### VARIABILI DI SERVIZIO
 
@@ -82,27 +121,27 @@ $clean_cache = $res_config[0][2];
 if($res_config[0][3]=="L"){
 	$save_files = false;
 	$tmp_path = "./tmp/";
-	$tmp_retrieve_path = "./tmp_retrive/";
+	$tmp_retrieve_path = "./tmp_retrieve/";
 	}
 
 else if($res_config[0][3]=="M"){
 	$save_files = true;
 	$tmp_path = "./tmp/";
-	$tmp_retrieve_path = "./tmp_retrive/";
+	$tmp_retrieve_path = "./tmp_retrieve/";
 	}
 else if($res_config[0][3]=="H"){
 	$save_files = true;
 	$tmp_path = "./tmp/".date("Y").date("m").date("d")."/".$ip_source."/";
-	$tmp_retrieve_path = "./tmp_retrive/".date("Y").date("m").date("d")."/".$ip_source."/";
+	$tmp_retrieve_path = "./tmp_retrieve/".date("Y").date("m").date("d")."/".$ip_source."/";
 	}
 
 
-#### JAVA PATH
-$java_path = $res_config[0][4];
-
-
 #### Repository UniqueID
-$rep_uniqueID = $res_config[0][5];
+$rep_uniqueID = $res_config[0][4];
+
+
+##### STATUS 
+$repository_status = $res_config[0][7];
 
 #### MESSAGGI
 $service = "repository.php";
@@ -118,7 +157,7 @@ $path_to_XSD_file = "./schemas/rs.xsd";
 //------------------- TO REGISTRY CONNECTION INFOS -------------------//
 
 ####  LEGGO LE INFORMAZIONI DA DB: NODO ATTIVO
-$select_registry = "SELECT HOST,PORT,PATH,HTTP FROM REGISTRY WHERE REGISTRY.ACTIVE = 'A' AND REGISTRY.SERVICE = 'SUBMISSION'";
+$select_registry = "SELECT HOST,PORT,PATH,HTTP FROM REGISTRY_B WHERE ACTIVE = 'A' AND SERVICE = 'SUBMISSION'";
 $ris = query_select2($select_registry,$connessione);
 
 #### OTTENGO LE INFORMAZIONI DEL NODO REGISTRY

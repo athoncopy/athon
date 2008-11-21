@@ -1,6 +1,6 @@
 <?php
 # ------------------------------------------------------------------------------------
-# MARIS XDS REGISTRY
+# MARIS XDS REPOSITORY
 # Copyright (C) 2007 - 2010  MARiS Project
 # Dpt. Medical and Diagnostic Sciences, University of Padova - csaccavini@rad.unipd.it
 # This program is distributed under the terms and conditions of the GPL
@@ -108,14 +108,14 @@ $windows=substr_count(strtoupper($system),"WINDOWS");
 if ($windows>0){
 	exec('del ..\\tmp\\* /q');
 	exec('del ..\\log\\* /q');
-	exec('del ..\\tmp_retrive\\* /q');
+	exec('del ..\\tmp_retrieve\\* /q');
 	header('location: ../setup.php');
 
 	}
 else{	
 	exec('rm -Rf ../tmp/*');
 	exec('rm -Rf ../log/*');
-	exec('rm -Rf ../tmp_retrive/*');
+	exec('rm -Rf ../tmp_retrieve/*');
 	header('location: ../setup.php');
 	}
 

@@ -1,6 +1,6 @@
 <?php
 # ------------------------------------------------------------------------------------
-# MARIS XDS REGISTRY
+# MARIS XDS REPOSITORY
 # Copyright (C) 2007 - 2010  MARiS Project
 # Dpt. Medical and Diagnostic Sciences, University of Padova - csaccavini@rad.unipd.it
 # This program is distributed under the terms and conditions of the GPL
@@ -21,10 +21,10 @@ $REG_path_post = $_POST['registry_path'];
 $REG_http_post = $_POST['registry_http'];
 
 
-$deleteREG = "DELETE FROM REGISTRY";
+$deleteREG = "DELETE FROM REGISTRY_B";
 $REG_delete = query_execute($deleteREG);
 
-$insertREG = "INSERT INTO REGISTRY (ID,HOST,PORT,PATH,ACTIVE,HTTP,SERVICE,DESCRIPTION) VALUES ('1','$REG_host_post','$REG_port_post','$REG_path_post','A','$REG_http_post','SUBMISSION','REGISTRY')";
+$insertREG = "INSERT INTO REGISTRY_B (ID,HOST,PORT,PATH,ACTIVE,HTTP,SERVICE,DESCRIPTION) VALUES ('1','$REG_host_post','$REG_port_post','$REG_path_post','A','$REG_http_post','SUBMISSION','REGISTRY')";
 //echo $insertREG;
 $REG_insert = query_execute($insertREG);
 
@@ -45,13 +45,13 @@ $REP_www_post = $_POST['repository_www'];
 $REP_log_post = $_POST['repository_log'];
 $REP_cache_post = $_POST['repository_cache'];
 $REP_files_post = $_POST['repository_files'];
-$REP_java_home = $_POST['repository_java_home'];
 $REP_uniqueID = $_POST['repository_uniqueid'];
+$REP_status = $_POST['repository_status'];
 
-$deleteREP_config = "DELETE FROM CONFIG";
+$deleteREP_config = "DELETE FROM CONFIG_B";
 $REP_delete_config = query_execute($deleteREP_config);
 
-$insertREP_config = "INSERT INTO CONFIG (WWW,LOG,CACHE,FILES,JAVA_PATH,UNIQUEID) VALUES ('$REP_www_post','$REP_log_post','$REP_cache_post','$REP_files_post','$REP_java_home','$REP_uniqueID')";
+$insertREP_config = "INSERT INTO CONFIG_B (WWW,LOG,CACHE,FILES,UNIQUEID,STATUS) VALUES ('$REP_www_post','$REP_log_post','$REP_cache_post','$REP_files_post','$REP_uniqueID','$REP_status')";
 //echo $insertREP_config;
 $REP_insert_config = query_execute($insertREP_config);
 
