@@ -1,10 +1,14 @@
 <?php
-
 # ------------------------------------------------------------------------------------
 # MARIS XDS REPOSITORY
 # Copyright (C) 2007 - 2010  MARiS Project
 # Dpt. Medical and Diagnostic Sciences, University of Padova - csaccavini@rad.unipd.it
 # This program is distributed under the terms and conditions of the GPL
+
+# Contributor(s):
+# A-thon srl <info@a-thon.it>
+# Alberto Castellini
+
 # See the LICENSE files for details
 # ------------------------------------------------------------------------------------
 
@@ -44,18 +48,11 @@ function connect()
 	$this->socket = fsockopen($this->host,$this->port,$this->errno,$this->errstr,$this->timeout);
 
 
-//writeTimeFile("HTTP_client: Setto il socket");
-	if($this->save_files){
-	$fp_HTTP_Client_CONNECTION_STATUS = fopen($this->tmp_path.$this->idfile."-HTTP_Client_CONNECTION_STATUS-".$this->idfile,"w+");
-	}
-//writeTimeFile("HTTP_client: Verifico connessione");
-
-
 	if(!$this->socket)
 	{
 	if($this->save_files){
-		fwrite($fp_HTTP_Client_CONNECTION_STATUS,"CONNESSIONE CON IL REGISTRY $this->host *** NON RIUSCITA ***");
-		fclose($fp_HTTP_Client_CONNECTION_STATUS);
+		$connection_response="CONNESSIONE CON IL REGISTRY $this->host *** NON RIUSCITA ***";
+		writeTmpFiles($connection_response,$this->idfile."-HTTP_Client_CONNECTION_STATUS-".$this->idfile);
 		}
 
 		return false;
@@ -63,10 +60,9 @@ function connect()
 	else
 	{
 	if($this->save_files){
-		fwrite($fp_HTTP_Client_CONNECTION_STATUS,"CONNESSIONE CON IL REGISTRY $this->host *** AVVENUTA REGOLARMENTE ***");
-		fclose($fp_HTTP_Client_CONNECTION_STATUS);
+		$connection_response="CONNESSIONE CON IL REGISTRY $this->host *** AVVENUTA REGOLARMENTE ***";
+		writeTmpFiles($connection_response,$this->idfile."-HTTP_Client_CONNECTION_STATUS-".$this->idfile);
 		}
-		//writeTimeFile("HTTP_client: Connessione avvenuta regolarmente");
 		return true;
 	}
 
@@ -86,13 +82,10 @@ function send_request()
 	else	#####CASO SENZA ERRORI
 	{
 
-//writeTimeFile("HTTP_client: Entro nel caso senza errori");
 		$this->result = $this->request($this->post_data);
 
-//writeTimeFile("HTTP_client: Ottengo il risultato");
 		##### COMPONGO L'ARRAY DA RITORNARE
 		$ret = array($this->result,"");
-//writeTimeFile("HTTP_client: Restituisco il messaggio");
 		return $ret;
 	}
 
@@ -116,11 +109,8 @@ function request($post_data)
 		"\r\n".$post_data;
 	
 	if($this->save_files){
-	$fp_HTTP_Client_POSTED = fopen($this->tmp_path.$this->idfile."-HTTP_Client_POSTED-".$this->idfile,"w+");
-    	fwrite($fp_HTTP_Client_POSTED,$post);
-	fclose($fp_HTTP_Client_POSTED);
+	writeTmpFiles($post,$this->idfile."-HTTP_Client_POSTED-".$this->idfile);
 	}
-	//writeTimeFile("HTTP_client_request: Scrivo file HTTP_Client_POSTED");
 	
 	fwrite($this->socket,$post);
 
@@ -130,7 +120,6 @@ function request($post_data)
 		$this->buf .= fgets($this->socket);
 
 	}
-	//writeTimeFile("HTTP_client_request: Restituisco il messaggio");
 	$this->close();
 
 

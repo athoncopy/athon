@@ -1,9 +1,14 @@
 <?php
 # ------------------------------------------------------------------------------------
-# MARIS XDS REGISTRY
+# MARIS XDS REPOSITORY
 # Copyright (C) 2007 - 2010  MARiS Project
 # Dpt. Medical and Diagnostic Sciences, University of Padova - csaccavini@rad.unipd.it
 # This program is distributed under the terms and conditions of the GPL
+
+# Contributor(s):
+# A-thon srl <info@a-thon.it>
+# Alberto Castellini
+
 # See the LICENSE files for details
 # ------------------------------------------------------------------------------------
 #### XDSSubmissionSet.sourceId
@@ -84,9 +89,8 @@ function validate_XDSSubmissionSetSourceId($dom,$connessione)
 	$query = "SELECT * FROM KNOWN_SOUCES_IDS WHERE XDSSUBMISSIONSET_SOURCEID = '$ebxml_value'";
 	 
   	if($_SESSION['save_files']){
-    	$fp_sourceIdQuery = fopen($_SESSION['tmp_path'].$_SESSION['idfile']."-SubmissionSetSourceIdQuery-".$_SESSION['idfile'],"w+");
-		fwrite($fp_sourceIdQuery,$query);
-	fclose($fp_sourceIdQuery);
+	$file_input=$_SESSION['idfile']."-SubmissionSetSourceIdQuery-".$_SESSION['idfile'];
+	writeTmpFiles($query,$file_input);
 	}
 	#### ESEGUO LA QUERY
     	$res = query_select2($query,$connessione); //array bidimensionale
@@ -99,12 +103,10 @@ function validate_XDSSubmissionSetSourceId($dom,$connessione)
 		$SourceId_response = makeSoapedFailureResponse($error_message,$errorcode);
 		writeTimeFile($_SESSION['idfile']."--Repository: sourceId_failure_response");
 			
-		$file_input=$_SESSION['tmp_path'].$_SESSION['idfile']."-sourceId_failure_response-".$_SESSION['idfile'];
-		$fp = fopen($file_input, "wb+");
-            	  fwrite($fp,$SourceId_response);
-         	fclose($fp);
+		$file_input=$_SESSION['idfile']."-sourceId_failure_response-".$_SESSION['idfile'];
+		writeTmpFiles($SourceId_response,$file_input);
 
-		SendError($file_input);
+		SendResponse($SourceId_response);
 		exit;
 	
 		}
@@ -118,8 +120,6 @@ function validate_XDSSubmissionSetSourceId($dom,$connessione)
 ##### XDSDocumentEntry.uniqueId
 function validate_XDSDocumentEntryUniqueId($dom,$connessione)
 {
-//      $fp_uniqueIdQuery = fopen("tmp/DocumentEntryUniqueIdQuery","w+");
-
 	$ebxml_value = array();
 
 ##### RADICE DEL DOCUMENTO ebXML
@@ -197,7 +197,10 @@ function validate_XDSDocumentEntryUniqueId($dom,$connessione)
 	### EFFETTUO LA QUERY ED OTTENGO IL RISULTATO
 	$res = query_select2($query,$connessione); //array bidimensionale
 	 
-    	$isEmptyUniqueId = ((empty($res)) || $isEmpty);
+	//Qui dovrei verificare che l'hash sia differente ma dato che non salvo l'hash non posso verificarlo
+    	//$isEmptyUniqueId = ((empty($res)) || $isEmpty);
+	$isEmptyUniqueId = true;
+
 
 		if(!$isEmptyUniqueId){###---> uniqueId già presente --> eccezione
 			$errorcode[]="XDSNonIdenticalHash";
@@ -205,12 +208,10 @@ function validate_XDSDocumentEntryUniqueId($dom,$connessione)
 			$uniqueId_response = makeSoapedFailureResponse($error_message,$errorcode);
 			writeTimeFile($_SESSION['idfile']."--Repository: uniqueId_failure_response");
 			
-			$file_input=$_SESSION['tmp_path'].$_SESSION['idfile']."-uniqueId_failure_response-".$_SESSION['idfile'];
-			$fp = fopen($file_input, "wb+");
-            	  	  fwrite($fp,$uniqueId_response);
-         		fclose($fp);
+			$file_input=$_SESSION['idfile']."-uniqueId_failure_response-".$_SESSION['idfile'];
+			writeTmpFiles($uniqueId_response,$file_input);
 
-			SendError($file_input);
+			SendResponse($uniqueId_response);
 			exit;
 		}
 	}//END OF for($index=0;$index<(count($dom_ebXML_ExtrinsicObject_node_array));$index++)
@@ -239,12 +240,10 @@ function controllaPayload($input){
 			$empty_payload_response = makeSoapedFailureResponse($error_message,$errorcode);
 			writeTimeFile($_SESSION['idfile']."--Repository: empty_payload_response");
 			
-			$file_input=$_SESSION['tmp_path'].$_SESSION['idfile']."-empty_payload_response-".$_SESSION['idfile'];
-			$fp = fopen($file_input, "wb+");
-            			fwrite($fp,$empty_payload_response);
-         		fclose($fp);
+			$file_input=$_SESSION['idfile']."-empty_payload_response-".$_SESSION['idfile'];
+			writeTmpFiles($empty_payload_response,$file_input);
 
-			SendError($file_input);
+			SendResponse($empty_payload_response);
 			exit;
 	
 		}
@@ -272,12 +271,10 @@ function isValid($ebxml_STRING_VALIDATION){
 		### SCRIVO LA RISPOSTA IN UN FILE
 		// File da scrivere
 		writeTimeFile($_SESSION['idfile']."--Repository: SOAPED_failure_VALIDATION_response");
-		$file_input=$_SESSION['tmp_path'].$_SESSION['idfile']."-SOAPED_failure_VALIDATION_response-".$_SESSION['idfile'];
-	 	$fp = fopen($file_input,"w+");
-           	   fwrite($fp,$failure_response);
-        	fclose($fp);
+		$file_input=$_SESSION['idfile']."-SOAPED_failure_VALIDATION_response-".$_SESSION['idfile'];
+		writeTmpFiles($failure_response,$file_input);
 
-		SendError($file_input);
+		SendResponse($failure_response);
 		exit;
 	
 	}
@@ -301,12 +298,10 @@ function verificaAllegatiExtrinsicObject($conta_EO,$conta_allegati){
 		$error_message[] = "XDSDocumentEntry exists in metadata with no corresponding attached document";
 		$failure_response = makeSoapedFailureResponse($error_message,$errorcode);
 
-		$file_input=$_SESSION['tmp_path'].$_SESSION['idfile']."-Document_missing-".$_SESSION['idfile'];
-	 	$fp = fopen($file_input,"w+");
-           	   fwrite($fp,$failure_response);
-        	fclose($fp);
+		$file_input=$_SESSION['idfile']."-Document_missing-".$_SESSION['idfile'];
+		writeTmpFiles($failure_response,$file_input);
 
-		SendError($file_input);
+		SendResponse($failure_response);
 		exit;
 		//PULISCO IL BUFFER DI USCITA
 		ob_get_clean();//OKKIO FONDAMENTALE!!!!!
@@ -324,12 +319,10 @@ function verificaAllegatiExtrinsicObject($conta_EO,$conta_allegati){
 		writeTimeFile($_SESSION['idfile']."--Repository: ExtrinsicObject_missing");
 		$failure_response = makeSoapedFailureResponse($error_message,$errorcode);
 
-		$file_input=$_SESSION['tmp_path'].$_SESSION['idfile']."-ExtrinsicObject_missing-".$_SESSION['idfile'];
-	 	$fp = fopen($file_input,"w+");
-           	   fwrite($fp,$failure_response);
-        	fclose($fp);
+		$file_input=$_SESSION['idfile']."-ExtrinsicObject_missing-".$_SESSION['idfile'];
+		writeTmpFiles($failure_response,$file_input);
 
-		SendError($file_input);
+		SendResponse($failure_response);
 		exit;
 		//PULISCO IL BUFFER DI USCITA
 		ob_get_clean();//OKKIO FONDAMENTALE!!!!!
@@ -393,7 +386,7 @@ function verificaContentMimeExtrinsicObject($dom_ebXML,$allegato_array){
 		}
 
 	}
-return $valid;
+return array($valid,$mimeType_arr);
 }
 
 
@@ -404,12 +397,10 @@ function makeErrorFromRegistry($registry_response_log){
 		$error_message[] = "Registry has returned errors";
 		$failure_response = makeSoapedFailureResponse($error_message,$errorcode);
 		writeTimeFile($_SESSION['idfile']."--Repository: Registry Error");
-		$file_input=$_SESSION['tmp_path'].$_SESSION['idfile']."-Registry_Error-".$_SESSION['idfile'];
-	 	$fp = fopen($file_input,"w+");
-           	   fwrite($fp,$failure_response);
-        	fclose($fp);
+		$file_input=$_SESSION['idfile']."-Registry_Error-".$_SESSION['idfile'];
+		writeTmpFiles($failure_response,$file_input);
 
-		SendError($file_input);
+		SendResponse($failure_response);
 		exit;
 		//PULISCO IL BUFFER DI USCITA
 		ob_get_clean();//OKKIO FONDAMENTALE!!!!!
@@ -422,17 +413,15 @@ function verificaExtrinsicObject($dom_ebXML){
 	$ExtrinsicObject_array = $dom_ebXML->get_elements_by_tagname("ExtrinsicObject");
 	$conta_EO = count($ExtrinsicObject_array);
 	if ($conta_EO>0){
-		         	//RESTITUISCE IL MESSAGGIO DI ERRORE
+		//RESTITUISCE IL MESSAGGIO DI ERRORE
 		$errorcode[] = "XDSMissingDocument";
 		$error_message[] = "XDSDocumentEntry exists in metadata with no corresponding attached document";
 		$failure_response = makeSoapedFailureResponse($error_message,$errorcode);
 
-		$file_input=$_SESSION['tmp_path'].$_SESSION['idfile']."-Document_missing-".$_SESSION['idfile'];
-	 	$fp = fopen($file_input,"w+");
-           	   fwrite($fp,$failure_response);
-        	fclose($fp);
+		$file_input=$_SESSION['idfile']."-Document_missing-".$_SESSION['idfile'];
+		writeTmpFiles($failure_response,$file_input);
 
-		SendError($file_input);
+		SendResponse($failure_response);
 		exit;
 		//PULISCO IL BUFFER DI USCITA
 		ob_get_clean();//OKKIO FONDAMENTALE!!!!!
