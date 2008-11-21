@@ -4,6 +4,11 @@
 # Copyright (C) 2007 - 2010  MARiS Project
 # Dpt. Medical and Diagnostic Sciences, University of Padova - csaccavini@rad.unipd.it
 # This program is distributed under the terms and conditions of the GPL
+
+# Contributor(s):
+# A-thon srl <info@a-thon.it>
+# Alberto Castellini
+
 # See the LICENSE files for details
 # ------------------------------------------------------------------------------------
 
@@ -17,10 +22,10 @@ $REG_path_post = $_POST['registry_path'];
 $REG_http_post = $_POST['registry_http'];
 
 
-$deleteREG = "DELETE FROM REGISTRY";
+$deleteREG = "DELETE FROM REGISTRY_A";
 $REG_delete = query_execute2($deleteREG,$connessione);
 
-$insertREG = "INSERT INTO REGISTRY (ID,HOST,PORT,PATH,ACTIVE,HTTP,SERVICE,DESCRIPTION) VALUES ('1','$REG_host_post','$REG_port_post','$REG_path_post','A','$REG_http_post','SUBMISSION','REGISTRY')";
+$insertREG = "INSERT INTO REGISTRY_A (ID,HOST,PORT,PATH,ACTIVE,HTTP,SERVICE,DESCRIPTION) VALUES ('1','$REG_host_post','$REG_port_post','$REG_path_post','A','$REG_http_post','SUBMISSION','REGISTRY')";
 //echo $insertREG;
 $REG_insert = query_execute2($insertREG,$connessione);
 
@@ -28,6 +33,7 @@ $REG_insert = query_execute2($insertREG,$connessione);
 $REP_host_post = $_POST['repository_host'];
 $REP_port_post = $_POST['repository_port'];
 $REP_http_post = $_POST['repository_http'];
+
 
 
 $deleteREP = "DELETE FROM REPOSITORY";
@@ -41,12 +47,12 @@ $REP_www_post = $_POST['repository_www'];
 $REP_log_post = $_POST['repository_log'];
 $REP_cache_post = $_POST['repository_cache'];
 $REP_files_post = $_POST['repository_files'];
-$REP_java_home = $_POST['repository_java_home'];
+$REP_status = $_POST['repository_status'];
 
-$deleteREP_config = "DELETE FROM CONFIG";
+$deleteREP_config = "DELETE FROM CONFIG_A";
 $REP_delete_config = query_execute2($deleteREP_config,$connessione);
 
-$insertREP_config = "INSERT INTO CONFIG (WWW,LOG,CACHE,FILES) VALUES ('$REP_www_post','$REP_log_post','$REP_cache_post','$REP_files_post')";
+$insertREP_config = "INSERT INTO CONFIG_A (WWW,LOG,CACHE,FILES,STATUS) VALUES ('$REP_www_post','$REP_log_post','$REP_cache_post','$REP_files_post','$REP_status')";
 //echo $insertREP_config;
 $REP_insert_config = query_execute2($insertREP_config,$connessione);
 

@@ -4,6 +4,11 @@
 # Copyright (C) 2007 - 2010  MARiS Project
 # Dpt. Medical and Diagnostic Sciences, University of Padova - csaccavini@rad.unipd.it
 # This program is distributed under the terms and conditions of the GPL
+
+# Contributor(s):
+# A-thon srl <info@a-thon.it>
+# Alberto Castellini
+
 # See the LICENSE files for details
 # ------------------------------------------------------------------------------------
 ##### CLASSE PER LA CREAZIONE DEI LOGs #####
@@ -179,28 +184,42 @@ function writeLogFileS($log_text,$file_name,$mandatory)
 			$this->current_files_log_path = $this->default_current_files_log_path;
 		}
 
-			### PATH COMPLETO AL FILE 
-			$pathToFile = $this->current_files_log_path.$file_name;
-
+		### PATH COMPLETO AL FILE 
+		$pathToFile = $this->current_files_log_path.$file_name;
+		$writef=false;
+		$nfile=0;
+		while(!$writef && $nfile<10){
 			### APERTURA DEL FILE IN FORMA TAIL ED IN SOLA SCRITTURA
-			$handler_log = fopen($pathToFile,"wb+");
-
-			## CASO DI DATO TIPO ARRAY
-			if(is_array($log_text))
-			{
-				$txt = "";
-				### IMPOSTA L'ARRAY NELLA FORMA [etichetta] = valore
-				foreach($log_text as $element => $value) 
+			if($handler_log = fopen($pathToFile,"wb+")){
+	
+				## CASO DI DATO TIPO ARRAY
+				if(is_array($log_text))
 				{
-   					$txt = $txt."$element = $value\n";
-				}//END OF foreach
-				$log_text = $txt;
-			}//END OF if(is_array($log_text))
+					$txt = "";
+					### IMPOSTA L'ARRAY NELLA FORMA [etichetta] = valore
+					foreach($log_text as $element => $value) 
+					{
+   						$txt = $txt."$element = $value\n";
+					}//END OF foreach
+					$log_text = $txt;
+				}//END OF if(is_array($log_text))
 
-			fwrite($handler_log,$log_text );
-
-			#### CHIUDO L'HANDLER
-			fclose($handler_log);
+				if (fwrite($handler_log,$log_text) === FALSE) {
+					sleep(1);
+					$nfile++;
+				}
+				else {
+					// Caso OK Riesce a aprire e scrivere il file correttamente
+					$writef=true;
+				}
+			} // Fine if($handler_log = fopen($pathToFile,"wb+"))
+			else {
+				sleep(1);
+				$nfile++;
+			}
+		} //Fine while
+		#### CHIUDO L'HANDLER
+		fclose($handler_log);
 		
 		
 		#### RITORNO IL PATH AL FILE SCRITTO
@@ -218,6 +237,93 @@ function writeLogFileS($log_text,$file_name,$mandatory)
 
 
 }//END OF CLASS Log
+
+
+
+function writeTmpFiles($log_text,$file_name,$mandatory=false)
+	{
+		### PATH COMPLETO AL FILE 
+		if(!isset($_SESSION['tmp_path'])){
+			$pathToFile = "./tmp/".$file_name;
+		}
+		else {
+			$pathToFile = $_SESSION['tmp_path'].$file_name;
+		}
+		$writef=false;
+		$nfile=0;
+		//Se il file è obbligatorio devo accertarmi che venga salvato
+		if($mandatory){
+		while(!$writef && $nfile<10){
+			### APERTURA DEL FILE IN FORMA TAIL ED IN SOLA SCRITTURA
+			if($handler_log = fopen($pathToFile,"wb+")){
+	
+				## CASO DI DATO TIPO ARRAY
+				if(is_array($log_text))
+				{
+					$txt = "";
+					### IMPOSTA L'ARRAY NELLA FORMA [etichetta] = valore
+					foreach($log_text as $element => $value) 
+					{
+   						$txt = $txt."$element = $value\n";
+					}//END OF foreach
+					$log_text = $txt;
+				}//END OF if(is_array($log_text))
+
+				if (fwrite($handler_log,$log_text) === FALSE) {
+					sleep(1);
+					$nfile++;
+				}
+				else {
+					// Caso OK Riesce a aprire e scrivere il file correttamente
+					$writef=true;
+				}
+			} // Fine if($handler_log = fopen($pathToFile,"wb+"))
+			else {
+				sleep(1);
+				$nfile++;
+			}
+		} //Fine while
+		#### CHIUDO L'HANDLER
+		fclose($handler_log);
+
+		if(!$writef){
+			$errorcode[]="XDSRepositoryError";
+			$error_message[] = "Repository can't create tmp file. ";
+			$tmp_response = makeSoapedFailureResponse($error_message,$errorcode);
+			writeTimeFile($_SESSION['idfile']."--Repository: Tmp File error");
+		
+			$file_input=$idfile."-tmp_failure_response-".$idfile;
+			writeTmpFiles($tmp_response,$file_input);
+			SendResponse($tmp_response);
+			exit;
+		}
+		
+		}
+
+	else {
+
+		$handler_log=fopen($pathToFile,"wb+");
+			## CASO DI DATO TIPO ARRAY
+			if(is_array($log_text))
+			{
+				$txt = "";
+				### IMPOSTA L'ARRAY NELLA FORMA [etichetta] = valore
+				foreach($log_text as $element => $value) 
+				{
+   					$txt = $txt."$element = $value\n";
+				}//END OF foreach
+				$log_text = $txt;
+			}//END OF if(is_array($log_text))
+	
+		fwrite($handler_log,$log_text);
+		fclose($handler_log);
+
+	}
+		#### RITORNO IL PATH AL FILE SCRITTO
+		return $pathToFile;
+
+	}//END OF writeTmpFiles($log_text)
+
 
 
 
@@ -258,6 +364,7 @@ function writeTimeFile($tempotxt)
 			fclose($handler_log_time);
 		}
 	}//END OF makeLog($log_text)
+
 
 
 ?>

@@ -4,13 +4,28 @@
 # Copyright (C) 2007 - 2010  MARiS Project
 # Dpt. Medical and Diagnostic Sciences, University of Padova - csaccavini@rad.unipd.it
 # This program is distributed under the terms and conditions of the GPL
+
+# Contributor(s):
+# A-thon srl <info@a-thon.it>
+# Alberto Castellini
+
 # See the LICENSE files for details
 # ------------------------------------------------------------------------------------
 
 require_once("./config/REP_configuration.php");
-
+if($repository_status=="O") {
+	$errorcode[]="XDSRepositoryNotAvailable";
+	$error_message[] = "Repository is down for maintenance";
+	$status_response = makeSoapedFailureResponse($error_message,$errorcode);
+	writeTimeFile($_SESSION['idfile']."--Repository: Repository is down");
+	
+	$file_input=$idfile."-down_failure_response.xml";
+	writeTmpFiles($status_response,$file_input,true);
+	//SendResponseFile($tmp_path.$file_input);
+	SendResponse($status_response);
+	exit;
+}
 ob_start(); //Non stampa niente a monitor ma mette tutto su un buffer
-require_once($lib_path."domxml-php4-to-php5.php");
 $connessione=connectDB();
 
 //ob_get_clean();//OKKIO FONDAMENTALE!!!!! Pulisco il buffer

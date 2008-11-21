@@ -4,6 +4,11 @@
 # Copyright (C) 2007 - 2010  MARiS Project
 # Dpt. Medical and Diagnostic Sciences, University of Padova - csaccavini@rad.unipd.it
 # This program is distributed under the terms and conditions of the GPL
+
+# Contributor(s):
+# A-thon srl <info@a-thon.it>
+# Alberto Castellini
+
 # See the LICENSE files for details
 # ------------------------------------------------------------------------------------
 
@@ -44,8 +49,24 @@ $risultato = ociexecute($statement);
     // Se non riesce ad eseguire la query prova a riconnettersi
     else {
 	include('./config/repository_oracle_db.php');
-	$conn = oci_connect($user_db,$password_db,$db)
-	or die( "Could not connect to Oracle database!") or die (ocierror());;
+	$conn = oci_connect($user_db,$password_db,$db);
+	if(!$conn){
+
+		$errorcode=array();
+		$error_message=array();
+	
+		$errorcode[]="XDSRepositoryError";
+		$err=ocierror();
+		$error_message[] = $err['message'];
+		$database_error_response = makeSoapedFailureResponse($error_message,$errorcode);
+		writeTimeFile($_SESSION['idfile']."--Repository: database_error_response");
+			
+		$file_input=$_SESSION['idfile']."-database_error_response-".$_SESSION['idfile'];
+		writeTmpFiles($database_error_response,$file_input);
+	
+		SendResponse($database_error_response);
+		exit;
+	}
 
 	$statement = ociparse($conn, $query);
 	$risultato = ociexecute($statement);
@@ -76,6 +97,7 @@ and returns an array $rec with the result recordset.
 Use this function ONLY with SELECT statements, if you want to execute  INSERT or UPDATE
 use the function query_execute().
 */
+$rec=array();
 include('./config/repository_oracle_db.php');
 //putenv("ORACLE_HOME=/usr/lib/oracle/xe/app/oracle/product/10.2.0");
 # open connection to db
@@ -105,7 +127,7 @@ oci_close($conn);
 
 function query_select2($query,$conn)
 {
-
+$rec=array();
 $statement = ociparse($conn, $query);
 $risultato = ociexecute($statement);
 
@@ -118,8 +140,24 @@ if($risultato){
 // Se non riesce ad eseguire la query prova a riconnettersi
 else {
 	include('./config/repository_oracle_db.php');
-	$conn = oci_connect($user_db,$password_db,$db)
-	or die( "Could not connect to Oracle database!") or die (ocierror());;
+	$conn = oci_connect($user_db,$password_db,$db);
+	if(!$conn){
+
+		$errorcode=array();
+		$error_message=array();
+	
+		$errorcode[]="XDSRepositoryError";
+		$err=ocierror();
+		$error_message[] = $err['message'];
+		$database_error_response = makeSoapedFailureResponse($error_message,$errorcode);
+		writeTimeFile($_SESSION['idfile']."--Repository: database_error_response");
+			
+		$file_input=$_SESSION['idfile']."-database_error_response-".$_SESSION['idfile'];
+		writeTmpFiles($database_error_response,$file_input);
+	
+		SendResponse($database_error_response);
+		exit;
+	}
 
 	$statement = ociparse($conn, $query);
 	$risultato = ociexecute($statement);
@@ -147,8 +185,24 @@ function connectDB(){
 include('./config/repository_oracle_db.php');
 //putenv("ORACLE_HOME=/usr/lib/oracle/xe/app/oracle/product/10.2.0");
 # open connection to db
-$conn = oci_connect($user_db,$password_db,$db)
-or die( "Could not connect to Oracle database!") or die (ocierror());;
+$conn = oci_connect($user_db,$password_db,$db);
+	if(!$conn){
+
+		$errorcode=array();
+		$error_message=array();
+	
+		$errorcode[]="XDSRepositoryError";
+		$err=ocierror();
+		$error_message[] = $err['message'];
+		$database_error_response = makeSoapedFailureResponse($error_message,$errorcode);
+		writeTimeFile($_SESSION['idfile']."--Repository: database_error_response");
+			
+		$file_input=$_SESSION['idfile']."-database_error_response-".$_SESSION['idfile'];
+		writeTmpFiles($database_error_response,$file_input);
+	
+		SendResponse($database_error_response);
+		exit;
+	}
 
 return $conn;
 }

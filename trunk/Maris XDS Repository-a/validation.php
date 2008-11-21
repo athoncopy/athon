@@ -1,17 +1,19 @@
 <?php
 # ------------------------------------------------------------------------------------
-# MARIS XDS REGISTRY
+# MARIS XDS REPOSITORY
 # Copyright (C) 2007 - 2010  MARiS Project
 # Dpt. Medical and Diagnostic Sciences, University of Padova - csaccavini@rad.unipd.it
 # This program is distributed under the terms and conditions of the GPL
+
+# Contributor(s):
+# A-thon srl <info@a-thon.it>
+# Alberto Castellini
+
 # See the LICENSE files for details
 # ------------------------------------------------------------------------------------
 #### XDSSubmissionSet.sourceId
 function validate_XDSSubmissionSetSourceId($dom,$idfile,$save_files,$connessione)
 {
-  if($save_files){
-    $fp_sourceIdQuery = fopen("tmp/".$idfile."-SubmissionSetSourceIdQuery-".$idfile,"w+");
-    }		
     	//$ebxml_value = searchForIds($dom,'RegistryPackage','uniqueId');
     
 	$ebxml_value = '';
@@ -86,11 +88,6 @@ function validate_XDSSubmissionSetSourceId($dom,$idfile,$save_files,$connessione
     	//$query = "SELECT * FROM SUBMISSIONS WHERE XDSSubmissionSet_uniqueId = '$ebxml_value'";
 	$query = "SELECT * FROM KNOWN_SOUCES_IDS WHERE XDSSUBMISSIONSET_SOURCEID = '$ebxml_value'";
 	 
-  if($save_files){
-
-		fwrite($fp_sourceIdQuery,$query);
-	fclose($fp_sourceIdQuery);
-	}
 	#### ESEGUO LA QUERY
     	$res = query_select2($query,$connessione); //array bidimensionale
 
@@ -106,8 +103,6 @@ function validate_XDSSubmissionSetSourceId($dom,$idfile,$save_files,$connessione
 ##### XDSDocumentEntry.uniqueId
 function validate_XDSDocumentEntryUniqueId($dom,$connessione)
 {
-//      $fp_uniqueIdQuery = fopen("tmp/DocumentEntryUniqueIdQuery","w+");
-
 	$ebxml_value = '';
 
 ##### RADICE DEL DOCUMENTO ebXML
@@ -180,9 +175,7 @@ function validate_XDSDocumentEntryUniqueId($dom,$connessione)
 	//QUERY AL DB
     	$query = "SELECT XDSDOCUMENTENTRY_UNIQUEID FROM DOCUMENTS WHERE XDSDOCUMENTENTRY_UNIQUEID = '$ebxml_value'";
 	 
-// 		fwrite($fp_uniqueIdQuery,$query);
-// 	fclose($fp_uniqueIdQuery);
-    	
+  	
 	### EFFETTUO LA QUERY ED OTTENGO IL RISULTATO
 	$res = query_select2($query,$connessione); //array bidimensionale
 	 

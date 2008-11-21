@@ -4,6 +4,11 @@
 # Copyright (C) 2007 - 2010  MARiS Project
 # Dpt. Medical and Diagnostic Sciences, University of Padova - csaccavini@rad.unipd.it
 # This program is distributed under the terms and conditions of the GPL
+
+# Contributor(s):
+# A-thon srl <info@a-thon.it>
+# Alberto Castellini
+
 # See the LICENSE files for details
 # ------------------------------------------------------------------------------------
 
@@ -31,8 +36,8 @@ function adjustURN_UUIDs($ebxml_string)
 }//END OF adjustURN_UUIDs($ebxml_string)
 
 //==UTILITY PER LA GESTIONE DELL'ERRORE SUL BOUNDARY==/
-   function truncateString($str,$st_to_search,$offset)
-   {
+function truncateString($str,$st_to_search,$offset)
+{
       $st = "";
       $tempString = "";
 
@@ -50,10 +55,8 @@ function adjustURN_UUIDs($ebxml_string)
 		#################
       return($st);
 		 
-   }//END OF truncateString($str,$st_to_search,$offset)
+}//END OF truncateString($str,$st_to_search,$offset)
 	
-//==UTILITY PER LA GESTIONE DELL'ERRORE SUL BOUNDARY==/
-
 
 //==IMPEDISCE CHE PHP INTERPRETI LE HTMLENTITIES SULLA STRINGA DI INGRESSO $str==/
 	//UTILE PER IL PATIENTID
@@ -263,7 +266,15 @@ function giveboundary($headers){
 		}
 
 		else {
+			$errorcode[]="XDSRepositoryError";
+			$error_message[] = "Repository can't recognize boundary. ";
+			$folder_response = makeSoapedFailureResponse($error_message,$errorcode);
 			writeTimeFile($_SESSION['idfile']."--Repository: Il boundary non e' del tipo boundary=\"bvdwetrct637crtv\" o boundary=bvdwetrct637crtv;");
+			
+			$file_input=$idfile."-boundary_failure_response-".$idfile;
+			writeTmpFiles($folder_response,$file_input);
+			SendResponse($folder_response);
+			exit;
 	
  		}
 
@@ -280,8 +291,9 @@ function giveboundary($headers){
  return $ret;
 }
 
-
-function SendError($file_input){
+/*
+//Funzione che invia la risposta da file
+function SendResponse($file_input){
 
 	ob_get_clean();//OKKIO FONDAMENTALE!!!!!
 
@@ -307,8 +319,28 @@ function SendError($file_input){
 	//BLOCCO L'ESECUZIONE DELLO SCRIPT
 	exit;
 
-}
+}*/
 
+// Funzione che invia la risposta da stringa
+function SendResponse($string_input){
+
+	ob_get_clean();//OKKIO FONDAMENTALE!!!!!
+
+	//HEADERS
+	header("HTTP/1.1 200 OK");
+	header("Path: ".$_SESSION['www_REP_path']);
+	header("Content-Type: text/xml;charset=UTF-8");
+	//header("Content-Length: ".(string)filesize($file_input));
+		//CONTENUTO DEL FILE DI RISPOSTA
+
+	print($string_input);
+
+	//SPEDISCO E PULISCO IL BUFFER DI USCITA
+	ob_end_flush();
+	//BLOCCO L'ESECUZIONE DELLO SCRIPT
+	exit;
+
+}
 
 
 ?>
