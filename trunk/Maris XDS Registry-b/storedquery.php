@@ -67,9 +67,10 @@ if(!is_dir($tmpQueryService_path)){
 		$folder_response = makeSoapedFailureResponse($error_message,$errorcode);
 		writeTimeFile($_SESSION['idfile']."--Registry: Folder error");
 		
-		$file_input=$idfile."-folder_failure_response-".$idfile;
-		writeTmpFiles($folder_response,$file_input);
-		SendResponse($folder_response);
+		$file_input=$idfile."-folder_failure_response.xml";
+		writeTmpQueryFiles($folder_response,$file_input,true);
+		SendResponseFile($tmpQueryService_path.$file_input);
+		//SendResponse($folder_response,"application/soap+xml",(string)filesize($tmpQueryService_path.$idfile."-folder_failure_response.xml"));
 		exit;
 	
 	}
@@ -104,6 +105,25 @@ $root_completo = $dom_XML_completo->document_element();
 $Action_array = $root_completo->get_elements_by_tagname("Action");
 $Action_node = $Action_array[0];
 $Action=$Action_node->get_content();
+
+if($Action==""){
+	$failure_response=array("You must set the Action of the Request");
+	$error_code=array("XDSRegistryActionError");
+	$SOAPED_failure_response = makeSoapedFailureResponse($failure_response,$error_code,$Action,$MessageID);
+	$file_input=$idfile."-SOAPED_Action_failure.xml";
+	writeTmpQueryFiles($SOAPED_failure_response,$file_input,true);
+	SendResponseFile($_SESSION['tmpQueryService_path'].$file_input);
+	exit;
+}
+elseif($Action!="urn:ihe:iti:2007:RegistryStoredQuery"){
+	$failure_response=array("This is a Registry Stored Query transaction and you don't use the Action urn:ihe:iti:2007:RegistryStoredQuery");
+	$error_code=array("XDSRegistryActionError");
+	$SOAPED_failure_response = makeSoapedFailureResponse($failure_response,$error_code,$Action,$MessageID);
+	$file_input=$idfile."-SOAPED_Action_failure.xml";
+	writeTmpQueryFiles($SOAPED_failure_response,$file_input,true);
+	SendResponseFile($_SESSION['tmpQueryService_path'].$file_input);
+	exit;
+}
 
 //Ottengo MessageID
 $MessageID_array = $root_completo->get_elements_by_tagname("MessageID");
@@ -168,9 +188,10 @@ if(count($error_code)>0){
 $SOAPED_failure_response = makeSoapedFailureStoredQueryResponse($failure_response,$error_code,$Action,$MessageID);
 
 	### SCRIVO LA RISPOSTA IN UN FILE
-	writeTmpQueryFiles($SOAPED_failure_response,$idfile."-SOAPED_failure_response-".$idfile);
-
-	SendResponse($SOAPED_failure_response);
+	$file_input=$idfile."-SOAPED_failure_response.xml";
+	writeTmpQueryFiles($SOAPED_failure_response,$file_input,true);
+	SendResponseFile($tmpQueryService_path.$file_input);
+	//SendResponse($SOAPED_failure_response,"application/soap+xml",(string)filesize($tmpQueryService_path.$idfile."-SOAPED_failure_response.xml"));
 	exit;
 
 
@@ -188,7 +209,7 @@ fwrite($fp_SQLResponse,"RISPOSTA DAL DB:\n");
 $trovato=true;
 for($SQcount=0;$SQcount<$contaQuery && $trovato;$SQcount++){
 $SQLQuery = $SQLStoredQuery[$SQcount];
-$controllo_query_array = controllaQuery($SQLQuery);
+$controllo_query_array = controllaQuery($SQLQuery,$Action,$MessageID);
 ########################################################################
 ### ORA DEVO ESEGUIRE LA QUERY SUL DB DEL XDS_REGISTRY_QUERY REGISTRY 
 
@@ -228,10 +249,11 @@ if(empty($SQLResponse))
 	### RESTITUISCE IL MESSAGGIO DI SUCCESS IN SOAP
 	### ANCHE SE IL RISULTATO DELLA QUERY DA DB È VUOTO
     	$SOAPED_failure_response = makeSoapedSuccessStoredQueryResponse($Action,$MessageID,"");
-	writeTmpQueryFiles($SOAPED_failure_response,$idfile."-SOAPED_NORESULTS_response-".$idfile);
+	$file_input=$idfile."-SOAPED_NORESULTS_response.xml";
+	writeTmpQueryFiles($SOAPED_failure_response,$file_input,true);
 
-
-	SendResponse($SOAPED_failure_response);
+	SendResponseFile($tmpQueryService_path.$file_input);
+	//SendResponse($SOAPED_failure_response,"application/soap+xml",(string)filesize($tmpQueryService_path.$idfile."-SOAPED_NORESULTS_response.xml"));
 	exit;
 
 }//END OF if(empty($SQLResponse))
@@ -376,6 +398,8 @@ else if($returnType_a=="LeafClass")
 
 	     if($objectType_code_from_ExtrinsicObject=="XDSDocumentEntry")
 	     {
+
+		writeSQLQueryService("XDSDocumentEntry");
 		//Devo risettare $objectType_code_from_ExtrinsicObject a "" altrimenti rimane associata alla variabile XDSDocumentEntry
 		$objectType_code_from_ExtrinsicObject="";
 		$ExtrinsicObject_id = $SQLResponse[$rr][0];
@@ -409,7 +433,7 @@ else if($returnType_a=="LeafClass")
 		$dom_ebXML_ExtrinsicObject_root->set_attribute("objectType",$ExtrinsicObject_objectType);
 		$dom_ebXML_ExtrinsicObject_root->set_attribute("status",$namespace_status.$ExtrinsicObject_status);
 
-		appendSlot($dom_ebXML_ExtrinsicObject,$dom_ebXML_ExtrinsicObject_root,$ns_rim3_path,$ExtrinsicObject_id,$connessione);
+		appendSlot($dom_ebXML_ExtrinsicObject,$dom_ebXML_ExtrinsicObject_root,$ns_rim3_path,$ExtrinsicObject_id,"XDSDocumentEntry",$connessione);
 
 		appendName($dom_ebXML_ExtrinsicObject,$dom_ebXML_ExtrinsicObject_root,$ns_rim3_path,$ExtrinsicObject_id,$connessione);
 		
@@ -536,6 +560,7 @@ else if($returnType_a=="LeafClass")
 
 	     if($objectType_code_from_RegistryPackage=="XDSSubmissionSet")
 	     {
+		writeSQLQueryService("XDSSubmissionSet");
 		//Devo risettare $objectType_code_from_RegistryPackage a "" altrimenti rimane associata alla variabile XDSSubmissionSet
 		$objectType_code_from_RegistryPackage="";
 		$RegistryPackage_id = $SQLResponse[$rr][0];
@@ -569,7 +594,7 @@ else if($returnType_a=="LeafClass")
 		//$dom_ebXML_RegistryPackage_root->set_attribute("objectType",$RegistryPackage_objectType);
 		$dom_ebXML_RegistryPackage_root->set_attribute("status",$namespace_status.$RegistryPackage_status);
 
-		appendSlot($dom_ebXML_RegistryPackage,$dom_ebXML_RegistryPackage_root,$ns_rim3_path,$RegistryPackage_id,$connessione);
+		appendSlot($dom_ebXML_RegistryPackage,$dom_ebXML_RegistryPackage_root,$ns_rim3_path,$RegistryPackage_id,"XDSSubmissionSet",$connessione);
 
 		appendName($dom_ebXML_RegistryPackage,$dom_ebXML_RegistryPackage_root,$ns_rim3_path,$RegistryPackage_id,$connessione);
 
@@ -708,6 +733,7 @@ else if($returnType_a=="LeafClass")
 
 	     if($objectType_code_from_RegistryPackage=="XDSFolder")
 	     {
+		writeSQLQueryService("XDSFolder");
 		//Devo risettare $objectType_code_from_RegistryPackage a "" altrimenti rimane associata alla variabile XDSSubmissionSet
 		$objectType_code_from_RegistryPackage="";
 
@@ -742,7 +768,7 @@ else if($returnType_a=="LeafClass")
 		//$dom_ebXML_RegistryPackage_root->set_attribute("objectType",$RegistryPackage_objectType);
 		$dom_ebXML_RegistryPackage_root->set_attribute("status",$namespace_status.$RegistryPackage_status);
 
-		appendSlot($dom_ebXML_RegistryPackage,$dom_ebXML_RegistryPackage_root,$ns_rim3_path,$RegistryPackage_id,$connessione);	
+		appendSlot($dom_ebXML_RegistryPackage,$dom_ebXML_RegistryPackage_root,$ns_rim3_path,$RegistryPackage_id,"XDSFolder",$connessione);	
 
 		appendName($dom_ebXML_RegistryPackage,$dom_ebXML_RegistryPackage_root,$ns_rim3_path,$RegistryPackage_id,$connessione);
 
@@ -873,6 +899,7 @@ else if($returnType_a=="LeafClass")
 	     ##### ASSOCIATION
 	     if($objectType_from_Association=="Association")
 	     {
+		writeSQLQueryService("Association");
 		//Devo risettare $objectType_from_Association a "" altrimenti rimane associata alla variabile Association
 		$objectType_from_Association="";
 		$Association_id = $SQLResponse[$rr][0];
@@ -909,7 +936,7 @@ else if($returnType_a=="LeafClass")
 		$Association_targetObject_ARR_2[]=$Association_targetObject;
 		##################################################
 
-		appendSlot($dom_ebXML_Association,$dom_ebXML_Association_root,$ns_rim3_path,$Association_id,$connessione);
+		appendSlot($dom_ebXML_Association,$dom_ebXML_Association_root,$ns_rim3_path,$Association_id,"Association",$connessione);
 
 		appendName($dom_ebXML_Association,$dom_ebXML_Association_root,$ns_rim3_path,$Association_id,$connessione);
 
@@ -1188,11 +1215,12 @@ if($statActive=="A") {
 $ebXML_Response_SOAPED_string = makeSoapedSuccessStoredQueryResponse($Action,$MessageID,$ebXML_Response_string);
 
 ### SCRIVO LA RISPOSTA IN UN FILE
-writeTmpQueryFiles($ebXML_Response_SOAPED_string,$idfile."-ebxmlResponseSOAP.xml");
+$file_input=$idfile."-ebxmlResponseSOAP.xml";
+writeTmpQueryFiles($ebXML_Response_SOAPED_string,$file_input,true);
 writeTimeFile($idfile."--StoredQuery: Creo file ebxmlResponseSOAP");
 
-
-SendResponse($ebXML_Response_SOAPED_string);
+SendResponseFile($tmpQueryService_path.$file_input);
+//SendResponse($ebXML_Response_SOAPED_string,"application/soap+xml",(string)filesize($tmpQueryService_path.$idfile."-ebxmlResponseSOAP.xml"));
 
 
 // Clean tmp folder

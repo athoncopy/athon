@@ -18,12 +18,14 @@ function appendObjectRef_EO($dom_ebXML_ExtrinsicObject,$dom_ebXML_ExtrinsicObjec
 }
 
 //Tutte queste funzioni servono sia per ExtrinsicObject, sia per RegistryPackage
-function appendSlot($dom_ebXML_ExtrinsicObject,$dom_ebXML_ExtrinsicObject_root,$ns_rim_path,$ExtrinsicObject_id,$connessione) {
+function appendSlot($dom_ebXML_ExtrinsicObject,$dom_ebXML_ExtrinsicObject_root,$ns_rim_path,$ExtrinsicObject_id,$objectType_code_from_ExtrinsicObject,$connessione) {
 	##### SLOT
 	$select_Slots = "SELECT DISTINCT name FROM Slot WHERE Slot.parent = '$ExtrinsicObject_id'";
 	$Slot_name_EO=query_select2($select_Slots,$connessione);
 	writeSQLQueryService($select_Slots);
 	$repeat = true;
+	$repositoryUniqueId_ispresent = false;
+	$trovatoURI = false;
 	for($s=0;$s<count($Slot_name_EO);$s++)
 	{
 		$Slot_EO = $Slot_name_EO[$s];
@@ -36,6 +38,8 @@ function appendSlot($dom_ebXML_ExtrinsicObject,$dom_ebXML_ExtrinsicObject_root,$
 			$Slots=query_select2($select_Slots,$connessione);
 			writeSQLQueryService($select_Slots);
 			
+
+
 			$dom_ebXML_ExtrinsicObject_Slot->set_attribute("name",$Slot_name);
 			$dom_ebXML_ExtrinsicObject_Slot_ValueList=$dom_ebXML_ExtrinsicObject->create_element_ns($ns_rim_path,"ValueList");
 			$dom_ebXML_ExtrinsicObject_Slot_ValueList=$dom_ebXML_ExtrinsicObject_Slot->append_child($dom_ebXML_ExtrinsicObject_Slot_ValueList);
@@ -48,12 +52,50 @@ function appendSlot($dom_ebXML_ExtrinsicObject,$dom_ebXML_ExtrinsicObject_root,$
 				$dom_ebXML_ExtrinsicObject_Slot_ValueList_Value=$dom_ebXML_ExtrinsicObject->create_element_ns($ns_rim_path,"Value");
 				$dom_ebXML_ExtrinsicObject_Slot_ValueList_Value=$dom_ebXML_ExtrinsicObject_Slot_ValueList->append_child($dom_ebXML_ExtrinsicObject_Slot_ValueList_Value);
 
+				if($Slot_name=="URI" && !$trovatoURI){
+					preg_match('(http://([^:\/]*))',$Slot_value,$matches);
+					if($matches[1]!=""){
+						$rep_host = $matches[1];
+						$trovatoURI = true;
+			writeSQLQueryService("ho trovato $objectType_code_from_ExtrinsicObject");
+					}
+				}
+
 				$dom_ebXML_ExtrinsicObject_Slot_ValueList_Value->set_content($Slot_value);
 
 			}//END OF for($r=0;$r<count($sourcePatientInfo_Slots);$r++)
 
 
+			if($Slot_name=="repositoryUniqueId"){
+				$repositoryUniqueId_ispresent = true;
+
+			}
+
+
 	}//END OF for($s=0;$s<count($slot_arr);$s++)
+
+	if(!$repositoryUniqueId_ispresent && $objectType_code_from_ExtrinsicObject=="XDSDocumentEntry"){
+	
+
+			$select_repositoryUniqueId = "SELECT REP_UNIQUEID FROM REPOSITORY WHERE REP_HOST = '$rep_host'";
+			$repositoryUniqueId=query_select2($select_repositoryUniqueId,$connessione);
+			writeSQLQueryService($select_repositoryUniqueId);
+
+	
+			$dom_ebXML_ExtrinsicObject_Slot=$dom_ebXML_ExtrinsicObject->create_element_ns($ns_rim_path,"Slot");
+			$dom_ebXML_ExtrinsicObject_Slot=$dom_ebXML_ExtrinsicObject_root->append_child($dom_ebXML_ExtrinsicObject_Slot);
+
+			$dom_ebXML_ExtrinsicObject_Slot->set_attribute("name","repositoryUniqueId");
+			$dom_ebXML_ExtrinsicObject_Slot_ValueList=$dom_ebXML_ExtrinsicObject->create_element_ns($ns_rim_path,"ValueList");
+			$dom_ebXML_ExtrinsicObject_Slot_ValueList=$dom_ebXML_ExtrinsicObject_Slot->append_child($dom_ebXML_ExtrinsicObject_Slot_ValueList);
+
+			$dom_ebXML_ExtrinsicObject_Slot_ValueList_Value=$dom_ebXML_ExtrinsicObject->create_element_ns($ns_rim_path,"Value");
+			$dom_ebXML_ExtrinsicObject_Slot_ValueList_Value=$dom_ebXML_ExtrinsicObject_Slot_ValueList->append_child($dom_ebXML_ExtrinsicObject_Slot_ValueList_Value);
+
+			$dom_ebXML_ExtrinsicObject_Slot_ValueList_Value->set_content($repositoryUniqueId[0][0]);
+
+	
+	}
 
 
 }

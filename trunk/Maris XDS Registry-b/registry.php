@@ -43,7 +43,6 @@ $_SESSION['logActive']=$logActive;
 $_SESSION['log_path']=$log_path;
 $_SESSION['www_REG_path']=$www_REG_path;
 
-
 // Creo la cartella per i file temporanei
 if(!is_dir($tmp_path)){
 	$createtmpdir=false;
@@ -69,10 +68,10 @@ if(!is_dir($tmp_path)){
 		$folder_response = makeSoapedFailureResponse($error_message,$errorcode);
 		writeTimeFile($_SESSION['idfile']."--Registry: Folder error");
 		
-		$file_input=$idfile."-folder_failure_response-".$idfile;
-		writeTmpFiles($folder_response,$file_input);
-		//SendResponse($tmp_path.$file_input);
-		SendResponse($folder_response);
+		$file_input=$idfile."-folder_failure_response.xml";
+		writeTmpFiles($folder_response,$file_input,true);
+		SendResponseFile($_SESSION['tmp_path'].$file_input);
+		//SendResponse($folder_response,"application/soap+xml",filesize($tmp_path.$idfile."-folder_failure_response.xml"));
 		exit;
 	
 	}
@@ -148,6 +147,40 @@ $Action=$Action_node->get_content();
 $MessageID_array = $root_completo->get_elements_by_tagname("MessageID");
 $MessageID_node = $MessageID_array[0];
 $MessageID=$MessageID_node->get_content();
+
+if($registry_status=="O") {
+	$errorcode[]="XDSRegistryNotAvailable";
+	$error_message[] = "Registry is down for maintenance";
+	$folder_response = makeSoapedFailureResponse($error_message,$errorcode,$Action,$MessageID);
+	writeTimeFile($_SESSION['idfile']."--Registry: Registry is down");
+	
+	$file_input=$idfile."-down_failure_response.xml";
+	writeTmpFiles($folder_response,$file_input,true);
+	SendResponseFile($tmp_path.$file_input);
+	//SendResponse($folder_response);
+	exit;
+}
+
+if($Action==""){
+	$failure_response=array("You must set the Action of the Request");
+	$error_code=array("XDSRegistryActionError");
+	$SOAPED_failure_response = makeSoapedFailureResponse($failure_response,$error_code,$Action,$MessageID);
+	$file_input=$idfile."-SOAPED_Action_failure.xml";
+	writeTmpFiles($SOAPED_failure_response,$file_input,true);
+	SendResponseFile($_SESSION['tmp_path'].$file_input);
+	exit;
+}
+elseif($Action!="urn:ihe:iti:2007:RegisterDocumentSet-b"){
+	$failure_response=array("This is a Register Document Set-b transaction and you don't use the Action urn:ihe:iti:2007:RegisterDocumentSet-b");
+	$error_code=array("XDSRegistryActionError");
+	$SOAPED_failure_response = makeSoapedFailureResponse($failure_response,$error_code,$Action,$MessageID);
+	$file_input=$idfile."-SOAPED_Action_failure.xml";
+	writeTmpFiles($SOAPED_failure_response,$file_input,true);
+	SendResponseFile($_SESSION['tmp_path'].$file_input);
+	exit;
+}
+
+
 
 ## OGGETTO DOM SUL SOAP RICEVUTO: QUI HO IL SOAP CORRETTO!
 $dom_ebxml_imbustato_soap = domxml_open_mem($ebxml_imbustato_soap_STRING);
@@ -326,9 +359,10 @@ if($ExtrinsicObject_mimeType_array[0] || $DocumentEntryPatientId_valid_array[0] 
 
 	### SCRIVO LA RISPOSTA IN UN FILE
 	$file_input=$idfile."-SOAPED_failure_response.xml";
-	writeTmpFiles($SOAPED_failure_response,$file_input);
+	writeTmpFiles($SOAPED_failure_response,$file_input,true);
 
-	SendResponse($SOAPED_failure_response);
+	SendResponseFile($_SESSION['tmp_path'].$file_input);
+	//SendResponse($SOAPED_failure_response,"application/soap+xml",filesize($tmp_path.$idfile."-SOAPED_failure_response.xml"));
 	exit;
 
 }######## END OF VALIDAZIONE ===NON=== PASSATA

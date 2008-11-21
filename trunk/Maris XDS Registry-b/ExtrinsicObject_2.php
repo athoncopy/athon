@@ -412,14 +412,14 @@ VALUES
 
 				$queryForClassificationNode="SELECT id FROM ClassificationNode WHERE ClassificationNode.code = '$name_value'";
 				$ris_code=query_select2($queryForClassificationNode,$connessione);
-
+				writeSQLQuery($ris_code.": ".$queryForClassificationNode);
 				$value_classificationNode=$ris_code[0][0];
 			}
 			if($value_classificationScheme == '')
 			{
 			$queryForClassificationNode="SELECT code FROM ClassificationNode WHERE ClassificationNode.id = '$value_classificationNode'";
-			writeSQLQuery($ris.": ".$queryForClassificationNode);
 			$ris_classificationNode = query_select2($queryForClassificationNode,$connessione);
+			writeSQLQuery($ris_classificationNode.": ".$queryForClassificationNode);
 			$code_classificationNode = $ris_classificationNode[0][0];
 			#### FOLDER
 			if($code_classificationNode=="XDSFolder")
