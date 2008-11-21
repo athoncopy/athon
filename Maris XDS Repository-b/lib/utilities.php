@@ -1,6 +1,6 @@
 <?php
 # ------------------------------------------------------------------------------------
-# MARIS XDS REGISTRY
+# MARIS XDS REPOSITORY
 # Copyright (C) 2007 - 2010  MARiS Project
 # Dpt. Medical and Diagnostic Sciences, University of Padova - csaccavini@rad.unipd.it
 # This program is distributed under the terms and conditions of the GPL
@@ -273,7 +273,7 @@ function giveboundary($headers){
  return $ret;
 }
 
-
+/*
 function SendError($file_input){
 
 	ob_get_clean();//OKKIO FONDAMENTALE!!!!!
@@ -300,7 +300,31 @@ function SendError($file_input){
 	//BLOCCO L'ESECUZIONE DELLO SCRIPT
 	exit;
 
+}*/
+
+
+// Funzione che invia la risposta da stringa
+function SendResponse($string_input){
+
+	ob_get_clean();//OKKIO FONDAMENTALE!!!!!
+
+	//HEADERS
+	header("HTTP/1.1 200 OK");
+	header("Path: ".$_SESSION['www_REP_path']);
+	//header("Content-Type: text/xml;charset=UTF-8");
+	header("Content-Type: application/soap+xml;charset=UTF-8");
+	//header("Content-Length: ".(string)filesize($file_input));
+		//CONTENUTO DEL FILE DI RISPOSTA
+
+	print($string_input);
+
+	//SPEDISCO E PULISCO IL BUFFER DI USCITA
+	ob_end_flush();
+	//BLOCCO L'ESECUZIONE DELLO SCRIPT
+	exit;
+
 }
+
 
 
 ?>

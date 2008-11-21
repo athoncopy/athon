@@ -1,6 +1,6 @@
 <?php
 # ------------------------------------------------------------------------------------
-# MARIS XDS REGISTRY
+# MARIS XDS REPOSITORY
 # Copyright (C) 2007 - 2010  MARiS Project
 # Dpt. Medical and Diagnostic Sciences, University of Padova - csaccavini@rad.unipd.it
 # This program is distributed under the terms and conditions of the GPL
@@ -17,6 +17,7 @@ function query_execute($query)
 {
 # IMPORT MYSQL PARAMETERS (NOTE: IT WORKS WITH ABSOLUTE PATH ONLY !!)
 	include('./config/repository_mysql_db.php');
+	//include('C:\\xampp\\htdocs\\MARIS_xds\\xdsServices2\\repository\\config\\repository_mysql_db.php');
 # open connection to db
     $connessione = mysql_connect($ip, $user_db, $password_db)
         or die("Connessione non riuscita: " . mysql_error());
@@ -35,6 +36,8 @@ function query_execute($query)
 
 
 
+
+
 function query_execute2($query,$connessione) //ERA LA query_execute($query)
 {
 # execute the SELECT query
@@ -46,8 +49,23 @@ function query_execute2($query,$connessione) //ERA LA query_execute($query)
 	// Se non riesce ad eseguire la query prova a riconnettersi
 	else {
 		include('./config/repository_mysql_db.php');
-    		$connessione = mysql_connect($ip,$user_db,$password_db)
-        	or die("Connessione non riuscita: " . mysql_error());
+    		$connessione = mysql_connect($ip,$user_db,$password_db);
+        	if(!$connessione){
+	
+			$errorcode=array();
+			$error_message=array();
+	
+			$errorcode[]="XDSRepositoryError";
+			$error_message[] = mysql_error();
+			$database_error_response = makeSoapedFailureResponse($error_message,$errorcode);
+			writeTimeFile($_SESSION['idfile']."--Repository: database_error_response");
+				
+			$file_input=$_SESSION['idfile']."-database_error_response-".$_SESSION['idfile'];
+			writeTmpFiles($database_error_response,$file_input);
+	
+			SendResponse($database_error_response);
+			exit;
+		}
 
 		# open  db
    		mysql_select_db($db_name);
@@ -61,12 +79,23 @@ function query_execute2($query,$connessione) //ERA LA query_execute($query)
 		}
 	// Se non riesce nemmeno adesso ritorna un errore
 		else {
-			return "FALSE";
+			$errorcode=array();
+			$error_message=array();
+	
+			$errorcode[]="XDSRepositoryError";
+			$error_message[] = mysql_error();
+			$database_error_response = makeSoapedFailureResponse($error_message,$errorcode);
+			writeTimeFile($_SESSION['idfile']."--Repository: database_error_response");
+				
+			$file_input=$_SESSION['idfile']."-database_error_response-".$_SESSION['idfile'];
+			writeTmpFiles($database_error_response,$file_input);
+	
+			SendResponse($database_error_response);
+			exit;
 		}
      	}
 
 }//END OF query_execute($query)
-
 
 
 
@@ -84,6 +113,7 @@ use the function query_execute().
 */
 
 include('./config/repository_mysql_db.php');
+//include('C:\\xampp\\htdocs\\MARIS_xds\\xdsServices2\\repository\\config\\repository_mysql_db.php');
 # open connection to db
    $rec=array();
     $connessione = mysql_connect($ip,$user_db,$password_db)
@@ -113,7 +143,6 @@ include('./config/repository_mysql_db.php');
 }
 
 
-
 function query_select2($query,$connessione)
 {
    $risultato = mysql_query($query);
@@ -133,8 +162,23 @@ if ($risultato){
 // Se non riesce ad eseguire la query prova a riconnettersi
 else {
 	include('./config/repository_mysql_db.php');
-    	$connessione = mysql_connect($ip,$user_db,$password_db)
-        or die("Connessione non riuscita: " . mysql_error());
+    	$connessione = mysql_connect($ip,$user_db,$password_db);
+	if(!$connessione){
+	
+		$errorcode=array();
+		$error_message=array();
+
+		$errorcode[]="XDSRepositoryError";
+		$error_message[] = mysql_error();
+		$database_error_response = makeSoapedFailureResponse($error_message,$errorcode);
+		writeTimeFile($_SESSION['idfile']."--Repository: database_error_response");
+			
+		$file_input=$_SESSION['idfile']."-database_error_response-".$_SESSION['idfile'];
+		writeTmpFiles($database_error_response,$file_input);
+
+		SendResponse($database_error_response);
+		exit;
+	}
 	# open  db
    	mysql_select_db($db_name);
 	# execute the SELECT query
@@ -153,12 +197,25 @@ else {
 	// Se non riesce nemmeno adesso ritorna un errore
 	else {
 		
-	return "FALSE";
+		$errorcode=array();
+		$error_message=array();
+
+		$errorcode[]="XDSRepositoryError";
+		$error_message[] = mysql_error();
+		$database_error_response = makeSoapedFailureResponse($error_message,$errorcode);
+		writeTimeFile($_SESSION['idfile']."--Repository: database_error_response");
+			
+		$file_input=$_SESSION['idfile']."-database_error_response-".$_SESSION['idfile'];
+		writeTmpFiles($database_error_response,$file_input);
+
+		SendResponse($database_error_response);
+		exit;
 	}
 
 }
 # close connection
 }//END OF query_select($query)
+
 
 
 
@@ -168,8 +225,23 @@ function connectDB(){
 include('./config/repository_mysql_db.php');
 
 # open connection to db
-    $connessione = mysql_connect($ip,$user_db,$password_db)
-        or die("Connessione non riuscita: " . mysql_error());
+    $connessione = mysql_connect($ip,$user_db,$password_db);
+        if(!$connessione){
+	
+		$errorcode=array();
+		$error_message=array();
+
+		$errorcode[]="XDSRepositoryError";
+		$error_message[] = mysql_error();
+		$database_error_response = makeSoapedFailureResponse($error_message,$errorcode);
+		writeTimeFile($_SESSION['idfile']."--Repository: database_error_response");
+			
+		$file_input=$_SESSION['idfile']."-database_error_response-".$_SESSION['idfile'];
+		writeTmpFiles($database_error_response,$file_input);
+
+		SendResponse($database_error_response);
+		exit;
+	}
 
 # open  db
    mysql_select_db($db_name);
@@ -185,4 +257,5 @@ function disconnectDB($conn){
 }
 
 
+//-----------------------------------------------------------------------------------//
 ?>

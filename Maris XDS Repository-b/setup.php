@@ -1,6 +1,6 @@
 <?php
 # ------------------------------------------------------------------------------------
-# MARIS XDS REGISTRY
+# MARIS XDS REPOSITORY
 # Copyright (C) 2007 - 2010  MARiS Project
 # Dpt. Medical and Diagnostic Sciences, University of Padova - csaccavini@rad.unipd.it
 # This program is distributed under the terms and conditions of the GPL
@@ -12,21 +12,23 @@
 # See the LICENSE files for details
 # ------------------------------------------------------------------------------------
 
-include_once('./config/config.php');
-include_once('./lib/functions_'.$database.'.php');
-
+require_once('./config/config.php');
+require_once('./lib/utilities.php');
+require_once('./lib/log.php');
+require_once('./lib/functions_'.$database.'.php');
+ob_start();
 $autenticato = false;
+$connessione=connectDB();
 
 $users = "SELECT * FROM USERS";
-$res_users = query_select($users);
-
-if (isset($_SERVER['PHP_AUTH_USER']) && 
+$res_users = query_select2($users,$connessione);
+if (isset($_SERVER['PHP_AUTH_USER']) &&
     isset($_SERVER['PHP_AUTH_PW']))
   {
 
   $user = $_SERVER['PHP_AUTH_USER'];
   $password = $_SERVER['PHP_AUTH_PW'];
-  
+
 if ($user == $res_users[0][0] && crypt($password,'xds') == $res_users[0][1]){
 
   $autenticato = true;
@@ -91,11 +93,11 @@ return false;
 
 
 <title>
-<?php 
+<?php
 
-$v_maris_repository="2.0.3";
+$v_maris_repository="3.1";
 
-echo "MARIS XDS REPOSITORY-A v$v_maris_repository SETUP"; //."   (".$_SESSION["idcode"].")"; 
+echo "MARIS XDS REPOSITORY-B v$v_maris_repository SETUP"; //."   (".$_SESSION["idcode"].")";
 	?></title>
 
 </HEAD>
@@ -104,8 +106,10 @@ echo "MARIS XDS REPOSITORY-A v$v_maris_repository SETUP"; //."   (".$_SESSION["i
 <?php
 
 $delete_active = $_GET['delete'];
-echo '<table width="100%" border=0 cellpadding="10" cellspacing="0"><tr bgcolor="black"><td><img src="./img/logo+scritta.jpg"></td></tr>';
-echo '<tr bgcolor="#FF8F10"><td>';
+echo '<table width="100%" border=0 cellpadding="10" cellspacing="0">
+<tr bgcolor="black"><td><img src="./img/logo+scritta.jpg"></td>
+<td><div align="right"><img src="./img/logo-A-thon-XDS-repository.jpg"></div></td></tr>';
+echo '<tr bgcolor="#FF8F10"><td colspan="2">';
 
 
 $ip = $_SERVER['SERVER_NAME'];
@@ -114,15 +118,15 @@ $root = $_SERVER['DOCUMENT_ROOT'];
 
 
 if($ip=="127.0.0.1" || $ip=="localhost"){
-$repository_link="http://repository.ip".str_replace('setup.php', 'repository.php',$script); 
-$repository_get="http://repository.ip".str_replace('setup.php', 'getDocumentb.php',$script); 
-$repository_getxop="http://repository.ip".str_replace('setup.php', 'getDocumentbopt.php',$script); 
+$repository_link="http://repository.ip".str_replace('setup.php', 'repository.php',$script);
+$repository_get="http://repository.ip".str_replace('setup.php', 'getDocumentb.php',$script);
+$repository_getxop="http://repository.ip".str_replace('setup.php', 'getDocumentbopt.php',$script);
 $ip_new="repository.ip";
 }
 else {
-$repository_link="http://".$ip.str_replace('setup.php', 'repository.php',$script); 
-$repository_get="http://".$ip.str_replace('setup.php', 'getDocumentb.php',$script); 
-$repository_getxop="http://".$ip.str_replace('setup.php', 'getDocumentbopt.php',$script); 
+$repository_link="http://".$ip.str_replace('setup.php', 'repository.php',$script);
+$repository_get="http://".$ip.str_replace('setup.php', 'getDocumentb.php',$script);
+$repository_getxop="http://".$ip.str_replace('setup.php', 'getDocumentbopt.php',$script);
 $ip_new=$ip;
 }
 
@@ -134,7 +138,7 @@ echo "<FORM name=\"myForm\" action=\"updatesetup.php\" method=\"POST\">";
 $get_REP="SELECT HOST,PORT,HTTP FROM REPOSITORY WHERE ACTIVE = 'A'";
 
 
-$res_REP = query_select($get_REP);
+$res_REP = query_select2($get_REP,$connessione);
 
 
 $REP_host = $res_REP[0][0];
@@ -143,6 +147,9 @@ $REP_http = $res_REP[0][2];
 
 
 echo "<h2>Repository-b v$v_maris_repository Setup</h2>";
+
+echo "This version of MARiS XDS Repository is not certified as a commercial medical device (FDA or CE)<br><br>";
+
 echo "The link to the repository you have to set in your software (XDS Source) is:";
 echo "<br><b>".$repository_link."</b>";
 echo "<br><br>";
@@ -154,6 +161,35 @@ echo "<br><b>".$repository_getxop."</b>";
 echo "<br><br>";
 
 
+
+$get_REP_config="SELECT LOG,CACHE,FILES,UNIQUEID,STATUS FROM CONFIG_B";
+$res_REP_config = query_select2($get_REP_config,$connessione);
+
+$REP_www = str_replace('setup.php','',$script);
+$REP_log = $res_REP_config[0][0];
+$REP_cache = $res_REP_config[0][1];
+$REP_files = $res_REP_config[0][2];
+$REP_uniqueID = $res_REP_config[0][3];
+$REP_status = $res_REP_config[0][4];
+
+
+echo "<h3>Repository Status</h3>";
+
+if($REP_status=="A"){
+
+	echo "Repository Status: <select name=\"repository_status\">
+  	<option value=\"A\" selected=\"selected\">ON</option>
+   	<option value=\"O\">OFF</option>
+  	</select><br></br>";
+	}
+else {
+
+	echo "Repository Status: <select name=\"repository_status\">
+   	<option value=\"A\">ON</option>
+  	<option value=\"O\" selected=\"selected\">OFF</option>
+  	</select><br></br>";
+	}
+
 echo "<h3>Repository parameters</h3>";
 echo "Repository Host: (".$ip_new.") <INPUT type=\"text\" name=\"repository_host\" value=\"$REP_host\" size=\"20\" maxlength=\"30\"><br></br>";
 echo "Repository Port: (80 default) <INPUT type=\"text\" name=\"repository_port\" value=\"$REP_port\" size=\"4\" maxlength=\"10\"><br></br>";
@@ -162,15 +198,6 @@ echo "Repository Port: (80 default) <INPUT type=\"text\" name=\"repository_port\
 
 
 
-$get_REP_config="SELECT * FROM CONFIG";
-$res_REP_config = query_select($get_REP_config);
-
-$REP_www = str_replace('setup.php','',$script);
-$REP_log = $res_REP_config[0][1];
-$REP_cache = $res_REP_config[0][2];
-$REP_files = $res_REP_config[0][3];
-$REP_java = $res_REP_config[0][4];
-$REP_uniqueID = $res_REP_config[0][5];
 
 echo "Repository UniqueID: <INPUT type=\"text\" name=\"repository_uniqueid\" value=\"$REP_uniqueID\" size=\"30\" maxlength=\"50\"><br></br>";
 
@@ -226,7 +253,7 @@ if($REP_files=="L"){
 else if($REP_files=="M"){
 	echo "Tmp Log Files: <select name=\"repository_files\">
    	<option value=\"L\">LOW</option>
-  	<option value=\"M\" selected=\"selected\">MIDDLE</option>	
+  	<option value=\"M\" selected=\"selected\">MIDDLE</option>
 	<option value=\"H\">HIGH</option>
   	</select><br></br>";
 	}
@@ -248,7 +275,7 @@ else {
 
 $get_ATNA="SELECT * FROM ATNA";
 
-$res_ATNA = query_select($get_ATNA);
+$res_ATNA = query_select2($get_ATNA,$connessione);
 
 $ATNA_host = $res_ATNA[0][1];
 $ATNA_port = $res_ATNA[0][2];
@@ -278,7 +305,7 @@ echo "Repository ATNA Port: <INPUT type=\"text\" name=\"repository_atna_port\" v
 
 #################### REGISTRY ####################
 
-$get_REG="SELECT HOST,PORT,PATH,HTTP FROM REGISTRY WHERE ACTIVE = 'A'";
+$get_REG="SELECT HOST,PORT,PATH,HTTP FROM REGISTRY_B WHERE ACTIVE = 'A'";
 
 
 $res_REG = query_select($get_REG);
@@ -359,7 +386,7 @@ echo "</FORM>";
 $get_SOURCES="SELECT * FROM KNOWN_SOUCES_IDS";
 
 
-$res_REP_SOURCES = query_select($get_SOURCES);
+$res_REP_SOURCES = query_select2($get_SOURCES,$connessione);
 
 echo "<h3>Known Sources</h3>";
 
@@ -392,7 +419,7 @@ echo "</table>";
 
 $get_USER="SELECT * FROM USERS";
 
-$res_USER = query_select($get_USER);
+$res_USER = query_select2($get_USER,$connessione);
 
 $USER_login = $res_USER[0][0];
 
@@ -402,7 +429,7 @@ echo "<h3>Setup User and password</h3>";
 
 echo "If you change login or password <br>you must fill the new login e the new password <br>immediately after you press update<br><br>";
 
-echo "<FORM action=\"updateuser.php\" method=\"POST\"onSubmit=\"return validatePwd()\">";
+echo "<FORM name=\"myForm\" action=\"updateuser.php\" method=\"POST\"onSubmit=\"return validatePwd()\">";
 echo "Login: <INPUT type=\"text\" name=\"login\" value=\"$USER_login\" size=\"20\" maxlength=\"30\"><br></br>";
 echo "Password: <INPUT type=\"password\" name=\"password\" value=\"\" size=\"10\" maxlength=\"20\"><br></br>";
 echo "Verify Password: <INPUT type=\"password\" name=\"password2\" value=\"\" size=\"10\" maxlength=\"20\"><br></br>";
@@ -411,6 +438,6 @@ echo "</FORM>";
 
 
 echo "</td></tr>";
-echo '<tr bgcolor="black"><td><br><br></td></tr></table>';
+echo '<tr bgcolor="black"><td colspan="2"><br><br></td></tr></table>';
   }
 ?>

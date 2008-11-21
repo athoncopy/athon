@@ -1,6 +1,6 @@
 <?php
 # ------------------------------------------------------------------------------------
-# MARIS XDS REGISTRY
+# MARIS XDS REPOSITORY
 # Copyright (C) 2007 - 2010  MARiS Project
 # Dpt. Medical and Diagnostic Sciences, University of Padova - csaccavini@rad.unipd.it
 # This program is distributed under the terms and conditions of the GPL
@@ -111,7 +111,7 @@ function request($post_data)
 	$post = "POST ".$this->path." HTTP/1.1\r\n".
 		"Host: ".$this->host.":".$this->port."\r\n".
 		"Accept: text/html, text/xml, image/gif, image/jpeg, *; q=.2, */*; q=.2\r\n".
-		"Content-Type: text/xml; charset=UTF-8; action=\"".$this->action."\"\r\n".
+		"Content-Type: application/soap+xml; charset=UTF-8; action=\"".$this->action."\"\r\n".
 		"Cache-Control: no-cache\r\n".
 		"Connection: Close\r\n".
 		"Content-Length: $this->dataLength \r\n".

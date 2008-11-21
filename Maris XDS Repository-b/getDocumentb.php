@@ -1,6 +1,6 @@
 <?php
 # ------------------------------------------------------------------------------------
-# MARIS XDS REGISTRY
+# MARIS XDS REPOSITORY
 # Copyright (C) 2007 - 2010  MARiS Project
 # Dpt. Medical and Diagnostic Sciences, University of Padova - csaccavini@rad.unipd.it
 # This program is distributed under the terms and conditions of the GPL
@@ -21,7 +21,18 @@ include_once("./lib/log.php");
 include_once("./lib/utilities.php");
 //include_once("./lib/domxml-php4-to-php5.php");
 
-
+if($repository_status=="O") {
+	$errorcode[]="XDSRepositoryNotAvailable";
+	$error_message[] = "Repository is down for maintenance";
+	$status_response = makeSoapedFailureResponse($error_message,$errorcode);
+	writeTimeFile($_SESSION['idfile']."--Repository: Repository is down");
+	
+	$file_input=$idfile."-down_failure_response.xml";
+	writeTmpFiles($status_response,$file_input,true);
+	//SendResponseFile($tmp_path.$file_input);
+	SendResponse($status_response);
+	exit;
+}
 $idfile = idrandom_file();
 
 $log = new Log("REP");
@@ -31,7 +42,42 @@ $log->setLogActive($logActive);
 $log->setCurrentLogPath($log_path);
 $log->setCurrentFileSLogPath($tmp_retrieve_path);
 
-$_SESSION['tmp_path']=$tmp_retrieve_path;
+
+// Creo la cartella per i file temporanei
+if(!is_dir($tmp_retrieve_path)){
+	$createtmpdir=false;
+	$ntmpdir=0;
+	while(!$createtmpdir && $ntmpdir<10){
+		$cmdtmpdir=mkdir($tmp_retrieve_path, 0777,true);
+		if($cmdtmpdir){
+			// Caso OK Riesce a creare il folder correttamente
+			writeTimeFile($idfile."--Ho creato il folder tmp correttamente");
+			$createtmpdir=true;
+			}
+		else {
+			sleep(1);
+			$ntmpdir++;
+		}
+	} //Fine while
+
+
+	// Se dopo 10 volte non sono riuscito a creare il folser riporto un errore
+	if(!$createtmpdir){
+		$errorcode[]="XDSRepositoryError";
+		$error_message[] = "Repository can't create tmp folder. ";
+		$folder_response = makeSoapedFailureResponse($error_message,$errorcode);
+		writeTimeFile($_SESSION['idfile']."--Repository: Folder error");
+		
+		$file_input=$idfile."-folder_failure_response-".$idfile;
+		writeTmpFiles($folder_response,$file_input);
+		SendResponse($folder_response);
+		exit;
+	
+	}
+	
+}
+
+$_SESSION['tmp_retrieve_path']=$tmp_retrieve_path;
 $_SESSION['idfile']=$idfile;
 $_SESSION['logActive']=$logActive;
 $_SESSION['log_path']=$log_path;
@@ -40,8 +86,11 @@ $headers = apache_request_headers();
 
 writeTimeFile($idfile."--Repository Retrive: RECUPERO GLI HEADERS RICEVUTI DA APACHE");
 
-if($save_files)
-$log->writeLogFileS($headers,$idfile."-headers_received-".$idfile,"M");
+if($save_files){
+writeTmpRetriveFiles($headers,$idfile."-headers_received-".$idfile);
+}
+
+
 
 $xdsheader=true;
 //$input = $HTTP_RAW_POST_DATA;
@@ -51,17 +100,20 @@ $input = $HTTP_RAW_POST_DATA;
 $errorcode=array();
 $error_message=array();
 
-if($save_files)
-$log->writeLogFileS($input,$idfile."-pre_decode_received-".$idfile,"M");
+if($save_files){
+writeTmpRetriveFiles($input,$idfile."-pre_decode_received-".$idfile);
+}
 
-preg_match('(<([^\t\n\r\f\v";<]+:)?(ENVELOPE))',strtoupper($input),$matches);
+
+preg_match('(<([^\t\n\r\f\v";<:]+:)?(ENVELOPE))',strtoupper($input),$matches);
 
 $presoap=$matches[1];
 $body = substr($input,strpos(strtoupper($input),"<".$presoap."ENVELOPE"));
 
 
-if($save_files)
-$log->writeLogFileS($body,$idfile."-body-".$idfile,"M");
+if($save_files){
+writeTmpRetriveFiles($body,$idfile."-body-".$idfile);
+}
 //echo $body;
 
 writeTimeFile($idfile."--Repository Retrieve: Ho recuperato soapenv");
@@ -79,13 +131,26 @@ $MessageID_node = $dom->getElementsByTagName('MessageID');
 $MessageID=$MessageID_node->item(0)->nodeValue;
 writeTimeFile($idfile."--Repository Retrieve: MessageID: ".$MessageID);
 
-if(!$Action){
-$Action="urn:ihe:iti:2007:RetrieveDocumentSet";
-writeTimeFile($idfile."--Repository Retrieve: Action2: ".$Action);
-$xdsheader=false;
+if($Action==""){
+	$failure_response=array("You must set the Action of the Request");
+	$error_code=array("XDSRepositoryActionError");
+	$SOAPED_failure_response = makeSoapedFailureResponse($failure_response,$error_code,$Action,$MessageID);
+	$file_input=$idfile."-SOAPED_Action_failure.xml";
+	writeTmpQueryFiles($SOAPED_failure_response,$file_input,true);
+	SendResponseFile($_SESSION['tmpQueryService_path'].$file_input);
+	exit;
+}
+elseif($Action!="urn:ihe:iti:2007:RetrieveDocumentSet"){
+	$failure_response=array("This is a Retrieve Document Set transaction and you don't use the Action urn:ihe:iti:2007:RetrieveDocumentSet");
+	$error_code=array("XDSRepositoryActionError");
+	$SOAPED_failure_response = makeSoapedFailureResponse($failure_response,$error_code,$Action,$MessageID);
+	$file_input=$idfile."-SOAPED_Action_failure.xml";
+	writeTmpFiles($SOAPED_failure_response,$file_input,true);
+	SendResponseFile($_SESSION['tmp_path'].$file_input);
+	exit;
 }
 
-if($Action=="urn:ihe:iti:2007:RetrieveDocumentSet"){
+
 	$DocumentRequests = $dom->getElementsByTagName('DocumentRequest');
 
 	$DocumentRequests_array=array();
@@ -104,7 +169,7 @@ if($Action=="urn:ihe:iti:2007:RetrieveDocumentSet"){
 	$numero_documenti=count($DocumentRequests_array);
 	writeTimeFile($idfile."--Repository Retrieve: Numero documenti: $numero_documenti");
 	for($i=0;$i<$numero_documenti;$i++){
-		$get_repUniqueId="SELECT UNIQUEID FROM CONFIG";
+		$get_repUniqueId="SELECT UNIQUEID FROM CONFIG_B";
 		$res_repUniqueId=query_select($get_repUniqueId);
 		if($res_repUniqueId[0][0]==$DocumentRequests_array[$i][0]){
 		//se il repository unique id corrisponde alla richiesta
@@ -123,13 +188,10 @@ if($Action=="urn:ihe:iti:2007:RetrieveDocumentSet"){
 		$error_message[] = "Repository.uniqueID '".$res_repUniqueId[0][0]."' is different form your submission '".$DocumentRequests_array[$i][0]."'";
 		$repositoryUniqueId_response = makeSoapedFailureResponse($error_message,$errorcode,$Action);
 			
-		$file_input=$_SESSION['tmp_path'].$_SESSION['idfile']."-repositoryUniqueId_failure_response-".$_SESSION['idfile'];
-		$fp = fopen($file_input, "wb+");
-            	  fwrite($fp,$repositoryUniqueId_response);
-         	fclose($fp);
+		$file_input=$_SESSION['idfile']."-repositoryUniqueId_failure_response-".$_SESSION['idfile'];
+		writeTmpRetriveFiles($repositoryUniqueId_response,$file_input);
 
-		SendError($file_input);
-		exit;
+		SendResponse($repositoryUniqueId_response);
 		}
 	}
 
@@ -143,13 +205,7 @@ $idDoc=array();
 $SOAP_stringaxml= "<?xml version='1.0' encoding='UTF-8'?>".CRLF.
 "<soapenv:Envelope xmlns:soapenv=\"http://www.w3.org/2003/05/soap-envelope\"
     xmlns:wsa=\"http://www.w3.org/2005/08/addressing\">";
-if($xdsheader){
-	$SOAP_stringaxml.="
-    <soapenv:Header>
-        <wsa:Action>urn:ihe:iti:2007:RetrieveDocumentSetResponse</wsa:Action>
-        <wsa:RelatesTo>$MessageID</wsa:RelatesTo>
-    </soapenv:Header>";
-}
+
 $SOAP_stringaxml.="
     <soapenv:Body>
         <xdsb:RetrieveDocumentSetResponse xmlns:xdsb=\"urn:ihe:iti:xds-b:2007\">
@@ -195,29 +251,12 @@ $SOAP_stringaxml.="
         CRLF;*/
 
 	$pacchetto=$head_content_type."\r\n".$SOAP_stringaxml;
-	$log->writeLogFileS($pacchetto,$idfile."-HTTP_POSTED-".$idfile,"M");
+	if($save_files){
+	writeTmpRetriveFiles($pacchetto,$idfile."-HTTP_POSTED-".$idfile);
+	}
 	//ob_end_flush();
 
-
-if($file = fopen($tmp_retrieve_path.$idfile."-repositoryGet_response.xml",'rb'))
-{
-   while((!feof($file)) && (connection_status()==0))
-   {
-      	print(fread($file, 1024*16));
-      	flush();//NOTA BENE!!!!!!!!!
-   }
-
-   fclose($file);
-}
-
-
-
-
-}
-
-else {
-writeTimeFile($idfile."--Repository $Action non è un'azione permessa");
-}
+	print($SOAP_stringaxml);
 
 
 
