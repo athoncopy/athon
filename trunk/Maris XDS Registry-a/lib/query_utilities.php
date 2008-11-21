@@ -11,6 +11,7 @@
 
 # See the LICENSE files for details
 # ------------------------------------------------------------------------------------
+
 function appendObjectRef_EO($dom_ebXML_ExtrinsicObject,$dom_ebXML_ExtrinsicObject_root,$ns_rim_path,$connessione) {
 
 

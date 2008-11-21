@@ -32,11 +32,12 @@ $REG_cache = $_POST['registry_cache'];
 $REG_patient = $_POST['registry_patient'];
 $REG_log = $_POST['registry_log'];
 $REG_stat = $_POST['registry_stat'];
-$REG_folder = $_POST['folder'];
+$REG_folder = $_POST['registry_folder'];
+$REG_status = $_POST['registry_status'];
 
-$deleteREG_config = "DELETE FROM CONFIG";
+$deleteREG_config = "DELETE FROM CONFIG_A";
 $REG_delete_config = query_exec2($deleteREG_config,$connessione);
-$insertREG_config = "INSERT INTO CONFIG (CACHE,PATIENTID,LOG,STAT,FOLDER) VALUES ('$REG_cache','$REG_patient','$REG_log','$REG_stat','$REG_folder')";
+$insertREG_config = "INSERT INTO CONFIG_A (CACHE,PATIENTID,LOG,STAT,FOLDER,STATUS) VALUES ('$REG_cache','$REG_patient','$REG_log','$REG_stat','$REG_folder','$REG_status')";
 $REG_insert_config = query_exec2($insertREG_config,$connessione);
 
 

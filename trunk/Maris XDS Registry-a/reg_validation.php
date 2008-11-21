@@ -47,10 +47,10 @@ function controllaPayload($input){
 			$empty_payload_response = makeSoapedFailureResponse($error_message,$errorcode);
 			writeTimeFile($_SESSION['idfile']."--Registry: empty_payload_response");
 			
-			$file_input=$_SESSION['idfile']."-empty_payload_response-".$_SESSION['idfile'];
-			writeTmpFiles($empty_payload_response,$file_input);
-
-			SendResponse($empty_payload_response);
+			$file_input=$_SESSION['idfile']."-empty_payload_response.xml";
+			writeTmpFiles($empty_payload_response,$file_input,true);
+			SendResponseFile($_SESSION['tmp_path'].$file_input);
+			//SendResponse($empty_payload_response);
 			exit;
 	
 		}
@@ -102,7 +102,6 @@ writeSQLQuery('---------------------------validate_XDSSubmissionSetUniqueId-----
 			
 			#### NODI FIGLI DI EXTERNALIDENTIFIER
 			$externalidentifier_child_nodes = $externalidentifier_node->child_nodes();
-		//print_r($name_node);
 			for($q = 0;$q < count($externalidentifier_child_nodes);$q++)
 			{
 				$externalidentifier_child_node = $externalidentifier_child_nodes[$q];
@@ -112,7 +111,6 @@ writeSQLQuery('---------------------------validate_XDSSubmissionSetUniqueId-----
 					$name_node=$externalidentifier_child_node;
 
 					$LocalizedString_nodes = $name_node->child_nodes();
-		//print_r($LocalizedString_nodes);
 			for($p = 0;$p < count($LocalizedString_nodes);$p++)
 			{
 				$LocalizedString_node = $LocalizedString_nodes[$p];//->node_name();
@@ -139,8 +137,9 @@ writeSQLQuery('---------------------------validate_XDSSubmissionSetUniqueId-----
 
     	//QUERY AL DB
     	//$query = "SELECT * FROM SUBMISSIONS WHERE XDSSubmissionSet_uniqueId = '$ebxml_value'";
-	$query = "SELECT * FROM ExternalIdentifier WHERE  value = '$ebxml_value'";
-
+	//$query = "SELECT * FROM ExternalIdentifier WHERE value = '$ebxml_value'";
+	$query = "SELECT registryObject FROM ExternalIdentifier WHERE value = '$ebxml_value'";
+	
     	$res = query_select2($query,$connessione); //array bidimensionale
 	writeSQLQuery($res.": ".$query);
     	$isEmpty_1 = (empty($res));
@@ -226,7 +225,6 @@ Per superare controllo su patientID
 			
 			#### NODI FIGLI DI EXTERNALIDENTIFIER
 			$externalidentifier_child_nodes = $externalidentifier_node->child_nodes();
-		//print_r($name_node);
 			for($q = 0;$q < count($externalidentifier_child_nodes);$q++)
 			{
 				$externalidentifier_child_node = $externalidentifier_child_nodes[$q];
@@ -236,7 +234,6 @@ Per superare controllo su patientID
 					$name_node=$externalidentifier_child_node;
 
 					$LocalizedString_nodes = $name_node->child_nodes();
-		//print_r($LocalizedString_nodes);
 			for($p = 0;$p < count($LocalizedString_nodes);$p++)
 			{
 				$LocalizedString_node = $LocalizedString_nodes[$p];//->node_name();
@@ -470,15 +467,29 @@ function validate_XDSDocumentEntryUniqueId($dom,$connessione)
 				if($slot_child_node_tagname=='ValueList')
 				{
 					$valuelist_node = $slot_child_node;
-				//print_r($valuelist_node);
 					$valuelist_child_nodes = $valuelist_node->child_nodes();
-				//print_r($valuelist_child_nodes);
+
+
+					for($r=0;$r<count($valuelist_child_nodes);$r++)
+					{
+						$value_node=$valuelist_child_nodes[$r];
+						$value_node_tagname=$value_node->node_name();
+						if($value_node_tagname=='Value')
+						{
+					  	   $hash_value = $value_node->get_content();
+
+						}
+					}
+
+
+					/*
 					## UN SOLO VALUE
 					if(count($valuelist_child_nodes)==3)
 					{
 					  $value_node = $valuelist_child_nodes[1];
 					  $hash_value = $value_node->get_content();
 					}
+					*/
 				     }
 				}
 			}
@@ -528,7 +539,7 @@ function validate_XDSDocumentEntryUniqueId($dom,$connessione)
 	if($ebxml_value!="")
 	{
 	//QUERY AL DB
-    	$query = "SELECT * FROM ExternalIdentifier WHERE  value = '$ebxml_value'";
+    	$query = "SELECT registryObject FROM ExternalIdentifier WHERE  value = '$ebxml_value'";
 	
     	
 	### EFFETTUO LA QUERY ED OTTENGO IL RISULTATO
@@ -539,12 +550,12 @@ function validate_XDSDocumentEntryUniqueId($dom,$connessione)
     	if(!$isEmpty_5)###---> uniqueId già presente
 	{
 	     ###DEVO CONFRONTARE L'HASH
-	     $query_1 = "SELECT * FROM Slot WHERE parent = '".$res[0]['registryObject']."' AND name = 'hash'";
+	     $query_1 = "SELECT value FROM Slot WHERE parent = '".$res[0][0]."' AND name = 'hash'";
 	     
 	     $res_1 = query_select2($query_1,$connessione);
 	     writeSQLQuery($res_1.": ".$query_1);
 
-	     $value_current=$res_1[0]['value'];
+	     $value_current=$res_1[0][0];
 	     if($value_current!=$hash_value)
 	     {
 		$errorcode[]="XDSNonIdenticalHash";
@@ -647,7 +658,7 @@ function validate_XDSSubmissionSetPatientIdError($dom,$connessione)
 	}//END OF for($index=0;$index<(count($dom_ebXML_RegistryPackage_node_array));$index++)
 
     	//QUERY AL DB
-    	$query = "SELECT * FROM Patient WHERE  PID3 = '$ebxml_value'";
+    	$query = "SELECT ID FROM Patient WHERE  PID3 = '$ebxml_value'";
 
     	$res = query_select2($query,$connessione); //array bidimensionale
 	writeSQLQuery($res.": ".$query); 
@@ -746,7 +757,7 @@ function validate_XDSSubmissionSetPatientIdInsert($dom,$connessione)
 
 
     	//QUERY AL DB
-    	$query = "SELECT * FROM Patient WHERE PID3 = '$ebxml_value'";
+    	$query = "SELECT ID FROM Patient WHERE PID3 = '$ebxml_value'";
 
     	$res = query_select2($query,$connessione); //array bidimensionale
 	writeSQLQuery($res.": ".$query); 
@@ -1253,7 +1264,6 @@ function validate_ExtrinsicObject_mimeType($dom,$connessione)
 	
 	if(!empty($dom_ebXML_ExtrinsicObject_node_array))##
 	{
-// 		$fp_mimeTypeQuery = fopen("tmp/mimeTypeQuery","w+");
 
 	#### CICLO SU OGNI ExtrinsicObject ####
 // 	$isEmpty_6 = false;
@@ -1767,10 +1777,10 @@ function controllaQuery($SQLQuery)
 		$query_not_allowed_response = makeSoapedFailureResponse($error_message,$errorcode);
 
 		writeTimeFile($_SESSION['idfile']."--StoredQuery: Query NOT allowed");
-		$file_input=$_SESSION['idfile']."-query_not_allowed-".$_SESSION['idfile'];
-		writeTmpQueryFiles($query_not_allowed_response,$file_input);
-
-		SendResponse($query_not_allowed_response);
+		$file_input=$_SESSION['idfile']."-query_not_allowed.xml";
+		writeTmpQueryFiles($query_not_allowed_response,$file_input,true);
+		SendResponseFile($_SESSION['tmpQueryService_path'].$file_input);
+		//SendResponse($query_not_allowed_response);
 		exit;
 		
 	}
@@ -1806,10 +1816,10 @@ function isValid($ebxml_STRING_VALIDATION,$schema){
 
 		### SCRIVO LA RISPOSTA IN UN FILE
 		// File da scrivere
-		$file_input=$_SESSION['idfile']."-SOAPED_failure_VALIDATION_response-".$_SESSION['idfile'];
-		writeTmpFiles($failure_response,$file_input);
-
-		SendResponse($failure_response);
+		$file_input=$_SESSION['idfile']."-SOAPED_failure_VALIDATION_response.xml";
+		writeTmpFiles($failure_response,$file_input,true);
+		SendResponseFile($_SESSION['tmp_path'].$file_input);
+		//SendResponse($failure_response);
 		exit;
 	
 	}

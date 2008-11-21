@@ -1,4 +1,5 @@
 <?php
+
 # ------------------------------------------------------------------------------------
 # MARIS XDS REGISTRY
 # Copyright (C) 2007 - 2010  MARiS Project
@@ -11,6 +12,7 @@
 
 # See the LICENSE files for details
 # ------------------------------------------------------------------------------------
+
 
 
 function searchForPatientsInfos($dom,$tag,$id_doc,$name)

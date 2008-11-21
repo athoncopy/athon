@@ -24,13 +24,13 @@ $autenticato = false;
 $users = "SELECT * FROM USERS";
 $res_users = query_select2($users,$connessione);
 
-if (isset($_SERVER['PHP_AUTH_USER']) && 
+if (isset($_SERVER['PHP_AUTH_USER']) &&
     isset($_SERVER['PHP_AUTH_PW']))
   {
 
   $user = $_SERVER['PHP_AUTH_USER'];
   $password = $_SERVER['PHP_AUTH_PW'];
-  
+
 if ($user == $res_users[0][0] && crypt($password,'xds') == $res_users[0][1]){
 
   $autenticato = true;
@@ -96,11 +96,11 @@ return false;
 
 
 <title>
-<?php 
+<?php
 
-$v_maris_registry="2.1";
+$v_maris_registry="2.2";
 
-echo "MARIS XDS REGISTRY-A v$v_maris_registry SETUP"; //."   (".$_SESSION["idcode"].")"; 
+echo "MARIS XDS REGISTRY-A v$v_maris_registry SETUP"; //."   (".$_SESSION["idcode"].")";
 	?></title>
 
 </HEAD>
@@ -115,21 +115,24 @@ $root = $_SERVER['DOCUMENT_ROOT'];
 
 
 if($ip=="127.0.0.1" || $ip=="localhost"){
-$registry_link="http://registry.ip".str_replace('setup.php', 'registry.php',$script); 
-$query_link="http://registry.ip".str_replace('setup.php', 'query.php',$script); 
-$stored_query_link="http://registry.ip".str_replace('setup.php', 'storedquery.php',$script); 
+$registry_link="http://registry.ip".str_replace('setup.php', 'registry.php',$script);
+$query_link="http://registry.ip".str_replace('setup.php', 'query.php',$script);
+$stored_query_link="http://registry.ip".str_replace('setup.php', 'storedquery.php',$script);
 }
 else {
-$registry_link="http://".$ip.str_replace('setup.php', 'registry.php',$script); 
-$query_link="http://".$ip.str_replace('setup.php', 'query.php',$script); 
-$stored_query_link="http://".$ip.str_replace('setup.php', 'storedquery.php',$script); 
+$registry_link="http://".$ip.str_replace('setup.php', 'registry.php',$script);
+$query_link="http://".$ip.str_replace('setup.php', 'query.php',$script);
+$stored_query_link="http://".$ip.str_replace('setup.php', 'storedquery.php',$script);
 }
 
 
 
-echo '<table width="100%" border=0 cellpadding="10" cellspacing="0"><tr bgcolor="black"><td><img src="./img/logo+scritta.jpg"></td></tr>';
-echo '<tr bgcolor="#FF8F10"><td>';
+echo '<table width="100%" border=0 cellpadding="10" cellspacing="0">
+<tr bgcolor="black"><td><img src="./img/logo+scritta.jpg"></td></tr>';
+echo '<tr bgcolor="#FF8F10"><td  colspan="2">';
 echo "<h2>Registry-a v$v_maris_registry Setup</h2>";
+
+echo "This version of MARiS XDS Registry is not certified as a commercial medical device (FDA or CE-1)<br><br>";
 
 echo "The link to the registry you have to set in your software (XDS Repository) is:";
 echo "<br><b>".$registry_link."</b><br><br>";
@@ -142,13 +145,47 @@ echo "<br><b>".$stored_query_link."</b>";
 
 
 
+echo "<FORM action=\"updatesetup.php\" method=\"POST\">";
+
+############## REGISTRY ACTIVE ################
+
+
+$get_REG_config="SELECT CACHE,PATIENTID,LOG,STAT,FOLDER,STATUS FROM CONFIG_A";
+$res_REG_config = query_select2($get_REG_config,$connessione);
+
+$REG_cache = $res_REG_config[0][0];
+$REG_PatientID = $res_REG_config[0][1];
+$REG_log = $res_REG_config[0][2];
+$REG_stat = $res_REG_config[0][3];
+$REG_folder = $res_REG_config[0][4];
+$REG_status = $res_REG_config[0][5];
+
+
+
+echo "<h3>Registry Status</h3>";
+
+if($REG_status=="A"){
+
+	echo "Registry Status: <select name=\"registry_status\">
+  	<option value=\"A\" selected=\"selected\">ON</option>
+   	<option value=\"O\">OFF</option>
+  	</select><br></br>";
+	}
+else {
+
+	echo "Registry Status: <select name=\"registry_status\">
+   	<option value=\"A\">ON</option>
+  	<option value=\"O\" selected=\"selected\">OFF</option>
+  	</select><br></br>";
+	}
+
 
 ############## HTTP ################
 
 $get_HTTP="SELECT * FROM HTTP";
 
 $res_REG_HTTP = query_select2($get_HTTP,$connessione);
-echo "<FORM action=\"updatesetup.php\" method=\"POST\">";
+
 $REG_HTTP = $res_REG_HTTP[0][0];
 echo "<h3>Registry connection</h3>";
 
@@ -168,16 +205,11 @@ else {
 	}
 
 
-$get_REG_config="SELECT CACHE,PATIENTID,LOG,STAT,FOLDER FROM CONFIG";
-$res_REG_config = query_select2($get_REG_config,$connessione);
 
-$REG_cache = $res_REG_config[0][0];
-$REG_PatientID = $res_REG_config[0][1];
-$REG_log= $res_REG_config[0][2];
-$REG_stat= $res_REG_config[0][3];
-$REG_folder= $res_REG_config[0][4];
+
 
 echo "<h3>Registry parameters</h3>";
+
 if($REG_cache=="O"){
 	echo "Save tmp files: <select name=\"registry_cache\">
   	<option value=\"O\" selected=\"selected\">OFF</option>
@@ -221,13 +253,13 @@ echo "<h3>Registry Folder uniqueID Control</h3>";
 echo "If you set \"<b>ON</b>\", when the Registry receives a document with an existing Folder.uniqueID, it rejects the submission.<br>";
 echo "If you set \"<b>OFF</b>\", when the Registry receives a document with an existing Folder.uniqueID, it adds the documet to folder and accept the submission.<br><br>";
 if($REG_folder=="A"){
-	echo "Validate Folder.uniqueID: <select name=\"folder\">
+	echo "Validate Folder.uniqueID: <select name=\"registry_folder\">
   	<option value=\"A\" selected=\"selected\">ON</option>
    	<option value=\"O\">OFF</option>
   	</select><br></br>";
 	}
 else {
-	echo "Validate Folder.uniqueID: <select name=\"folder\">
+	echo "Validate Folder.uniqueID: <select name=\"registry_folder\">
    	<option value=\"A\">ON</option>
   	<option value=\"O\" selected=\"selected\">OFF</option>
   	</select><br></br>";
@@ -325,10 +357,41 @@ echo "<h3>JAVA HOME</h3>";
 echo "JAVA_HOME could be /usr/lib/jvm/jre/bin/ or /usr/lib/jvm/java-xxx/bin/ or C:\\\\Programmi\\Java\\jre.xxx\\bin\\<br>";
 echo "<INPUT type=\"text\" name=\"registry_java_home\" value=\"$REG_java\" size=\"50\" maxlength=\"100\"><br></br>";
 */
-
 echo "<INPUT type=\"Submit\" value=\"Update\"><br></br>";
 
 echo "</FORM>";
+
+#################### COEXISTENCE REPOSITORY-A - REPOSITORY-B ###################
+
+$get_REPOSITORY="SELECT REP_HOST,REP_UNIQUEID FROM REPOSITORY";
+
+
+$res_REPOSITORY = query_select2($get_REPOSITORY,$connessione);
+
+echo "<h3>Coexistence XDS.a/XDS.b</h3>";
+
+echo "<table>";
+echo "<tr><td></td><td><b>Repository IP</b></td><td><b>Repository UniqueID</b></td></tr>";
+for($s=0;$s<count($res_REPOSITORY);$s++)
+{
+echo "<form action=\"updaterepository.php\" method=\"POST\">";
+echo "<tr><td><INPUT type=\"image\" title=\"Delete Repository\"  src=\"./img/delete.png\"></td><td>
+<INPUT type=\"hidden\" name=\"repository_action\" value=\"delete\">
+<INPUT type=\"text\" name=\"repository_ip\" value=\"".$res_REPOSITORY[$s][0]."\"></td><td>
+<INPUT type=\"text\" name=\"repository_uniqueid\" value=\"".$res_REPOSITORY[$s][1]."\" size=\"50\" maxlength=\"100\"></td></tr>";
+echo "</form>";
+}
+echo "<form action=\"updaterepository.php\" method=\"POST\">";
+echo "<tr><td><INPUT type=\"image\" title=\"Insert Repository\" src=\"./img/add.png\"></td><td>
+<INPUT type=\"hidden\" name=\"repository_action\" value=\"add\">
+<INPUT type=\"text\" name=\"repository_ip\" value=\"\"></td><td>
+<INPUT type=\"text\" name=\"repository_uniqueid\" value=\"\" size=\"50\" maxlength=\"100\"></td></tr>";
+echo "</form>";
+
+echo "</table>";
+echo "<br>";
+echo "<br>";
+
 
 if($delete_active=="on"){
 echo "<h3>Delete Registry</h3>";
@@ -373,7 +436,7 @@ echo "</FORM>";
 
 
 echo "</td></tr>";
-echo '<tr bgcolor="black"><td><br><br></td></tr></table>';
+echo '<tr bgcolor="black"><td colspan="2"><br><br></td></tr></table>';
 }
 
 disconnectDB($connessione);

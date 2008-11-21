@@ -13,7 +13,6 @@
 # ------------------------------------------------------------------------------------
 
 #### OTTENGO L'OGGETTO DOM DALL'AdhocQueryRequest
-//$dom_AdhocQueryRequest = domxml_open_mem($ebxml_STRING);
 if (!$dom_AdhocQueryRequest = domxml_open_mem($ebxml_STRING)) {
   writeTimeFile($idfile."--StoredQuery: AdhocQueryRequest non corretto");
 }
@@ -379,7 +378,7 @@ switch ($AdhocQuery) {
         break;
 
 //*************************FindFolders******************//
-    case "urn:uuid:958f3006-baad-4929-a4deff1114824431":
+    case "urn:uuid:958f3006-baad-4929-a4de-ff1114824431":
         $AdhocQuery_case="FindFolders";
 	for ($SQI=0;$SQI<$conta_SlotSQ;$SQI++) {
 		if (strpos(strtoupper($Value[$SQI][0]),"XDSFOLDERPATIENTID")) {
@@ -395,7 +394,7 @@ switch ($AdhocQuery) {
 		}
 	}
 	$SQLStoredQuery_From = "SELECT fol.id FROM RegistryPackage fol, ExternalIdentifier patId ";
-	$SQLStoredQuery_Required = "WHERE fol.status = '".trim($SQFolderStatus)."' AND (patId.registryobject = fol.id AND patId.identificationScheme = 'urn:uuid:f64ffdf0-4b97-4e06-b79f-a52b38ec2f8a' AND patId.value = '".trim($SQPatientID)."')";
+	$SQLStoredQuery_Required = "WHERE fol.status = '".trim($SQFolderStatus)."' AND (patId.registryobject = fol.id AND patId.identificationScheme = 'urn:uuid:f64ffdf0-4b97-4e06-b79f-a52b38ec2f8a' AND patId.value = ".trim($SQPatientID).")";
 
 
 	$SQLStoredQuery_Optional = "";
@@ -490,9 +489,37 @@ switch ($AdhocQuery) {
 
 	$SQLStoredQuery_RP = $SQLStoredQuery_From_RP.$SQLStoredQuery_Required_RP;
 
+	$SQLStoredQuery_From_ASS_EO="SELECT eo.id FROM ExtrinsicObject eo, ExternalIdentifier patId WHERE eo.status = '".trim($SQEntryStatus)."' AND patId.registryObject = eo.id AND patId.identificationScheme = 'urn:uuid:58a6f841-87b3-4a3e-92fd-a8ffeff98427' AND patId.value = ".trim($SQPatientID)."";
+
+	$DocUUID_arr=query_select($SQLStoredQuery_From_ASS_EO);
+	$DocUUID = "'".$DocUUID_arr[0][0]."'";
+	for ($contaDoc=1;$contaDoc<count($DocUUID_arr);$contaDoc++){
+	$DocUUID .= ",'".trim($DocUUID_arr[$contaDoc][0])."'";
+	}
+
+	$SQLStoredQuery_From_ASS_RP="SELECT ss.id FROM RegistryPackage ss, ExternalIdentifier patId WHERE ss.status = '".trim($SQSubmissionStatus)."' AND ss.objectType = 'urn:uuid:a54d6aa5-d40d-43f9-88c5-b4633d873bdd' AND patId.registryObject = ss.id AND patId.identificationScheme = 'urn:uuid:6b5aea1a-874d-4603-a4bc-96a0a7b38446' AND patId.value = ".trim($SQPatientID)."";
+
+	$RPUUID_arr=query_select($SQLStoredQuery_From_ASS_RP);
+	$RPUUID = "'".$RPUUID_arr[0][0]."'";
+	for ($contaRP=1;$contaRP<count($RPUUID_arr);$contaRP++){
+	$RPUUID .= ",'".trim($RPUUID_arr[$contaRP][0])."'";
+	}
+
+	$SQLStoredQuery_From_ASS_FO="SELECT fol.id FROM RegistryPackage fol, ExternalIdentifier patId WHERE fol.status = '".trim($SQFolderStatus)."' AND fol.objectType = 'urn:uuid:d9d542f3-6cc4-48b6-8870-ea235fbc94c2' AND patId.registryObject = fol.id AND patId.identificationScheme = 'urn:uuid:f64ffdf0-4b97-4e06-b79f-a52b38ec2f8a' AND patId.value = ".trim($SQPatientID)."";
+
+	$FOUUID_arr=query_select($SQLStoredQuery_From_ASS_FO);
+	$FOUUID = "'".$FOUUID_arr[0][0]."'";
+	for ($contaFO=1;$contaFO<count($FOUUID_arr);$contaFO++){
+	$FOUUID .= ",'".trim($FOUUID_arr[$contaDoc][0])."'";
+	}	
+
+
 	// SQL Part3
 	$SQLStoredQuery_From_ASS = "SELECT DISTINCT ass.id FROM Association ass, ExtrinsicObject eo, RegistryPackage ss, RegistryPackage fol ";
-	$SQLStoredQuery_Required_ASS = "WHERE ((ass.sourceObject = ss.id AND ass.targetObject = fol.id) OR (ass.sourceObject = ss.id AND ass.targetObject = eo.id) OR (ass.sourceObject = fol.id AND ass.targetObject = eo.id) ) AND eo.id IN (SELECT eo.id FROM ExtrinsicObject eo, ExternalIdentifier patId WHERE eo.status = '".trim($SQEntryStatus)."' AND patId.registryObject = eo.id AND patId.identificationScheme = 'urn:uuid:58a6f841-87b3-4a3e-92fd-a8ffeff98427' AND patId.value = ".trim($SQPatientID).") AND ss.id IN (SELECT ss.id FROM RegistryPackage ss, ExternalIdentifier patId WHERE ss.status = '".trim($SQSubmissionStatus)."' AND patId.registryObject = ss.id AND patId.identificationScheme = 'urn:uuid:6b5aea1a-874d-4603-a4bc-96a0a7b38446' AND patId.value = ".trim($SQPatientID).") AND fol.id IN (SELECT fol.id FROM RegistryPackage fol, ExternalIdentifier patId WHERE fol.status = '".trim($SQFolderStatus)."' AND patId.registryObject = fol.id AND patId.identificationScheme = 'urn:uuid:f64ffdf0-4b97-4e06-b79f-a52b38ec2f8a' AND patId.value = ".trim($SQPatientID).")" ;
+	$SQLStoredQuery_Required_ASS = "WHERE ((ass.sourceObject = ss.id AND ass.targetObject = fol.id) OR (ass.sourceObject = ss.id AND ass.targetObject = eo.id) OR (ass.sourceObject = fol.id AND ass.targetObject = eo.id) )";
+	if($DocUUID!="''"){ $SQLStoredQuery_Required_ASS .= " AND eo.id IN ($DocUUID)";}
+	$SQLStoredQuery_Required_ASS .= " AND ss.id IN ($RPUUID)";
+	if($FOUUID!="''"){ $SQLStoredQuery_Required_ASS .= " AND fol.id IN ($FOUUID)";}
 
 
 	$SQLStoredQuery_ASS = $SQLStoredQuery_From_ASS.$SQLStoredQuery_Required_ASS;
@@ -646,10 +673,10 @@ switch ($AdhocQuery) {
 	// SQL Part1
 	if (strpos(strtoupper($Value[0][0]),"XDSFOLDERENTRYUUID")){
 	$FolderUUID=trim($Value[0][1]);
-	$SQLStoredQuery[0] = "SELECT fol.id FROM RegistryPackage fol WHERE fol.id = ".trim($Value[0][1]);
+	$SQLStoredQuery[0] = "SELECT fol.id FROM RegistryPackage fol WHERE fol.id = ".trim($Value[0][1]). " and fol.objectType = 'urn:uuid:d9d542f3-6cc4-48b6-8870-ea235fbc94c2'";
 	}
 	if (strpos(strtoupper($Value[0][0]),"XDSFOLDERUNIQUEID")){
-	$SQLStoredQuery[0] = "SELECT fol.id from RegistryPackage fol, ExternalIdentifier uniq WHERE uniq.registryObject = fol.id AND uniq.identificationScheme = 'urn:uuid:75df8f67-9973-4fbe-a900-df66cefecc5a' AND uniq.value = ".trim($Value[0][1]);
+	$SQLStoredQuery[0] = "SELECT fol.id from RegistryPackage fol, ExternalIdentifier uniq WHERE uniq.registryObject = fol.id  and fol.objectType = 'urn:uuid:d9d542f3-6cc4-48b6-8870-ea235fbc94c2' AND uniq.identificationScheme = 'urn:uuid:75df8f67-9973-4fbe-a900-df66cefecc5a' AND uniq.value = ".trim($Value[0][1]);
 	$FolderUUID_arr=query_select($SQLStoredQuery[0]);
 	$FolderUUID = "'".$FolderUUID_arr[0][0]."'";
 	for ($contaFol=1;$contaFol<count($FolderUUID_arr);$contaFol++){
@@ -691,7 +718,7 @@ switch ($AdhocQuery) {
         break;
 
 //*************************GetFoldersForDocument******************//
-    case "urn:uuid:10cae35a-c7f9-4cf5-b61efc3278ffb578":
+    case "urn:uuid:10cae35a-c7f9-4cf5-b61e-fc3278ffb578":
         $AdhocQuery_case="GetFoldersForDocument";
 
 	for ($SQI=0;$SQI<$conta_SlotSQ;$SQI++) {
@@ -702,7 +729,7 @@ switch ($AdhocQuery) {
 	$SQLStoredQuery[0] = "SELECT fol.id FROM RegistryPackage fol, Association a, ExtrinsicObject doc, Classification c WHERE doc.id IN (SELECT doc.id FROM ExtrinsicObject doc WHERE doc.id = '".trim($Value[0][1])."')";
 	}
 	if (strpos(strtoupper($Value[0][0]),"XDSDOCUMENTENTRYUNIQUEID")){
-	$SQLStoredQuery[0] = "SELECT fol.id FROM RegistryPackage fol, Association a, ExtrinsicObject doc, Classification c WHERE doc.id IN (SELECT doc.id FROM ExtrinsicObject doc, ExternalIdentifier uniqId WHERE uniqId.registryobject = doc.id AND uniqId.identificationScheme = 'urn:uuid:2e82c1f6-a085-4c72-9da3-8640a32e42ab' AND uniqId.value = '".trim($Value[0][1])."') AND a.targetObject = doc.id AND a.associationType = 'HasMember' AND a.sourceObject = fol.id AND c.classifiedObject = fol.id AND c.classificationNode = 'urn:uuid:d9d542f3-6cc4-48b6-8870-ea235fbc94c2'";
+	$SQLStoredQuery[0] = "SELECT fol.id FROM RegistryPackage fol, Association a, ExtrinsicObject doc, Classification c WHERE doc.id IN (SELECT doc.id FROM ExtrinsicObject doc, ExternalIdentifier uniqId WHERE uniqId.registryobject = doc.id AND uniqId.identificationScheme = 'urn:uuid:2e82c1f6-a085-4c72-9da3-8640a32e42ab' AND uniqId.value = ".trim($Value[0][1]).") AND a.targetObject = doc.id AND a.associationType = 'HasMember' AND a.sourceObject = fol.id AND c.classifiedObject = fol.id AND c.classificationNode = 'urn:uuid:d9d542f3-6cc4-48b6-8870-ea235fbc94c2'";
 	}
 	}
         break;

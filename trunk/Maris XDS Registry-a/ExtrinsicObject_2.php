@@ -552,7 +552,6 @@ VALUES
 			$DB_array_slot_attributes['parent'] = $value_id;
 
 			$slot_child_nodes = $slot_node->child_nodes();
-		//print_r($name_node);
 			for($q = 0;$q < count($slot_child_nodes);$q++)
 			{
 				$slot_child_node = $slot_child_nodes[$q];
