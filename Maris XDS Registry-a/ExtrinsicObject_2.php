@@ -4,6 +4,11 @@
 # Copyright (C) 2007 - 2010  MARiS Project
 # Dpt. Medical and Diagnostic Sciences, University of Padova - csaccavini@rad.unipd.it
 # This program is distributed under the terms and conditions of the GPL
+
+# Contributor(s):
+# A-thon srl <info@a-thon.it>
+# Alberto Castellini
+
 # See the LICENSE files for details
 # ------------------------------------------------------------------------------------
 
@@ -18,10 +23,11 @@ function fill_ExtrinsicObject_tables($dom,$connessione)
 
 	##### ARRAY DELL'ATTRIBUTO ID DI EXTRINSICOBJECT
 	$ExtrinsicObject_id_array = array();
+	$simbolic_ExtrinsicObject_id_array = array();
 
 	##### ARRAY DEGLI ATTRIBUTI DEL NODO EXTRINSICOBJECT
 	$DB_array_extrinsicobject_attributes = array();
-
+	
 	##### RADICE DEL DOCUMENTO ebXML
 	$root_ebXML = $dom->document_element();
 	
@@ -42,6 +48,7 @@ function fill_ExtrinsicObject_tables($dom,$connessione)
 ############## RECUPERO TUTTI GLI ATTRIBUTI DEL NODO EXTRINSICOBJECT
 	$value_ExtrinsicObject_id = "urn:uuid:".idrandom();
 	$simbolic_ExtrinsicObject_id = $ExtrinsicObject_node->get_attribute('id');
+	$simbolic_ExtrinsicObject_id_array[] = $ExtrinsicObject_node->get_attribute('id');
 
 	#############################################################
 	####NOTA BENE NEL CASO NON SIMBOLICO(VEDI SOLINFO)
@@ -89,14 +96,15 @@ function fill_ExtrinsicObject_tables($dom,$connessione)
 	}
         $value_status = $ExtrinsicObject_node->get_attribute('status');
 	#### DEAULT
-	$value_status = "Approved";###QUI LA SUBMISSION VA A BUON FINE
+	//$value_status = "Approved";###QUI LA SUBMISSION VA A BUON FINE
+	$value_status = "NotCompleted";
 	### VERIFICO CASO DI REPLACEMENT
 	for($t=0;$t<count($dom_ebXML_Association_node_array);$t++)
 	{
 		$dom_ebXML_Association_node=$dom_ebXML_Association_node_array[$t];
 		#### ATTRIBUTO associationType
 		$Association_node_associationType_attr=$dom_ebXML_Association_node->get_attribute('associationType');
-		if($Association_node_associationType_attr=='RPLC' || $Association_node_associationType_attr=='XFRM_RPLC')
+		/*if($Association_node_associationType_attr=='RPLC' || $Association_node_associationType_attr=='XFRM_RPLC')
 		{
 			$value_status = "Approved";
 		}
@@ -108,7 +116,7 @@ function fill_ExtrinsicObject_tables($dom,$connessione)
 		{
 			$value_status = "Approved";
 		}
-		else continue;	
+		else continue;	*/
 
 	}//END OF for($t=0;$t<count($dom_ebXML_Association_node_array);$t++)
 
@@ -435,11 +443,11 @@ VALUES
 			}//END OF if($value_classificationScheme == '')
 
 			$value_nodeRepresentation= $classification_node->get_attribute('nodeRepresentation');
-			if($value_nodeRepresentation == '')
+			/*if($value_nodeRepresentation == '')
 			{
 				$value_nodeRepresentation = "NULL";
 				//$value_nodeRepresentation = "default";
-			}
+			}*/
 
 			$DB_array_classification_attributes['classificationScheme'] = $value_classificationScheme;
 			$DB_array_classification_attributes['accessControlPolicy'] = $value_accessControlPolicy;
@@ -688,10 +696,6 @@ VALUES
 		##### SONO PRONTO A SCRIVERE NEL DB
         	$INSERT_INTO_Name = "INSERT INTO Name (charset,lang,value,parent) VALUES ('".trim($DB_array_name['charset'])."','".trim($DB_array_name['lang'])."','".trim(adjustString($DB_array_name['value']))."','".trim($DB_array_name['parent'])."')";
 		
-
-		//$fp_INSERT_INTO_Name = fopen("tmpQuery/INSERT_INTO_Name","w+");
-		//fwrite($fp_INSERT_INTO_Name,$INSERT_INTO_Name);
-		//fclose($fp_INSERT_INTO_Name);
 	
 		$ris = query_exec2($INSERT_INTO_Name,$connessione);	
 		writeSQLQuery($ris.": ".$INSERT_INTO_Name);	
@@ -709,7 +713,7 @@ VALUES
 	}
 
 	### COMPONGO L'ARRAY DA TORNARE
-	$ret = array($ExtrinsicObject_id_array,$lang,$atna_patient_value);
+	$ret = array($ExtrinsicObject_id_array,$lang,$atna_patient_value,$simbolic_ExtrinsicObject_id_array);
 
 	### RETURN
 	return $ret;

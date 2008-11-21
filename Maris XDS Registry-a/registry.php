@@ -1,33 +1,40 @@
 <?php
-
 # ------------------------------------------------------------------------------------
 # MARIS XDS REGISTRY
 # Copyright (C) 2007 - 2010  MARiS Project
 # Dpt. Medical and Diagnostic Sciences, University of Padova - csaccavini@rad.unipd.it
 # This program is distributed under the terms and conditions of the GPL
+
+# Contributor(s):
+# A-thon srl <info@a-thon.it>
+# Alberto Castellini
+
 # See the LICENSE files for details
 # ------------------------------------------------------------------------------------
 
 //BLOCCO IL BUFFER DI USCITA
 ob_start();//OKKIO FONADAMENTALE!!!!!!!!!!
 
-//Parte per calcolare i tempi di esecuzione
-$mtime = microtime();
-$mtime = explode(" ",$mtime);
-$mtime = $mtime[1] + $mtime[0];
-$starttime = $mtime;
-
-
 
 ##### CONFIGURAZIONE DEL REPOSITORY
 include("REGISTRY_CONFIGURATION/REG_configuration.php");
 #######################################
 
-//include('./config/registry_QUERY_mysql_db.php');
-include_once($lib_path."domxml-php4-to-php5.php");
-include($lib_path."utilities.php");
+if($statActive=="A") {
+	//Parte per calcolare i tempi di esecuzione
+	$mtime = microtime();
+	$mtime = explode(" ",$mtime);
+	$mtime = $mtime[1] + $mtime[0];
+	$starttime = $mtime;
+
+}
+
 
 $idfile = idrandom_file();
+
+
+$script = $_SERVER['PHP_SELF'];
+$www_REG_path=str_replace('registry.php', '',$script);
 
 $_SESSION['tmp_path']=$tmp_path;
 $_SESSION['tmpQueryService_path']=$tmpQueryService_path;
@@ -35,14 +42,43 @@ $_SESSION['idfile']=$idfile;
 $_SESSION['logActive']=$logActive;
 $_SESSION['log_path']=$log_path;
 $_SESSION['www_REG_path']=$www_REG_path;
-include_once("./lib/log.php");
 
 
+
+// Creo la cartella per i file temporanei
 if(!is_dir($tmp_path)){
-mkdir($tmp_path, 0777,true);
+	$createtmpdir=false;
+	$ntmpdir=0;
+	while(!$createtmpdir && $ntmpdir<10){
+		$cmdtmpdir=mkdir($tmp_path, 0777,true);
+		if($cmdtmpdir){
+			// Caso OK Riesce a creare il folder correttamente
+			writeTimeFile($idfile."--Ho creato il folder tmp correttamente");
+			$createtmpdir=true;
+			}
+		else {
+			sleep(1);
+			$ntmpdir++;
+		}
+	} //Fine while
+
+
+	// Se dopo 10 volte non sono riuscito a creare il folder riporto un errore
+	if(!$createtmpdir){
+		$errorcode[]="XDSRegistryError";
+		$error_message[] = "Registry can't create tmp folder. ";
+		$folder_response = makeSoapedFailureResponse($error_message,$errorcode);
+		writeTimeFile($_SESSION['idfile']."--Registry: Folder error");
+		
+		$file_input=$idfile."-folder_failure_response-".$idfile;
+		writeTmpFiles($folder_response,$file_input);
+		//SendResponse($tmp_path.$file_input);
+		SendResponse($folder_response);
+		exit;
+	
+	}
+	
 }
-
-
 
 writeTimeFile($idfile."--Registry: Rimuovo la cache temporanea");
 
@@ -52,85 +88,41 @@ $headers = apache_request_headers();
 
 
 //COPIO IN LOCALE TUTTI GLI HEADERS RICEVUTI
-$fp_headers_received = fopen($tmp_path.$idfile."-headers_received-".$idfile, "w+");
-foreach ($headers as $header => $value)
-{
-   fwrite ($fp_headers_received, "$header = $value  \n");
+if($clean_cache!="O"){
+writeTmpFiles($headers,$idfile."-headers_received-".$idfile);
 }
-fclose($fp_headers_received);
-
-//ebXML IMBUSTATO
-$fp_ebxml_imbustato_soap = fopen($tmp_path.$idfile."-ebxml_imbustato_soap-".$idfile, "w+");
-    fwrite($fp_ebxml_imbustato_soap,$HTTP_RAW_POST_DATA);
-fclose($fp_ebxml_imbustato_soap);
-
-//SBUSTO
-$ebxml_imbustato_soap_STRING = file_get_contents($tmp_path.$idfile."-ebxml_imbustato_soap-".$idfile);
-
-### GESTISCO IL CASO DI ATTACHMENT
-$content_type = stristr($headers["Content-Type"],'boundary');
-
-writeTimeFile($idfile."--Registry: Analizzo caso in cui ci sia il boundary");
-
-#### SOLO CASO DI DICHIARAZ. BOUNDARY
-if($content_type)
-{
-	$ebxml_imbustato_soap_STRING = '';
 
 
-	$pre_boundary = substr($content_type,strpos($content_type,'"')+1);
+#### NEL CASO SIA PRESENTE IL BOUNDARY
+if(stripos($headers["Content-Type"],"boundary")){
 
-	$fine_boundary = strpos($pre_boundary,'"')+1;
-	//BOUNDARY ESATTO
-	$boundary = '';
-	$boundary = substr($pre_boundary,0,$fine_boundary-1);
-
-/*
-	//RESETTO LA VARIABILE
-	## IN TAL CASO NON MI VA BENE $ebxml_imbustato_soap_STRING
-	$pre_boundary = substr($content_type,strpos($content_type,'=')+2);
-	#### RICAVO: BOUNDARY ESATTO
-	$boundary = '';
-*/
-	#### OCCHIO: AGGIUNGO DUE - !!!!!
-	$boundary = "--".substr($pre_boundary,0,strlen($pre_boundary)-1);
-	###################################################################
-
-	writeTimeFile($idfile."--Registry: Scrivo il boundary");
-
-	//BOUNDARY
-	$fp_bo = fopen($tmp_path."boundary","wb+");
-    		fwrite($fp_bo,$boundary);
-	fclose($fp_bo);
+	### GESTISCO IL CASO DI ATTACHMENT
+	writeTimeFile($idfile."--Registry: Analizzo caso in cui ci sia il boundary");
+	$boundary = giveboundary($headers);
 
 	//PASSO A DECODARE IL FILE CREATO
-
-	$filename = $tmp_path.$idfile."-ebxml_imbustato_soap-".$idfile;
-   		$input  = fread(fopen($filename,'rb'),filesize($filename));
-
+	$input = $HTTP_RAW_POST_DATA;
 
 	if (preg_match('([^\t\n\r\f\v";][:]*+ENVELOPE)',strtoupper($input))) {
-	writeTimeFile($idfile."--Repository: Ho trovato SOAPENV:ENVELOPE");
+		writeTimeFile($idfile."--Registry: Ho trovato SOAPENV:ENVELOPE");
 
-	preg_match('(<([^\t\n\r\f\v";<]+:)?(ENVELOPE))',strtoupper($input),$matches);
+		preg_match('(<([^\t\n\r\f\v";<]+:)?(ENVELOPE))',strtoupper($input),$matches);
 
-	$presoap=$matches[1];
-	writeTimeFile($idfile."--Repository: Ho trovato $presoap");
-	$body = substr($input,strpos(strtoupper($input),"<".$presoap."ENVELOPE"));
+		$presoap=$matches[1];
+		writeTimeFile($idfile."--Registry: Ho trovato $presoap");
+		$body = substr($input,strpos(strtoupper($input),"<".$presoap."ENVELOPE"));
+		$ebxml_imbustato_soap_STRING = rtrim(rtrim(substr($body,0,strpos($body,$boundary)),"\n"),"\r");
+		writeTmpFiles($ebxml_imbustato_soap_STRING,$idfile."-ebxml_imbustato_soap-".$idfile);
 	}
 
-	//CONTENUTO
-	$fp = fopen($tmp_path.$idfile."-body-".$idfile,"wb+");
-    		fwrite($fp,$body);
-	fclose($fp);
-
 	### RIOTTENGO LA STRINGA SOAP
-	$ebxml_imbustato_soap_STRING = rtrim(rtrim(substr($body,0,strpos($body,$boundary)),"\n"),"\r");
+	
 }
-//ebXML IMBUSTATO
-$fp_ebxml_imbustato_soap = fopen($tmp_path.$idfile."-ebxml_imbustato_soap_2-".$idfile, "w+");
-    fwrite($fp_ebxml_imbustato_soap,$ebxml_imbustato_soap_STRING);
-fclose($fp_ebxml_imbustato_soap);
+
+else {
+	$ebxml_imbustato_soap_STRING = $HTTP_RAW_POST_DATA;
+	writeTmpFiles($ebxml_imbustato_soap_STRING,$idfile."-ebxml_imbustato_soap-".$idfile);
+}
 
 ## OGGETTO DOM SUL SOAP RICEVUTO: QUI HO IL SOAP CORRETTO!
 $dom_ebxml_imbustato_soap = domxml_open_mem($ebxml_imbustato_soap_STRING);
@@ -163,22 +155,15 @@ for($i = 0;$i<count($dom_SOAP_ebXML_node_array);$i++)
 	$ebxml_STRING = $dom_ebxml_imbustato_soap->dump_node($node);
 }
 //SCRIVO L'ebXML SBUSTATO
-$fp_ebxml = fopen($tmp_path.$idfile."-ebxml-".$idfile,"w+");
-	fwrite($fp_ebxml,$ebxml_STRING);
-fclose($fp_ebxml);
-
-
-
-
-
-
-
-
+if($clean_cache!="O"){
+writeTmpFiles($ebxml_STRING,$idfile."-ebxml-".$idfile);
+}
 //SCRIVO L'ebXML DA VALIDARE (urn:uuid: ---> urn-uuid-)
 $ebxml_STRING_VALIDATION = adjustURN_UUIDs($ebxml_STRING);
-$fp_ebxml_val = fopen($tmp_path.$idfile."-ebxml_for_validation-".$idfile,"w+");
-	fwrite($fp_ebxml_val,$ebxml_STRING_VALIDATION);
-fclose($fp_ebxml_val);
+
+if($clean_cache!="O"){
+writeTmpFiles($ebxml_STRING_VALIDATION,$idfile."-ebxml_for_validation-".$idfile);
+}
 
 $schema='schemas/rs.xsd';
 $isValid = isValid($ebxml_STRING_VALIDATION,$schema);
@@ -197,7 +182,7 @@ $dom_ebXML = domxml_open_mem($ebxml_STRING);
 
 
 
-
+//$connessione=connectDB();
 
 
 ##### ATTENZIONE!!! CONTA L'ORDINE DI CHIAMATA ALLE FUNZIONI!!!!
@@ -270,10 +255,16 @@ writeTimeFile($idfile."--Registry: Ho validato XDSSubmissionSetUniqueId");}
 
 ############ CHECK OF XDSFolder.uniqueID
 // se $FolderUniqueId_valid_array[0] è falso dà errore
-$FolderUniqueId_valid_array = validate_XDSFolderUniqueId($dom_ebXML,$connessione);
-if($FolderUniqueId_valid_array[0]){
-writeTimeFile($idfile."--Registry: Ho validato XDSFolderUniqueId");}
-
+if($controlFolderUniqueId=="A") {
+	$FolderUniqueId_valid_array = validate_XDSFolderUniqueId($dom_ebXML,$connessione);
+	if($FolderUniqueId_valid_array[0]){
+	writeTimeFile($idfile."--Registry: Ho validato XDSFolderUniqueId");}
+}
+else {
+	$FolderUniqueId_valid_array = validate_XDSFolderUniqueIdInsert($dom_ebXML,$connessione);
+	if($FolderUniqueId_valid_array[0]){
+	writeTimeFile($idfile."--Registry: Ho validato XDSFolderUniqueIdInsert");}
+}
 ########### CHECK OF HASH + SIZE + URI
 // se $hsu[0] è falso dà errore
 $hsu = arePresent_HASH_SIZE_URI($dom_ebXML);
@@ -331,12 +322,10 @@ if($ExtrinsicObject_mimeType_array[0] || $DocumentEntryPatientId_valid_array[0] 
     	$SOAPED_failure_response = makeSoapedFailureResponse($failure_response_array,$error_code_array);
 
 	### SCRIVO LA RISPOSTA IN UN FILE
-	$file_input=$tmp_path.$idfile."-SOAPED_failure_response-".$idfile;
-	 $fp = fopen($file_input,"w+");
-           fwrite($fp,$SOAPED_failure_response);
-         fclose($fp);
-
-	SendResponse($file_input);
+	$file_input=$idfile."-SOAPED_failure_response-".$idfile;
+	writeTmpFiles($SOAPED_failure_response,$file_input);
+	
+	SendResponse($SOAPED_failure_response);
 	exit;
 
 	
@@ -344,9 +333,7 @@ if($ExtrinsicObject_mimeType_array[0] || $DocumentEntryPatientId_valid_array[0] 
 
 #### SE SONO QUI HO SUPERATO TUTTI I VINCOLI DI VALIDAZIONE
 
-$fp = fopen($tmp_path.$idfile."-POST_VALIDATION-".$idfile, "w+");
-      fwrite($fp,'SUPERATO IL VINCOLO DI VALIDAZIONE SU SCHEMAS + UNIQUEID + PATIENTID + FOLDER');
-fclose($fp);
+writeTimeFile($idfile."--Registry: HO SUPERATO I VINCOLI DI VALIDAZIONE");
 
 ######################################################
 ###### POSSO RIEMPIRE IL DATABASE DEL REGISTRY #######
@@ -358,6 +345,7 @@ writeTimeFile($idfile."--Registry: Inizio a riempire il Database");
 		$RETURN_from_ExtrinsicObject_id_array=fill_ExtrinsicObject_tables($dom_ebXML,$connessione);
 		#### ARRAY DEGLI EXTRINSICOBJECTS ID
 		$ExtrinsicObject_id_array=$RETURN_from_ExtrinsicObject_id_array[0];
+		$simbolic_ExtrinsicObject_id_array=$RETURN_from_ExtrinsicObject_id_array[3];
 		#### LANGUAGE CODE
 		$language=$RETURN_from_ExtrinsicObject_id_array[1];
 		
@@ -368,20 +356,46 @@ writeTimeFile($idfile."--Registry: Inserito nel Database ExtrinsicObject");
 	include_once('RegistryPackage_2.php');
 		$RegistryPackage_id_array2=fill_RegistryPackage_tables($dom_ebXML,$language,$connessione);
 		$RegistryPackage_id_array=$RegistryPackage_id_array2[0];
+		$simbolic_RegistryPackage_id_array=$RegistryPackage_id_array2[2];
+		$simbolic_RegistryPackage_FOL_id_array=$RegistryPackage_id_array2[3];
 
 writeTimeFile($idfile."--Registry: Inserito nel Database RegistryPackage");
 
 	### 3 - Classification
 	include_once('Classification_2.php');
-		fill_Classification_tables($dom_ebXML,$RegistryPackage_id_array,$connessione);
+		fill_Classification_tables($dom_ebXML,$RegistryPackage_id_array,$simbolic_RegistryPackage_FOL_id_array,$connessione);
 
 writeTimeFile($idfile."--Registry: Inserito nel Database Classification");
 
 	### 4 - Association
 	include_once('Association_2.php');
-		fill_Association_tables($dom_ebXML,$RegistryPackage_id_array,$ExtrinsicObject_id_array,$connessione);
+		fill_Association_tables($dom_ebXML,$RegistryPackage_id_array,$ExtrinsicObject_id_array,$simbolic_RegistryPackage_FOL_id_array,$connessione);
 
 writeTimeFile($idfile."--Registry: Inserito nel Database Association");
+
+
+
+####### Se arrivo a questo punto cambio lo stato del documento da NotCompleted a Approved
+//Aggiorno lo stato di ExtrinsicObject
+for($e=0;$e<count($ExtrinsicObject_id_array);$e++){
+	$simbolic_ExtrinsicObject_id=$simbolic_ExtrinsicObject_id_array[$e];
+	$UPDATE_ExtrinsicObject = "UPDATE ExtrinsicObject SET status='Approved' where id='".$ExtrinsicObject_id_array[$simbolic_ExtrinsicObject_id]."' AND status = 'NotCompleted'";
+
+	$ris = query_exec2($UPDATE_ExtrinsicObject,$connessione);
+	writeSQLQuery($ris.": ".$UPDATE_ExtrinsicObject);
+}
+
+//Aggiorno lo stato di RegistryPackage
+for($s=0;$s<count($RegistryPackage_id_array);$s++){
+	$simbolic_RegistryPackage_id=$simbolic_RegistryPackage_id_array[$s];
+	if($simbolic_RegistryPackage_id!=''){
+		$UPDATE_RegistryPackage = "UPDATE RegistryPackage SET status='Approved' where id='".$RegistryPackage_id_array[$simbolic_RegistryPackage_id]."' AND status = 'NotCompleted'";
+
+		$ris = query_exec2($UPDATE_RegistryPackage,$connessione);
+		writeSQLQuery($ris.": ".$UPDATE_RegistryPackage);
+	}
+}
+
 
 ####### FINE RIEMPIMENTO DATABASE DEL REGISTRY ########
 #######################################################
@@ -393,9 +407,7 @@ writeTimeFile($idfile."--Registry: Inserito nel Database Association");
 $registry_response = makeSoapedSuccessResponse();
 
 //SCRIVO LA RISPOSTA IN UN FILE
-$fp_registry_response = fopen($tmp_path.$idfile."-registry_response.xml","wb+");
-	fwrite($fp_registry_response,$registry_response);
-fclose($fp_registry_response);
+writeTmpFiles($registry_response,$idfile."-registry_response.xml",true);
 
 writeTimeFile($idfile."--Registry: Scrivo la risposta positiva in un file");
 
@@ -412,7 +424,7 @@ if($http=="TLS")
 	##### NEL CASO TLS AGGIUNGO LA DICITURA SECURE
 	$path_header = $path_header."; Secure";
 }
-header($path_header);
+//header($path_header);
 header("Content-Type: text/xml; charset=UTF-8");
 header("Content-Length: ".(string)filesize($tmp_path.$idfile."-registry_response.xml"));
 
@@ -474,7 +486,7 @@ $msg_mail .= "<Signature Id=\"signatureID\" xmlns=\"http://www.w3.org/2000/09/xm
 <Object>
 <SignatureProperties>
 <SignatureProperty Id=\"recommendedRegistry\"
-target=\"signatureID\">http://".$_SERVER['SERVER_NAME'].$www_REG_path.$service_query."</SignatureProperty>
+target=\"signatureID\">http://".$_SERVER['SERVER_NAME'].$www_REG_path."storedquery.php</SignatureProperty>
 <SignatureProperty Id=\"sendAcknowledgementTo\"
 target=\"signatureID\">".$NAV_to."</SignatureProperty>
 </SignatureProperties>
@@ -495,17 +507,11 @@ $msg_mail .= "
 
 $msg_mail .= "--".$bound_mail."--";
 
-	$fp_ebxml_nav = fopen($tmp_path.$idfile."-nav_msg-".$idfile,"w+");
-	fwrite($fp_ebxml_nav,$msg_mail);
-	fclose($fp_ebxml_nav);
-
-
-
 mail($NAV_to, "Notification of Document Availability",$msg_mail, $headers_mail);
 
-$fp_mail = fopen($tmp_path.$idfile."-mail-".$idfile,"w+");
-	fwrite($fp_mail,$NAV_to."Notification of Document Availability".$msg_mail.$headers_mail);
-fclose($fp_mail);
+if($clean_cache!="O"){
+	writeTmpFiles($msg_mail,$idfile."-mail-".$idfile);
+}
 
 writeTimeFile($idfile."--Registry: Ho spedito i messaggi di NAV");
 
@@ -553,23 +559,29 @@ $message_import="<AuditMessage>
 
         $logSyslog=$syslog->Send($ATNA_host,$ATNA_port,$message_import);
 
-
+if($clean_cache!="O"){
+	writeTmpFiles($message_import,$idfile."-atna_import.xml");
+}
 
 writeTimeFile($idfile."--Registry: Ho spedito i messaggi di ATNA");
 
 
 }
 
-//Parte per calcolare i tempi di esecuzione
-$mtime = microtime();
-$mtime = explode(" ",$mtime);
-$mtime = $mtime[1] + $mtime[0];
-$endtime = $mtime;
-$totaltime = number_format($endtime - $starttime,15);
+//Statistiche
+if($statActive=="A") {
 
-$STAT_SUBMISSION="INSERT INTO STATS (REPOSITORY,DATA,EXECUTION_TIME,OPERATION) VALUES ('".$_SERVER['REMOTE_ADDR']."',CURRENT_TIMESTAMP,'$totaltime','QUERY')";
-$ris = query_exec2($STAT_SUBMISSION,$connessione);
-writeSQLQuery($ris.": ".$STAT_SUBMISSION);
+	//Parte per calcolare i tempi di esecuzione
+	$mtime = microtime();
+	$mtime = explode(" ",$mtime);
+	$mtime = $mtime[1] + $mtime[0];
+	$endtime = $mtime;
+	$totaltime = number_format($endtime - $starttime,15);
+
+	$STAT_SUBMISSION="INSERT INTO STATS (REPOSITORY,DATA,EXECUTION_TIME,OPERATION) VALUES ('".$_SERVER['REMOTE_ADDR']."',CURRENT_TIMESTAMP,'$totaltime','SUBMISSION-A')";
+	$ris = query_exec2($STAT_SUBMISSION,$connessione);
+	writeSQLQuery($ris.": ".$STAT_SUBMISSION);
+}
 
 disconnectDB($connessione);
 

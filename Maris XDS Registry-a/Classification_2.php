@@ -4,13 +4,18 @@
 # Copyright (C) 2007 - 2010  MARiS Project
 # Dpt. Medical and Diagnostic Sciences, University of Padova - csaccavini@rad.unipd.it
 # This program is distributed under the terms and conditions of the GPL
+
+# Contributor(s):
+# A-thon srl <info@a-thon.it>
+# Alberto Castellini
+
 # See the LICENSE files for details
 # ------------------------------------------------------------------------------------
 
 writeSQLQuery('-------------------------------------------------------------------------------------');
 writeSQLQuery('Classification_2.php');
 ##### METODO PRINCIPALE
-function fill_Classification_tables($dom,$RegistryPackage_id_array,$connessione)
+function fill_Classification_tables($dom,$RegistryPackage_id_array,$simbolic_RegistryPackage_FOL_id_array,$connessione)
 {
 	##### NODEREPRESENTATION
 	$value_nodeRepresentation_assigned='';
@@ -43,6 +48,8 @@ function fill_Classification_tables($dom,$RegistryPackage_id_array,$connessione)
 			$DB_array_classification_attributes = array();
 
 			$value_id= $classification_node->get_attribute('id');
+			$simbolic_Classification_id = $classification_node->get_attribute('id');
+
 			if($value_id == '')
 			{
 				$value_id = "urn:uuid:".idrandom();
@@ -65,8 +72,8 @@ function fill_Classification_tables($dom,$RegistryPackage_id_array,$connessione)
 			{
 				##### VALORE DI DEFAULT CASO DI CLASSIFICATION
 				##### NON FIGLIE DI EXTRINSICOBJECT E/O REGISTRYPACKAGE
-				//$value_nodeRepresentation = "NULL";
-				$value_nodeRepresentation=$RegistryPackage_id_array['nodeRepresentation'];
+				$value_nodeRepresentation = '';
+				//$value_nodeRepresentation=$RegistryPackage_id_array['nodeRepresentation'];
 			}
 
 			if($value_classificationNode == '')
@@ -122,6 +129,10 @@ function fill_Classification_tables($dom,$RegistryPackage_id_array,$connessione)
 			}//END OF if($code_classificationNode=="XDSSubmissionSet")
 			}//END OF if($value_classificationScheme == '')
 			$simbolic_value_classifiedObject= $classification_node->get_attribute('classifiedObject');
+			$Classification_folder=in_array($simbolic_value_classifiedObject,$simbolic_RegistryPackage_FOL_id_array);
+			if(!$Classification_folder){
+	
+			
 			$value_classifiedObject=$RegistryPackage_id_array[$simbolic_value_classifiedObject];
 // 			if($value_classifiedObject == '')
 // 			{
@@ -145,6 +156,7 @@ function fill_Classification_tables($dom,$RegistryPackage_id_array,$connessione)
 			
 				
 			}
+			} //Fine if(!$Classification_folder)
 
 			}//END OF if($dom_ebXML_LeafRegistryObjectList_child_node_tagname=='Classification')
 

@@ -4,6 +4,11 @@
 # Copyright (C) 2007 - 2010  MARiS Project
 # Dpt. Medical and Diagnostic Sciences, University of Padova - csaccavini@rad.unipd.it
 # This program is distributed under the terms and conditions of the GPL
+
+# Contributor(s):
+# A-thon srl <info@a-thon.it>
+# Alberto Castellini
+
 # See the LICENSE files for details
 # ------------------------------------------------------------------------------------
 
@@ -15,11 +20,17 @@ function fill_RegistryPackage_tables($dom,$language,$connessione)
 	#### LANGUAGECODE
 	$lang=$language;
 
+	
+
 	##### NODEREPRESENTATION
 	$value_nodeRepresentation_assigned='';
 
 	##### ARRAY DELL'ATTRIBUTO ID DI REGISTRYPACKAGE
 	$RegistryPackage_id_array = array();
+	$simbolic_RegistryPackage_id_array = array();
+
+	#### FOLDERID DA NON INSERIRE
+	$RegistryPackage_Fol_id_array = array();
 
 	##### ARRAY DEGLI ATTRIBUTI DEL NODO REGISTRYPACKAGE
 	$DB_array_registrypackage_attributes = array();
@@ -39,10 +50,84 @@ function fill_RegistryPackage_tables($dom,$language,$connessione)
 	##### NODO REGISTRYPACKAGE RELATIVO AL DOCUMENTO NUMERO $index
 	$RegistryPackage_node = $dom_ebXML_RegistryPackage_node_array[$index];
 	
+	### Setto di default che RegistryPackage non è un folder già presente
+	$isEmpty_F=true;
+
+	##### NODO REGISTRYPACKAGE RELATIVO AL DOCUMENTO NUMERO $index
+	$RegistryPackage_node = $dom_ebXML_RegistryPackage_node_array[$index];
+	
+	#### ARRAY DEI FIGLI DEL NODO REGISTRYPACKAGE ##############	
+	$RegistryPackage_child_nodes = $RegistryPackage_node->child_nodes();
+	#################################################################
+
+	################# PROCESSO TUTTI I NODI FIGLI DI REGISTRYPACKAGE
+	for($k=0;$k<count($RegistryPackage_child_nodes);$k++)
+	{
+
+		#### SINGOLO NODO FIGLIO DI REGISTRYPACKAGE
+		$RegistryPackage_child_node=$RegistryPackage_child_nodes[$k];
+		#### NOME DEL NODO
+		$RegistryPackage_child_node_tagname = $RegistryPackage_child_node->node_name();
+		
+		########## Versione 2.1 per gestione Folder.uniqueid #############
+		if($RegistryPackage_child_node_tagname=='ExternalIdentifier')
+		{
+			$externalidentifier_node = $RegistryPackage_child_node;
+			$value_value= avoidHtmlEntitiesInterpretation($externalidentifier_node->get_attribute('value'));
+			
+			#### NODI FIGLI DI EXTERNALIDENTIFIER
+			$externalidentifier_child_nodes = $externalidentifier_node->child_nodes();
+			for($q = 0;$q < count($externalidentifier_child_nodes);$q++)
+			{
+				$externalidentifier_child_node = $externalidentifier_child_nodes[$q];
+				$externalidentifier_child_node_tagname = $externalidentifier_child_node->node_name();
+				if($externalidentifier_child_node_tagname=='Name')
+				{
+					$name_node=$externalidentifier_child_node;
+
+					$LocalizedString_nodes = $name_node->child_nodes();
+			for($p = 0;$p < count($LocalizedString_nodes);$p++)
+			{
+				$LocalizedString_node = $LocalizedString_nodes[$p];//->node_name();
+				$LocalizedString_node_tagname = $LocalizedString_node->node_name();
+
+				if($LocalizedString_node_tagname == 'LocalizedString')
+				{
+					$LocalizedString_value =$LocalizedString_node->get_attribute('value');
+					if(strpos(strtolower(trim($LocalizedString_value)),strtolower('Folder.uniqueId')))
+					{
+					
+						$ebxml_value = $value_value;
+						### QUERY AL DB
+    						$query = "SELECT registryObject FROM ExternalIdentifier WHERE value = '$ebxml_value'";
+
+    						$res = query_select2($query,$connessione); //array bidimensionale
+						writeSQLQuery($res.": ".$query); 
+
+						
+						$isEmpty_F = (empty($res));
+						$value_RegistryPackage_id=$res[0][0];
+						//$RegistryPackage_Fol_id_array[]=$simbolic_RegistryPackage_id_fol;
+
+					}
+					
+				}
+
+			}
+
+				}
+			}
+		}
+	}
+
+###############################################################################
+ 	if($isEmpty_F){
+
 ############## RECUPERO TUTTI GLI ATTRIBUTI DEL NODO REGISTRYPACKAGE
 	$value_RegistryPackage_id = "urn:uuid:".idrandom();
 
 	$simbolic_RegistryPackage_id = $RegistryPackage_node->get_attribute('id');
+	$simbolic_RegistryPackage_id_array[] = $RegistryPackage_node->get_attribute('id');
 
 
 	#############################################################
@@ -89,7 +174,8 @@ function fill_RegistryPackage_tables($dom,$language,$connessione)
         $value_status = $RegistryPackage_node->get_attribute('status');
 	if($value_status == '')
 	{
-		$value_status = "Approved";
+		//$value_status = "Approved";
+		$value_status = "NotCompleted";
 	}
         $value_userVersion = $RegistryPackage_node->get_attribute('userVersion');
 	if($value_userVersion == '')
@@ -110,11 +196,6 @@ function fill_RegistryPackage_tables($dom,$language,$connessione)
 ####### QUI ORA POSSO RIEMPIRE IL DB
 $INSERT_INTO_RegistryPackage = "INSERT INTO RegistryPackage (id,accessControlPolicy,objectType,expiration,majorVersion,minorVersion,stability,status,userVersion) VALUES
 ('".$DB_array_registrypackage_attributes['id']."','".$DB_array_registrypackage_attributes['accessControlPolicy']."','".$DB_array_registrypackage_attributes['objectType']."',".$DB_array_registrypackage_attributes['expiration'].",'".$DB_array_registrypackage_attributes['majorVersion']."','".$DB_array_registrypackage_attributes['minorVersion']."','".$DB_array_registrypackage_attributes['stability']."','".$DB_array_registrypackage_attributes['status']."','".$DB_array_registrypackage_attributes['userVersion']."')";
-
-			
-	//$fp_INSERT_INTO_RegistryPackage = fopen("tmpQuery/INSERT_INTO_RegistryPackage","w+");
-	//	fwrite($fp_INSERT_INTO_RegistryPackage,$INSERT_INTO_RegistryPackage);
-	//fclose($fp_INSERT_INTO_RegistryPackage);
 	
 	$ris = query_exec2($INSERT_INTO_RegistryPackage,$connessione);
 	writeSQLQuery($ris.": ".$INSERT_INTO_RegistryPackage);
@@ -286,7 +367,7 @@ $INSERT_INTO_RegistryPackage = "INSERT INTO RegistryPackage (id,accessControlPol
 					{
 						$value_node=$valuelist_child_nodes[$r];
 						$value_node_tagname=$value_node->node_name();
-						if($value_node_tagname=='Value')
+						if($value_node_tagname=='Value' && $value_name!="lastUpdateTime")
 						{
 					  		$value_value = $value_node->get_content();
 					  		$DB_array_slot_attributes['value'] = $value_value;
@@ -675,13 +756,24 @@ $INSERT_INTO_RegistryPackage = "INSERT INTO RegistryPackage (id,accessControlPol
 
 ################# FINE PROCESSO TUTTI I NODI FIGLI DI REGISTRYPACKAGE
 
+	} //END OF if($isEmpty_F)
+
+	// Se il folder.uniqueID è già presente inserisco nella variabile gli id dei folder da non inserire
+	else {
+
+		$simbolic_RegistryPackage_id_fol = $RegistryPackage_node->get_attribute('id');
+		$RegistryPackage_Fol_id_array[]=$simbolic_RegistryPackage_id_fol;
+
+			
+		$RegistryPackage_id_array[$simbolic_RegistryPackage_id_fol]=$value_RegistryPackage_id;
+	}
 	}//END OF for($index=0;$index<(count($dom_ebXML_RegistryPackage_node_array));$index++)
 
 	$RegistryPackage_id_array['nodeRepresentation']=$value_nodeRepresentation_assigned;
 
 
 	//return $RegistryPackage_id_array;
-	return array($RegistryPackage_id_array,$atna_value);
+	return array($RegistryPackage_id_array,$atna_value,$simbolic_RegistryPackage_id_array,$RegistryPackage_Fol_id_array);
 
 
 

@@ -1,10 +1,14 @@
 <?php
-
 # ------------------------------------------------------------------------------------
 # MARIS XDS REGISTRY
 # Copyright (C) 2007 - 2010  MARiS Project
 # Dpt. Medical and Diagnostic Sciences, University of Padova - csaccavini@rad.unipd.it
 # This program is distributed under the terms and conditions of the GPL
+
+# Contributor(s):
+# A-thon srl <info@a-thon.it>
+# Alberto Castellini
+
 # See the LICENSE files for details
 # ------------------------------------------------------------------------------------
 
@@ -121,5 +125,178 @@ function writeTimeFile($tempotxt)
 			fclose($handler_log_time);
 		}
 	}//END OF makeLog($log_text)
+
+
+function writeTmpFiles($log_text,$file_name,$mandatory=false)
+	{
+		### PATH COMPLETO AL FILE 
+		if(!isset($_SESSION['tmp_path'])){
+			$pathToFile = "./tmp/".$file_name;
+		}
+		else {
+			$pathToFile = $_SESSION['tmp_path'].$file_name;
+		}
+		$writef=false;
+		$nfile=0;
+		//Se il file è obbligatorio devo accertarmi che venga salvato
+		if($mandatory){
+		while(!$writef && $nfile<10){
+			### APERTURA DEL FILE IN FORMA TAIL ED IN SOLA SCRITTURA
+			if($handler_log = fopen($pathToFile,"wb+")){
+	
+				## CASO DI DATO TIPO ARRAY
+				if(is_array($log_text))
+				{
+					$txt = "";
+					### IMPOSTA L'ARRAY NELLA FORMA [etichetta] = valore
+					foreach($log_text as $element => $value) 
+					{
+   						$txt = $txt."$element = $value\n";
+					}//END OF foreach
+					$log_text = $txt;
+				}//END OF if(is_array($log_text))
+
+				if (fwrite($handler_log,$log_text) === FALSE) {
+					sleep(1);
+					$nfile++;
+				}
+				else {
+					// Caso OK Riesce a aprire e scrivere il file correttamente
+					$writef=true;
+				}
+			} // Fine if($handler_log = fopen($pathToFile,"wb+"))
+			else {
+				sleep(1);
+				$nfile++;
+			}
+		} //Fine while
+		#### CHIUDO L'HANDLER
+		fclose($handler_log);
+
+		if(!$writef){
+			$errorcode[]="XDSRegistryError";
+			$error_message[] = "Registry can't create tmp file. ";
+			$tmp_response = makeSoapedFailureResponse($error_message,$errorcode);
+			writeTimeFile($_SESSION['idfile']."--Registry: Tmp File error");
+		
+			$file_input=$idfile."-tmp_failure_response-".$idfile;
+			writeTmpFiles($tmp_response,$file_input);
+			SendResponse($tmp_response);
+			exit;
+		}
+		
+		}
+
+	else {
+
+		$handler_log=fopen($pathToFile,"wb+");
+			## CASO DI DATO TIPO ARRAY
+			if(is_array($log_text))
+			{
+				$txt = "";
+				### IMPOSTA L'ARRAY NELLA FORMA [etichetta] = valore
+				foreach($log_text as $element => $value) 
+				{
+   					$txt = $txt."$element = $value\n";
+				}//END OF foreach
+				$log_text = $txt;
+			}//END OF if(is_array($log_text))
+	
+		fwrite($handler_log,$log_text);
+		fclose($handler_log);
+
+	}
+		#### RITORNO IL PATH AL FILE SCRITTO
+		return $pathToFile;
+
+	}//END OF writeTmpFiles($log_text)
+
+
+
+function writeTmpQueryFiles($log_text,$file_name,$mandatory=false)
+	{
+	//$mandatory indica se il file deve essere salvato.
+	### PATH COMPLETO AL FILE 
+	if(!isset($_SESSION['tmpQueryService_path'])){
+			$pathToFile = "./tmpQueryService/".$file_name;
+		}
+	else {
+		$pathToFile = $_SESSION['tmpQueryService_path'].$file_name;
+	}
+	$writef=false;
+	$nfile=0;
+	//Se il file è obbligatorio devo accertarmi che venga salvato
+	if($mandatory){
+		while(!$writef && $nfile<10){
+			### APERTURA DEL FILE IN FORMA TAIL ED IN SOLA SCRITTURA
+			if($handler_log = fopen($pathToFile,"wb+")){
+	
+				## CASO DI DATO TIPO ARRAY
+				if(is_array($log_text))
+				{
+					$txt = "";
+					### IMPOSTA L'ARRAY NELLA FORMA [etichetta] = valore
+					foreach($log_text as $element => $value) 
+					{
+   						$txt = $txt."$element = $value\n";
+					}//END OF foreach
+					$log_text = $txt;
+				}//END OF if(is_array($log_text))
+
+				if (fwrite($handler_log,$log_text) === FALSE) {
+					sleep(1);
+					$nfile++;
+				}
+				else {
+					// Caso OK Riesce a aprire e scrivere il file correttamente
+					$writef=true;
+				}
+			} // Fine if($handler_log = fopen($pathToFile,"wb+"))
+			else {
+				sleep(1);
+				$nfile++;
+			}
+		} //Fine while
+		#### CHIUDO L'HANDLER
+		fclose($handler_log);
+
+		if(!$writef){
+			$errorcode[]="XDSRegistryError";
+			$error_message[] = "Registry can't create tmp file. ";
+			$tmp_response = makeSoapedFailureResponse($error_message,$errorcode);
+			writeTimeFile($_SESSION['idfile']."--Registry: Tmp File error");
+		
+			$file_input=$idfile."-tmp_failure_response-".$idfile;
+			writeTmpQueryFiles($tmp_response,$file_input);
+			SendResponse($tmp_response);
+			exit;
+		}
+	}
+
+	else {
+
+		$handler_log=fopen($pathToFile,"wb+");
+			## CASO DI DATO TIPO ARRAY
+			if(is_array($log_text))
+			{
+				$txt = "";
+				### IMPOSTA L'ARRAY NELLA FORMA [etichetta] = valore
+				foreach($log_text as $element => $value) 
+				{
+   					$txt = $txt."$element = $value\n";
+				}//END OF foreach
+				$log_text = $txt;
+			}//END OF if(is_array($log_text))
+	
+		fwrite($handler_log,$log_text);
+		fclose($handler_log);
+
+	}
+		
+	#### RITORNO IL PATH AL FILE SCRITTO
+	return $pathToFile;
+
+	}//END OF writeTmpQueryFiles($log_text)
+
 
 ?>

@@ -1,7 +1,22 @@
 <?php
+# ------------------------------------------------------------------------------------
+# MARIS XDS REGISTRY
+# Copyright (C) 2007 - 2010  MARiS Project
+# Dpt. Medical and Diagnostic Sciences, University of Padova - csaccavini@rad.unipd.it
+# This program is distributed under the terms and conditions of the GPL
+
+# Contributor(s):
+# A-thon srl <info@a-thon.it>
+# Alberto Castellini
+
+# See the LICENSE files for details
+# ------------------------------------------------------------------------------------
 
 #### OTTENGO L'OGGETTO DOM DALL'AdhocQueryRequest
-$dom_AdhocQueryRequest = domxml_open_mem(file_get_contents($tmpQueryService_path.$idfile."AdhocQueryRequest".$idfile));
+//$dom_AdhocQueryRequest = domxml_open_mem($ebxml_STRING);
+if (!$dom_AdhocQueryRequest = domxml_open_mem($ebxml_STRING)) {
+  writeTimeFile($idfile."--StoredQuery: AdhocQueryRequest non corretto");
+}
 ##############################################################################
 
 ##### PARAMETRI DA RICAVARE DALL'ebXML DI QUERY
@@ -33,15 +48,11 @@ $SQLQuery_AdhocQuery = $SQLQuery_AdhocQuery_node_array[0];
 $AdhocQuery=$SQLQuery_AdhocQuery->get_attribute("id");
 
 
-$fp_Slot_val = fopen($tmpQueryService_path.$idfile."-Slot-".$idfile,"a+");
+$fp_Slot_val = fopen($tmpQueryService_path.$idfile."-Request-".$idfile,"a+");
  
 
 
 $SQLQuery_Slot_node_array = $root->get_elements_by_tagname("Slot");
-
-$fp_Slot = fopen($tmpQueryService_path.$idfile."-contaSlot-".$idfile,"a+");
-	fwrite($fp_Slot,count($SQLQuery_Slot_node_array));
-fclose($fp_Slot);
 
 # Conto quanti slot ci sono
 for($h = 0;$h < count($SQLQuery_Slot_node_array);$h++)
@@ -92,7 +103,9 @@ for($h = 0;$h < count($SQLQuery_Slot_node_array);$h++)
 	}
 
 	fwrite($fp_Slot_val,$Value[$h][0]);
+	fwrite($fp_Slot_val,"\n\r");
 	fwrite($fp_Slot_val,$Value[$h][1]);
+	fwrite($fp_Slot_val,"\n\r");
 
 }
 
@@ -506,11 +519,11 @@ switch ($AdhocQuery) {
     case "urn:uuid:5737b14c-8a1a-4539-b659-e03a34a5e1e4":
         $AdhocQuery_case="GetFolders";
 	if (strpos(strtoupper($Value[0][0]),"XDSFOLDERENTRYUUID")){
-	$SQLStoredQuery[0] = "SELECT fol.id FROM RegistryPackage fol WHERE fol.id = '".trim($Value[0][1])."'";
+	$SQLStoredQuery[0] = "SELECT fol.id FROM RegistryPackage fol WHERE fol.id IN ".trim($Value[0][1]);
 	}
 
 	else if (strpos(strtoupper($Value[0][0]),"XDSFOLDERUNIQUEID")){
-	$SQLStoredQuery[0] = "SELECT fol.id from RegistryPackage fol, ExternalIdentifier uniq WHERE uniq.registryObject = fol.id AND uniq.identificationScheme = 'urn:uuid:75df8f67-9973-4fbe-a900-df66cefecc5a' AND uniq.value = '".trim($Value[0][1])."'";
+	$SQLStoredQuery[0] = "SELECT fol.id from RegistryPackage fol, ExternalIdentifier uniq WHERE uniq.registryObject = fol.id AND uniq.identificationScheme = 'urn:uuid:75df8f67-9973-4fbe-a900-df66cefecc5a' AND uniq.value IN ".trim($Value[0][1]);
 	}
         break;
 

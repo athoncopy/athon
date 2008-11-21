@@ -4,19 +4,22 @@
 # Copyright (C) 2007 - 2010  MARiS Project
 # Dpt. Medical and Diagnostic Sciences, University of Padova - csaccavini@rad.unipd.it
 # This program is distributed under the terms and conditions of the GPL
+
+# Contributor(s):
+# A-thon srl <info@a-thon.it>
+# Alberto Castellini
+
 # See the LICENSE files for details
 # ------------------------------------------------------------------------------------
 
 writeSQLQuery('-------------------------------------------------------------------------------------');
 writeSQLQuery('Association_2');
 ##### METODO PRINCIPALE
-function fill_Association_tables($dom,$RegistryPackage_id_array,$ExtrinsicObject_id_array,$connessione)
+function fill_Association_tables($dom,$RegistryPackage_id_array,$ExtrinsicObject_id_array,$simbolic_RegistryPackage_FOL_id_array,$connessione)
 {
 //$log = new Log_REG("REG");
 //$log = new Log_REG();
 //$log->set_tmp_path("./tmp/");
-
-
 
 	writeTimeFile("Registry: sono entrato in fill_Association_tables");
 	##### RADICE DEL DOCUMENTO ebXML
@@ -51,6 +54,7 @@ function fill_Association_tables($dom,$RegistryPackage_id_array,$ExtrinsicObject
 			{
 				$value_id = "urn:uuid:".idrandom();
 			}
+		 
 			#### PARENT
 			$value_parent=$value_id;
 
@@ -70,7 +74,7 @@ function fill_Association_tables($dom,$RegistryPackage_id_array,$ExtrinsicObject
 				$value_associationType = "NOT DECLARED";
 			}
 			$value_sourceObject= $association_node->get_attribute('sourceObject');
-			writeSQLQuery('Valore fuori dall if '.$value_sourceObject);
+			//writeSQLQuery('Valore fuori dall if '.$value_sourceObject);
 			if(isSimbolic($value_sourceObject))
 			{
 				$value_sourceObject_1=$ExtrinsicObject_id_array[$value_sourceObject];
@@ -82,9 +86,10 @@ function fill_Association_tables($dom,$RegistryPackage_id_array,$ExtrinsicObject
 				else{
 				        $value_sourceObject=$value_sourceObject_2;
 			    	     }
-				writeSQLQuery('Valore dentro all if '.$value_sourceObject);
+				//writeSQLQuery('Valore dentro all if '.$value_sourceObject);
 			}//END OF if(isSimbolic($value_sourceObject))
 			$value_targetObject= $association_node->get_attribute('targetObject');
+			$simbolic_value_targetObject= $association_node->get_attribute('targetObject');
 			if(isSimbolic($value_targetObject))
 			{
 				$value_targetObject_1=$ExtrinsicObject_id_array[$value_targetObject];
@@ -116,14 +121,11 @@ function fill_Association_tables($dom,$RegistryPackage_id_array,$ExtrinsicObject
 			$DB_array_association_attributes['targetObject'] = $value_targetObject;
 			$DB_array_association_attributes['isConfirmedBySourceOwner'] = $value_isConfirmedBySourceOwner;
 			$DB_array_association_attributes['isConfirmedByTargetOwner'] = $value_isConfirmedByTargetOwner;
-
+			
+			$Association_folder=in_array($simbolic_value_targetObject,$simbolic_RegistryPackage_FOL_id_array);
+			if(!$Association_folder){
 			####### QUI ORA POSSO RIEMPIRE IL DB
 			$INSERT_INTO_Association = "INSERT INTO Association (id,accessControlPolicy,objectType,associationType,sourceObject,targetObject,isConfirmedBySourceOwner,isConfirmedByTargetOwner) VALUES ('".$DB_array_association_attributes['id']."','".$DB_array_association_attributes['accessControlPolicy']."','".$DB_array_association_attributes['objectType']."','".$DB_array_association_attributes['associationType']."','".$DB_array_association_attributes['sourceObject']."','".$DB_array_association_attributes['targetObject']."','".$DB_array_association_attributes['isConfirmedBySourceOwner']."','".$DB_array_association_attributes['isConfirmedByTargetOwner']."')";
-
-
-			//$fp = fopen("tmpQuery/INSERT_INTO_Association","w+");
-    			//fwrite($fp,$INSERT_INTO_Association);
-			//fclose($fp);
 
 
 			$ris = query_exec2($INSERT_INTO_Association,$connessione);
@@ -203,6 +205,12 @@ function fill_Association_tables($dom,$RegistryPackage_id_array,$ExtrinsicObject
 
 			}//END OF if(!empty($association_child_nodes))
 
+
+			} //Fine if(!$Association_folder)
+
+			else {
+
+			}
 		########### CASI DI REPLACEMENT + ADDENDUM + TRANSFORMATION
 		##### CASO RPLC Accept Document Replace
 		if($value_associationType=="RPLC")
@@ -218,10 +226,6 @@ function fill_Association_tables($dom,$RegistryPackage_id_array,$ExtrinsicObject
 		if($value_associationType=="XFRM_RPLC")
 		{
 		    $query_UPDATE_targetObject="UPDATE ExtrinsicObject SET status = 'Deprecated' WHERE ExtrinsicObject.id = '$value_targetObject'";
-
-		    //$fp_query_UPDATE_targetObject=fopen("tmp/query_XFRM_RPLC_targetObject","w+");
-		    //fwrite($fp_query_UPDATE_targetObject,$query_UPDATE_targetObject);
-		    //fclose($fp_query_UPDATE_targetObject);
 
 		    $ex = query_exec2($query_UPDATE_targetObject,$connessione);
 			writeSQLQuery($ex.": ".$query_UPDATE_targetObject);
