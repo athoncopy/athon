@@ -1,4 +1,5 @@
 <?php
+
 # ------------------------------------------------------------------------------------
 # MARIS XDS REGISTRY
 # Copyright (C) 2007 - 2010  MARiS Project
@@ -65,9 +66,10 @@ if(!is_dir($tmpQueryService_path)){
 		$folder_response = makeSoapedFailureResponse($error_message,$errorcode);
 		writeTimeFile($_SESSION['idfile']."--Registry: Folder error");
 		
-		$file_input=$idfile."-folder_failure_response-".$idfile;
-		writeTmpQueryFiles($folder_response,$file_input);
-		SendResponse($folder_response);
+		$file_input=$idfile."-folder_failure_response.xml";
+		writeTmpQueryFiles($folder_response,$file_input,true);
+		SendResponseFile($_SESSION['tmpQueryService_path'].$file_input);
+		//SendResponse($folder_response);
 		exit;
 	
 	}
@@ -203,10 +205,10 @@ if(empty($SQLResponse))
 	### ANCHE SE IL RISULTATO DELLA QUERY DA DB È VUOTO
     	$SOAPED_failure_response = makeSoapedSuccessQueryResponse($failure_response);
 
-	$file_input=$idfile."-SOAPED_NORESULTS_response-".$idfile;
-	writeTmpQueryFiles($SOAPED_failure_response,$file_input);
-
-	SendResponse($SOAPED_failure_response);
+	$file_input=$idfile."-SOAPED_NORESULTS_response.xml";
+	writeTmpQueryFiles($SOAPED_failure_response,$file_input,true);
+	SendResponseFile($_SESSION['tmpQueryService_path'].$file_input);
+	//SendResponse($SOAPED_failure_response);
 	exit;
 
 }//END OF if(empty($SQLResponse))

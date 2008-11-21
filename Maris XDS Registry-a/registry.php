@@ -43,7 +43,18 @@ $_SESSION['logActive']=$logActive;
 $_SESSION['log_path']=$log_path;
 $_SESSION['www_REG_path']=$www_REG_path;
 
-
+if($registry_status=="O") {
+	$errorcode[]="XDSRegistryNotAvailable";
+	$error_message[] = "Registry is down for maintenance";
+	$folder_response = makeSoapedFailureResponse($error_message,$errorcode);
+	writeTimeFile($_SESSION['idfile']."--Registry: Registry is down");
+	
+	$file_input=$idfile."-down_failure_response.xml";
+	writeTmpFiles($folder_response,$file_input,true);
+	SendResponseFile($tmp_path.$file_input);
+	//SendResponse($folder_response);
+	exit;
+}
 
 // Creo la cartella per i file temporanei
 if(!is_dir($tmp_path)){
@@ -70,10 +81,10 @@ if(!is_dir($tmp_path)){
 		$folder_response = makeSoapedFailureResponse($error_message,$errorcode);
 		writeTimeFile($_SESSION['idfile']."--Registry: Folder error");
 		
-		$file_input=$idfile."-folder_failure_response-".$idfile;
-		writeTmpFiles($folder_response,$file_input);
-		//SendResponse($tmp_path.$file_input);
-		SendResponse($folder_response);
+		$file_input=$idfile."-folder_failure_response.xml";
+		writeTmpFiles($folder_response,$file_input,true);
+		SendResponseFile($tmp_path.$file_input);
+		//SendResponse($folder_response);
 		exit;
 	
 	}
@@ -103,10 +114,10 @@ if(stripos($headers["Content-Type"],"boundary")){
 	//PASSO A DECODARE IL FILE CREATO
 	$input = $HTTP_RAW_POST_DATA;
 
-	if (preg_match('([^\t\n\r\f\v";][:]*+ENVELOPE)',strtoupper($input))) {
+	if (preg_match('([^\t\n\r\f\v";:][:]*+ENVELOPE)',strtoupper($input))) {
 		writeTimeFile($idfile."--Registry: Ho trovato SOAPENV:ENVELOPE");
 
-		preg_match('(<([^\t\n\r\f\v";<]+:)?(ENVELOPE))',strtoupper($input),$matches);
+		preg_match('(<([^\t\n\r\f\v";<:]+:)?(ENVELOPE))',strtoupper($input),$matches);
 
 		$presoap=$matches[1];
 		writeTimeFile($idfile."--Registry: Ho trovato $presoap");
@@ -156,14 +167,13 @@ for($i = 0;$i<count($dom_SOAP_ebXML_node_array);$i++)
 }
 //SCRIVO L'ebXML SBUSTATO
 if($clean_cache!="O"){
-writeTmpFiles($ebxml_STRING,$idfile."-ebxml-".$idfile);
+writeTmpFiles($ebxml_STRING,$idfile."-ebxml-".$idfile.".xml");
 }
 //SCRIVO L'ebXML DA VALIDARE (urn:uuid: ---> urn-uuid-)
 $ebxml_STRING_VALIDATION = adjustURN_UUIDs($ebxml_STRING);
 
 if($clean_cache!="O"){
-writeTmpFiles($ebxml_STRING_VALIDATION,$idfile."-ebxml_for_validation-".$idfile);
-}
+writeTmpFiles($ebxml_STRING_VALIDATION,$idfile."-ebxml_for_validation-".$idfile);}
 
 $schema='schemas/rs.xsd';
 $isValid = isValid($ebxml_STRING_VALIDATION,$schema);
@@ -301,8 +311,6 @@ writeTimeFile($idfile."--Registry: CONFRONTO XDSDocumentEntry.patientId vs XDSSu
 // se $isAddAllowed_array[0] è falso dà errore
 $isAddAllowed_array = verifyAddDocToFolder($dom_ebXML,$XDSDocumentEntryPatientId_arr,$connessione);
 
-/*$bool_array=array(!$Replacement_valid_array[0],!$Replacement_valid_array[2],!$Replacement_valid_array[4],$conf_PatientIds_arr[0],$DocumentEntryPatientId_valid_array[0],!$DocumentEntryUniqueId_valid_array[0],$SubmissionSetPatientId_valid_array[0],!$SubmissionSetUniqueId_valid_array[0],!$FolderUniqueId_valid_array[0],$ExtrinsicObject_mimeType_array[0],$FolderPatientId_valid_array[0],!$FolderPatientId_valid_array[2],!$FolderPatientId_valid_array[4],!$isAddAllowed_array[0],!$isAddAllowed_array[2],!$hsu[0],!$hsu[2],!$hsu[4]);*/
-
 $error_code_array=array_merge($ExtrinsicObject_mimeType_array[2],$DocumentEntryPatientId_valid_array[4],$DocumentEntryUniqueId_valid_array[4],$Replacement_valid_array[2],$Append_valid_array[2],$SubmissionSetPatientId_valid_array[3],$SubmissionSetUniqueId_valid_array[2],$FolderUniqueId_valid_array[3],$hsu[2],$FolderPatientId_valid_array[2],$conf_PatientIds_arr[2],$isAddAllowed_array[2]);
 
 
@@ -322,10 +330,11 @@ if($ExtrinsicObject_mimeType_array[0] || $DocumentEntryPatientId_valid_array[0] 
     	$SOAPED_failure_response = makeSoapedFailureResponse($failure_response_array,$error_code_array);
 
 	### SCRIVO LA RISPOSTA IN UN FILE
-	$file_input=$idfile."-SOAPED_failure_response-".$idfile;
-	writeTmpFiles($SOAPED_failure_response,$file_input);
-	
-	SendResponse($SOAPED_failure_response);
+	$file_input=$idfile."-SOAPED_failure_response.xml";
+	writeTmpFiles($SOAPED_failure_response,$file_input,true);
+
+	SendResponseFile($tmp_path.$file_input);
+	//SendResponse($SOAPED_failure_response);
 	exit;
 
 	
@@ -434,7 +443,7 @@ if($file = fopen($tmp_path.$idfile."-registry_response.xml",'rb'))
    while((!feof($file)) && (connection_status()==0))
    {
       	print(fread($file, 1024*8));
-      	flush();//NOTA BENE!!!!!!!!!
+      	//flush();//NOTA BENE!!!!!!!!!
    }
 
    fclose($file);
@@ -589,6 +598,8 @@ unset($_SESSION['tmp_path']);
 unset($_SESSION['idfile']);
 unset($_SESSION['logActive']);
 unset($_SESSION['log_path']);
+unset($_SESSION['tmpQueryService_path']);
+unset($_SESSION['www_REG_path']);
 
 // Clean tmp folder
 $system=PHP_OS;

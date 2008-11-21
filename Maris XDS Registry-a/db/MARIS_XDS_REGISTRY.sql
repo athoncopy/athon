@@ -1,23 +1,23 @@
 -- phpMyAdmin SQL Dump
--- version 2.10.3deb1
+-- version 2.11.3deb1ubuntu1.1
 -- http://www.phpmyadmin.net
--- 
+--
 -- Host: localhost
--- Generato il: 21 Nov, 2007 at 11:51 AM
--- Versione MySQL: 5.0.45
--- Versione PHP: 5.2.3-1ubuntu6
+-- Generato il: 28 Ott, 2008 at 10:46 AM
+-- Versione MySQL: 5.0.51
+-- Versione PHP: 5.2.4-2ubuntu5.3
 
 SET SQL_MODE="NO_AUTO_VALUE_ON_ZERO";
 
--- 
+--
 -- Database: `MARIS_XDS_REGISTRY`
--- 
+--
 
 -- --------------------------------------------------------
 
--- 
+--
 -- Struttura della tabella `Association`
--- 
+--
 
 CREATE TABLE IF NOT EXISTS `Association` (
   `key_prog` bigint(20) NOT NULL auto_increment,
@@ -34,16 +34,16 @@ CREATE TABLE IF NOT EXISTS `Association` (
   KEY `sourceObject` (`sourceObject`)
 ) ENGINE=MyISAM DEFAULT CHARSET=latin1 AUTO_INCREMENT=1 ;
 
--- 
+--
 -- Dump dei dati per la tabella `Association`
--- 
+--
 
 
 -- --------------------------------------------------------
 
--- 
+--
 -- Struttura della tabella `ATNA`
--- 
+--
 
 CREATE TABLE IF NOT EXISTS `ATNA` (
   `ID` int(11) NOT NULL auto_increment,
@@ -55,18 +55,18 @@ CREATE TABLE IF NOT EXISTS `ATNA` (
   KEY `ACTIVE` (`ACTIVE`)
 ) ENGINE=MyISAM  DEFAULT CHARSET=latin1 AUTO_INCREMENT=2 ;
 
--- 
+--
 -- Dump dei dati per la tabella `ATNA`
--- 
+--
 
-INSERT INTO `ATNA` (`ID`, `host`, `port`, `ACTIVE`, `DESCRIPTION`) VALUES 
+INSERT INTO `ATNA` (`ID`, `host`, `port`, `ACTIVE`, `DESCRIPTION`) VALUES
 (1, '172.18.8.67', '4000', 'O', 'ATNA REGISTRY');
 
 -- --------------------------------------------------------
 
--- 
+--
 -- Struttura della tabella `AuditableEvent`
--- 
+--
 
 CREATE TABLE IF NOT EXISTS `AuditableEvent` (
   `id` int(64) NOT NULL auto_increment,
@@ -78,16 +78,16 @@ CREATE TABLE IF NOT EXISTS `AuditableEvent` (
   PRIMARY KEY  (`id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=latin1 AUTO_INCREMENT=1 ;
 
--- 
+--
 -- Dump dei dati per la tabella `AuditableEvent`
--- 
+--
 
 
 -- --------------------------------------------------------
 
--- 
+--
 -- Struttura della tabella `classCode`
--- 
+--
 
 CREATE TABLE IF NOT EXISTS `classCode` (
   `code` varchar(255) NOT NULL default '',
@@ -95,11 +95,11 @@ CREATE TABLE IF NOT EXISTS `classCode` (
   `codingScheme` varchar(255) NOT NULL default ''
 ) ENGINE=MyISAM DEFAULT CHARSET=latin1;
 
--- 
+--
 -- Dump dei dati per la tabella `classCode`
--- 
+--
 
-INSERT INTO `classCode` (`code`, `display`, `codingScheme`) VALUES 
+INSERT INTO `classCode` (`code`, `display`, `codingScheme`) VALUES
 ('Communication', 'Communication', 'Connect-a-thon classCodes'),
 ('Evaluation and management', 'Evaluation and management', 'Connect-a-thon classCodes'),
 ('Conference', 'Conference', 'Connect-a-thon classCodes'),
@@ -131,9 +131,9 @@ INSERT INTO `classCode` (`code`, `display`, `codingScheme`) VALUES
 
 -- --------------------------------------------------------
 
--- 
+--
 -- Struttura della tabella `Classification`
--- 
+--
 
 CREATE TABLE IF NOT EXISTS `Classification` (
   `key_prog` bigint(20) NOT NULL auto_increment,
@@ -143,21 +143,21 @@ CREATE TABLE IF NOT EXISTS `Classification` (
   `classificationNode` varchar(64) default NULL,
   `classificationScheme` varchar(128) default NULL,
   `classifiedObject` varchar(128) NOT NULL default '',
-  `nodeRepresentation` varchar(128) NOT NULL default 'Radiology',
+  `nodeRepresentation` varchar(128) default NULL,
   PRIMARY KEY  (`key_prog`),
   KEY `classifiedObject` (`classifiedObject`,`nodeRepresentation`)
 ) ENGINE=MyISAM DEFAULT CHARSET=latin1 AUTO_INCREMENT=1 ;
 
--- 
+--
 -- Dump dei dati per la tabella `Classification`
--- 
+--
 
 
 -- --------------------------------------------------------
 
--- 
+--
 -- Struttura della tabella `ClassificationNode`
--- 
+--
 
 CREATE TABLE IF NOT EXISTS `ClassificationNode` (
   `accessControlPolicy` varchar(64) default NULL,
@@ -170,11 +170,11 @@ CREATE TABLE IF NOT EXISTS `ClassificationNode` (
   PRIMARY KEY  (`id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=latin1;
 
--- 
+--
 -- Dump dei dati per la tabella `ClassificationNode`
--- 
+--
 
-INSERT INTO `ClassificationNode` (`accessControlPolicy`, `id`, `objectType`, `code`, `parent`, `path`, `Name_value`) VALUES 
+INSERT INTO `ClassificationNode` (`accessControlPolicy`, `id`, `objectType`, `code`, `parent`, `path`, `Name_value`) VALUES
 (NULL, 'urn:uuid:415715f1-fc0b-47c4-90e5-c180b7b82db6', 'ClassificationNode', 'XDS', 'urn:uuid:3188a449-18ac-41fb-be9f-99a1adca02cb', '/urn:uuid:3188a449-18ac-41fb-be9f-99a1adca02cb/XDS', 'XDS object type'),
 (NULL, 'urn:uuid:7edca82f-054d-47f2-a032-9b2a5b5186c1', 'ClassificationNode', 'XDSDocumentEntry', 'urn:uuid:415715f1-fc0b-47c4-90e5-c180b7b82db6', '/urn:uuid:3188a449-18ac-41fb-be9f-99a1adca02cb/XDS/XDSDocumentEntry', 'XDSDocumentEntry'),
 (NULL, 'urn:uuid:a54d6aa5-d40d-43f9-88c5-b4633d873bdd', 'ClassificationNode', 'XDSSubmissionSet', 'urn:uuid:415715f1-fc0b-47c4-90e5-c180b7b82db6', '/urn:uuid:3188a449-18ac-41fb-be9f-99a1adca02cb/XDS/XDSSubmissionSet', 'XDSSubmissionSet'),
@@ -189,9 +189,9 @@ INSERT INTO `ClassificationNode` (`accessControlPolicy`, `id`, `objectType`, `co
 
 -- --------------------------------------------------------
 
--- 
+--
 -- Struttura della tabella `ClassificationScheme`
--- 
+--
 
 CREATE TABLE IF NOT EXISTS `ClassificationScheme` (
   `accessControlPolicy` varchar(64) default NULL,
@@ -211,11 +211,11 @@ CREATE TABLE IF NOT EXISTS `ClassificationScheme` (
   KEY `Name_value` (`Name_value`)
 ) ENGINE=MyISAM DEFAULT CHARSET=latin1;
 
--- 
+--
 -- Dump dei dati per la tabella `ClassificationScheme`
--- 
+--
 
-INSERT INTO `ClassificationScheme` (`accessControlPolicy`, `id`, `objectType`, `expiration`, `majorVersion`, `minorVersion`, `stability`, `status`, `userVersion`, `isInternal`, `nodeType`, `Name_value`, `Description_value`) VALUES 
+INSERT INTO `ClassificationScheme` (`accessControlPolicy`, `id`, `objectType`, `expiration`, `majorVersion`, `minorVersion`, `stability`, `status`, `userVersion`, `isInternal`, `nodeType`, `Name_value`, `Description_value`) VALUES
 (NULL, 'urn:uuid:554ac39e-e3fe-47fe-b233-965d2a147832', 'ClassificationScheme', '2007-05-15 14:38:58', 1, 0, NULL, '', NULL, 1, 'EmbeddedPath', 'XDSSubmissionSet.sourceId', ''),
 (NULL, 'urn:uuid:6b5aea1a-874d-4603-a4bc-96a0a7b38446', 'ClassificationScheme', '2007-05-15 14:38:58', 1, 0, NULL, '', NULL, 1, 'EmbeddedPath', 'XDSSubmissionSet.patientId', ''),
 (NULL, 'urn:uuid:58a6f841-87b3-4a3e-92fd-a8ffeff98427', 'ClassificationScheme', '2007-05-15 14:38:58', 1, 0, NULL, '', NULL, 1, 'EmbeddedPath', 'XDSDocumentEntry.patientId', ''),
@@ -237,9 +237,9 @@ INSERT INTO `ClassificationScheme` (`accessControlPolicy`, `id`, `objectType`, `
 
 -- --------------------------------------------------------
 
--- 
+--
 -- Struttura della tabella `classScheme`
--- 
+--
 
 CREATE TABLE IF NOT EXISTS `classScheme` (
   `class_Scheme` varchar(255) NOT NULL default '',
@@ -248,11 +248,11 @@ CREATE TABLE IF NOT EXISTS `classScheme` (
   KEY `name` (`name`)
 ) ENGINE=MyISAM DEFAULT CHARSET=latin1;
 
--- 
+--
 -- Dump dei dati per la tabella `classScheme`
--- 
+--
 
-INSERT INTO `classScheme` (`class_Scheme`, `name`) VALUES 
+INSERT INTO `classScheme` (`class_Scheme`, `name`) VALUES
 ('urn:uuid:aa543740-bdda-424e-8c96-df4873be8500', 'contentTypeCode'),
 ('urn:uuid:41a5887f-8865-4c09-adf7-e362475b143a', 'classCode'),
 ('urn:uuid:f4f85eac-e6cb-4883-b524-f2705394840f', 'confidentialityCode'),
@@ -265,9 +265,9 @@ INSERT INTO `classScheme` (`class_Scheme`, `name`) VALUES
 
 -- --------------------------------------------------------
 
--- 
+--
 -- Struttura della tabella `codeList`
--- 
+--
 
 CREATE TABLE IF NOT EXISTS `codeList` (
   `code` varchar(255) NOT NULL default '',
@@ -275,11 +275,11 @@ CREATE TABLE IF NOT EXISTS `codeList` (
   `codingScheme` varchar(255) NOT NULL default ''
 ) ENGINE=MyISAM DEFAULT CHARSET=latin1;
 
--- 
+--
 -- Dump dei dati per la tabella `codeList`
--- 
+--
 
-INSERT INTO `codeList` (`code`, `display`, `codingScheme`) VALUES 
+INSERT INTO `codeList` (`code`, `display`, `codingScheme`) VALUES
 ('Anesthesia', 'Anesthesia', 'Connect-a-thon codeList'),
 ('Cardiology', 'Cardiology', 'Connect-a-thon codeList'),
 ('Case Manager', 'Case Manager', 'Connect-a-thon codeList'),
@@ -327,9 +327,9 @@ INSERT INTO `codeList` (`code`, `display`, `codingScheme`) VALUES
 
 -- --------------------------------------------------------
 
--- 
+--
 -- Struttura della tabella `confidentialityCode`
--- 
+--
 
 CREATE TABLE IF NOT EXISTS `confidentialityCode` (
   `code` varchar(255) NOT NULL default '',
@@ -337,11 +337,11 @@ CREATE TABLE IF NOT EXISTS `confidentialityCode` (
   `codingScheme` varchar(255) NOT NULL default ''
 ) ENGINE=MyISAM DEFAULT CHARSET=latin1;
 
--- 
+--
 -- Dump dei dati per la tabella `confidentialityCode`
--- 
+--
 
-INSERT INTO `confidentialityCode` (`code`, `display`, `codingScheme`) VALUES 
+INSERT INTO `confidentialityCode` (`code`, `display`, `codingScheme`) VALUES
 ('C', 'Celebrity', 'Connect-a-thon confidentialityCodes'),
 ('D', 'Clinician', 'Connect-a-thon confidentialityCodes'),
 ('I', 'Individual', 'Connect-a-thon confidentialityCodes'),
@@ -352,30 +352,54 @@ INSERT INTO `confidentialityCode` (`code`, `display`, `codingScheme`) VALUES
 
 -- --------------------------------------------------------
 
--- 
--- Struttura della tabella `CONFIG`
--- 
 
-CREATE TABLE IF NOT EXISTS `CONFIG` (
-  `WWW` varchar(100) NOT NULL default '',
+--
+-- Struttura della tabella `CONFIG_A`
+--
+
+CREATE TABLE IF NOT EXISTS `CONFIG_A` (
   `CACHE` char(1) NOT NULL default '',
   `PATIENTID` char(1) NOT NULL default '',
   `LOG` char(1) NOT NULL,
-  `JAVA_PATH` varchar(255) NOT NULL
+  `STAT` char(1) NOT NULL,
+  `FOLDER` char(1) NOT NULL,
+  `STATUS` char(1) NOT NULL default 'A'
 ) ENGINE=MyISAM DEFAULT CHARSET=latin1;
 
--- 
--- Dump dei dati per la tabella `CONFIG`
--- 
+--
+-- Dump dei dati per la tabella `CONFIG_A`
+--
 
-INSERT INTO `CONFIG` (`WWW`, `CACHE`, `PATIENTID`, `LOG`, `JAVA_PATH`) VALUES 
-('/MARIS_XDS/registry-a/', 'H', 'O', 'A', '');
+INSERT INTO `CONFIG_A` (`CACHE`, `PATIENTID`, `LOG`, `STAT`, `FOLDER`, `STATUS`) VALUES
+('H', 'O', 'O', 'A', 'O', 'A');
 
 -- --------------------------------------------------------
 
--- 
+
+
+--
+-- Struttura della tabella `CONFIG_B`
+--
+
+CREATE TABLE IF NOT EXISTS `CONFIG_B` (
+  `CACHE` char(1) NOT NULL default '',
+  `PATIENTID` char(1) NOT NULL default '',
+  `LOG` char(1) NOT NULL,
+  `STAT` char(1) NOT NULL,
+  `FOLDER` char(1) NOT NULL,
+  `STATUS` char(1) NOT NULL default 'A'
+) ENGINE=MyISAM DEFAULT CHARSET=latin1;
+
+--
+-- Dump dei dati per la tabella `CONFIG_B`
+--
+
+INSERT INTO `CONFIG_B` (`CACHE`, `PATIENTID`, `LOG`, `STAT`, `FOLDER`, `STATUS`) VALUES
+('H', 'O', 'O', 'A', 'O', 'A');
+
+--
 -- Struttura della tabella `contentTypeCode`
--- 
+--
 
 CREATE TABLE IF NOT EXISTS `contentTypeCode` (
   `code` varchar(255) NOT NULL default '',
@@ -383,11 +407,11 @@ CREATE TABLE IF NOT EXISTS `contentTypeCode` (
   `codingScheme` varchar(255) NOT NULL default ''
 ) ENGINE=MyISAM DEFAULT CHARSET=latin1;
 
--- 
+--
 -- Dump dei dati per la tabella `contentTypeCode`
--- 
+--
 
-INSERT INTO `contentTypeCode` (`code`, `display`, `codingScheme`) VALUES 
+INSERT INTO `contentTypeCode` (`code`, `display`, `codingScheme`) VALUES
 ('Communication', 'Communication', 'Connect-a-thon contentTypeCodes'),
 ('Evaluation and management', 'Evaluation and management', 'Connect-a-thon contentTypeCodes'),
 ('Conference', 'Conference', 'Connect-a-thon contentTypeCodes'),
@@ -419,26 +443,26 @@ INSERT INTO `contentTypeCode` (`code`, `display`, `codingScheme`) VALUES
 
 -- --------------------------------------------------------
 
--- 
+--
 -- Struttura della tabella `Counters`
--- 
+--
 
 CREATE TABLE IF NOT EXISTS `Counters` (
   `id` bigint(255) NOT NULL default '0'
 ) ENGINE=MyISAM DEFAULT CHARSET=latin1;
 
--- 
+--
 -- Dump dei dati per la tabella `Counters`
--- 
+--
 
-INSERT INTO `Counters` (`id`) VALUES 
+INSERT INTO `Counters` (`id`) VALUES
 (0);
 
 -- --------------------------------------------------------
 
--- 
+--
 -- Struttura della tabella `Description`
--- 
+--
 
 CREATE TABLE IF NOT EXISTS `Description` (
   `key_prog` bigint(20) NOT NULL auto_increment,
@@ -450,16 +474,16 @@ CREATE TABLE IF NOT EXISTS `Description` (
   KEY `parent` (`parent`)
 ) ENGINE=MyISAM DEFAULT CHARSET=latin1 AUTO_INCREMENT=1 ;
 
--- 
+--
 -- Dump dei dati per la tabella `Description`
--- 
+--
 
 
 -- --------------------------------------------------------
 
--- 
+--
 -- Struttura della tabella `EmailAddress`
--- 
+--
 
 CREATE TABLE IF NOT EXISTS `EmailAddress` (
   `address` varchar(64) NOT NULL default '',
@@ -467,16 +491,16 @@ CREATE TABLE IF NOT EXISTS `EmailAddress` (
   `parent` varchar(64) NOT NULL default ''
 ) ENGINE=MyISAM DEFAULT CHARSET=latin1;
 
--- 
+--
 -- Dump dei dati per la tabella `EmailAddress`
--- 
+--
 
 
 -- --------------------------------------------------------
 
--- 
+--
 -- Struttura della tabella `ExternalIdentifier`
--- 
+--
 
 CREATE TABLE IF NOT EXISTS `ExternalIdentifier` (
   `key_prog` bigint(20) NOT NULL auto_increment,
@@ -491,16 +515,16 @@ CREATE TABLE IF NOT EXISTS `ExternalIdentifier` (
   KEY `registryObject` (`registryObject`)
 ) ENGINE=MyISAM DEFAULT CHARSET=latin1 AUTO_INCREMENT=1 ;
 
--- 
+--
 -- Dump dei dati per la tabella `ExternalIdentifier`
--- 
+--
 
 
 -- --------------------------------------------------------
 
--- 
+--
 -- Struttura della tabella `ExternalLink`
--- 
+--
 
 CREATE TABLE IF NOT EXISTS `ExternalLink` (
   `accessControlPolicy` varchar(64) default NULL,
@@ -510,16 +534,16 @@ CREATE TABLE IF NOT EXISTS `ExternalLink` (
   PRIMARY KEY  (`id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=latin1;
 
--- 
+--
 -- Dump dei dati per la tabella `ExternalLink`
--- 
+--
 
 
 -- --------------------------------------------------------
 
--- 
+--
 -- Struttura della tabella `ExtrinsicObject`
--- 
+--
 
 CREATE TABLE IF NOT EXISTS `ExtrinsicObject` (
   `key_prog` bigint(20) NOT NULL auto_increment,
@@ -538,16 +562,16 @@ CREATE TABLE IF NOT EXISTS `ExtrinsicObject` (
   KEY `id` (`id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=latin1 AUTO_INCREMENT=1 ;
 
--- 
+--
 -- Dump dei dati per la tabella `ExtrinsicObject`
--- 
+--
 
 
 -- --------------------------------------------------------
 
--- 
+--
 -- Struttura della tabella `formatCode`
--- 
+--
 
 CREATE TABLE IF NOT EXISTS `formatCode` (
   `code` varchar(255) NOT NULL default '',
@@ -555,11 +579,11 @@ CREATE TABLE IF NOT EXISTS `formatCode` (
   `codingScheme` varchar(255) NOT NULL default ''
 ) ENGINE=MyISAM DEFAULT CHARSET=latin1;
 
--- 
+--
 -- Dump dei dati per la tabella `formatCode`
--- 
+--
 
-INSERT INTO `formatCode` (`code`, `display`, `codingScheme`) VALUES 
+INSERT INTO `formatCode` (`code`, `display`, `codingScheme`) VALUES
 ('PDF/IHE 1.x', 'PDF/IHE 1.x', 'Connect-a-thon formatCodes'),
 ('CDA/IHE 1.0', 'CDA/IHE 1.0', 'Connect-a-thon formatCodes'),
 ('CDAR2/IHE 1.0', 'CDAR2/IHE 1.0', 'Connect-a-thon formatCodes'),
@@ -571,9 +595,9 @@ INSERT INTO `formatCode` (`code`, `display`, `codingScheme`) VALUES
 
 -- --------------------------------------------------------
 
--- 
+--
 -- Struttura della tabella `healthcareFacilityTypeCode`
--- 
+--
 
 CREATE TABLE IF NOT EXISTS `healthcareFacilityTypeCode` (
   `code` varchar(255) NOT NULL default '',
@@ -581,11 +605,11 @@ CREATE TABLE IF NOT EXISTS `healthcareFacilityTypeCode` (
   `codingScheme` varchar(255) NOT NULL default ''
 ) ENGINE=MyISAM DEFAULT CHARSET=latin1;
 
--- 
+--
 -- Dump dei dati per la tabella `healthcareFacilityTypeCode`
--- 
+--
 
-INSERT INTO `healthcareFacilityTypeCode` (`code`, `display`, `codingScheme`) VALUES 
+INSERT INTO `healthcareFacilityTypeCode` (`code`, `display`, `codingScheme`) VALUES
 ('Home', 'Home', 'Connect-a-thon healthcareFacilityTypeCodes'),
 ('Assisted Living', 'Assisted Living', 'Connect-a-thon healthcareFacilityTypeCodes'),
 ('Home Health Care', 'Home Health Care', 'Connect-a-thon healthcareFacilityTypeCodes'),
@@ -602,9 +626,9 @@ INSERT INTO `healthcareFacilityTypeCode` (`code`, `display`, `codingScheme`) VAL
 
 -- --------------------------------------------------------
 
--- 
+--
 -- Struttura della tabella `HL7_MESSAGES`
--- 
+--
 
 CREATE TABLE IF NOT EXISTS `HL7_MESSAGES` (
   `IDMESSAGE` bigint(20) NOT NULL auto_increment,
@@ -616,16 +640,16 @@ CREATE TABLE IF NOT EXISTS `HL7_MESSAGES` (
   PRIMARY KEY  (`IDMESSAGE`)
 ) ENGINE=MyISAM DEFAULT CHARSET=latin1 AUTO_INCREMENT=1 ;
 
--- 
+--
 -- Dump dei dati per la tabella `HL7_MESSAGES`
--- 
+--
 
 
 -- --------------------------------------------------------
 
--- 
+--
 -- Struttura della tabella `HTTP`
--- 
+--
 
 CREATE TABLE IF NOT EXISTS `HTTP` (
   `HTTPD` varchar(20) NOT NULL default '',
@@ -633,32 +657,33 @@ CREATE TABLE IF NOT EXISTS `HTTP` (
   KEY `ACTIVE` (`ACTIVE`)
 ) ENGINE=MyISAM DEFAULT CHARSET=latin1;
 
--- 
+--
 -- Dump dei dati per la tabella `HTTP`
--- 
+--
 
-INSERT INTO `HTTP` (`HTTPD`, `ACTIVE`) VALUES 
+INSERT INTO `HTTP` (`HTTPD`, `ACTIVE`) VALUES
 ('NORMAL', 'A');
 
 -- --------------------------------------------------------
 
--- 
+--
 -- Struttura della tabella `mimeType`
--- 
+--
 
 CREATE TABLE IF NOT EXISTS `mimeType` (
   `code` varchar(255) NOT NULL default '',
   KEY `code` (`code`)
 ) ENGINE=MyISAM DEFAULT CHARSET=latin1;
 
--- 
+--
 -- Dump dei dati per la tabella `mimeType`
--- 
+--
 
-INSERT INTO `mimeType` (`code`) VALUES 
+INSERT INTO `mimeType` (`code`) VALUES
 ('application/dicom'),
 ('application/pdf'),
 ('application/x-hl7'),
+('application/x-pkcs7-mime'),
 ('multipart/related'),
 ('text/plain'),
 ('text/x-cda-r2+xml'),
@@ -666,9 +691,9 @@ INSERT INTO `mimeType` (`code`) VALUES
 
 -- --------------------------------------------------------
 
--- 
+--
 -- Struttura della tabella `Name`
--- 
+--
 
 CREATE TABLE IF NOT EXISTS `Name` (
   `key_prog` bigint(20) NOT NULL auto_increment,
@@ -680,16 +705,16 @@ CREATE TABLE IF NOT EXISTS `Name` (
   KEY `parent` (`parent`)
 ) ENGINE=MyISAM DEFAULT CHARSET=latin1 AUTO_INCREMENT=1 ;
 
--- 
+--
 -- Dump dei dati per la tabella `Name`
--- 
+--
 
 
 -- --------------------------------------------------------
 
--- 
+--
 -- Struttura della tabella `NAV`
--- 
+--
 
 CREATE TABLE IF NOT EXISTS `NAV` (
   `NAV` char(1) NOT NULL default '',
@@ -697,18 +722,18 @@ CREATE TABLE IF NOT EXISTS `NAV` (
   `NAV_TO` varchar(100) NOT NULL default ''
 ) ENGINE=MyISAM DEFAULT CHARSET=latin1;
 
--- 
+--
 -- Dump dei dati per la tabella `NAV`
--- 
+--
 
-INSERT INTO `NAV` (`NAV`, `NAV_FROM`, `NAV_TO`) VALUES 
-('O', 'from@dominio.it', 'to@dominio.it');
+INSERT INTO `NAV` (`NAV`, `NAV_FROM`, `NAV_TO`) VALUES
+('O', 'acastellini@rad.unipd.it', 'xds@rad.unipd.it');
 
 -- --------------------------------------------------------
 
--- 
+--
 -- Struttura della tabella `Organization`
--- 
+--
 
 CREATE TABLE IF NOT EXISTS `Organization` (
   `accessControlPolicy` varchar(64) default NULL,
@@ -719,16 +744,16 @@ CREATE TABLE IF NOT EXISTS `Organization` (
   PRIMARY KEY  (`id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=latin1;
 
--- 
+--
 -- Dump dei dati per la tabella `Organization`
--- 
+--
 
 
 -- --------------------------------------------------------
 
--- 
+--
 -- Struttura della tabella `Patient`
--- 
+--
 
 CREATE TABLE IF NOT EXISTS `Patient` (
   `ID` int(11) NOT NULL auto_increment,
@@ -739,14 +764,18 @@ CREATE TABLE IF NOT EXISTS `Patient` (
   PRIMARY KEY  (`ID`),
   KEY `PID3` (`PID3`),
   KEY `PriorPID3` (`PriorPID3`)
-) ENGINE=MyISAM  DEFAULT CHARSET=latin1 AUTO_INCREMENT=19 ;
+) ENGINE=MyISAM DEFAULT CHARSET=latin1 AUTO_INCREMENT=1 ;
+
+--
+-- Dump dei dati per la tabella `Patient`
+--
 
 
 -- --------------------------------------------------------
 
--- 
+--
 -- Struttura della tabella `PostalAddress`
--- 
+--
 
 CREATE TABLE IF NOT EXISTS `PostalAddress` (
   `city` varchar(64) default NULL,
@@ -758,16 +787,16 @@ CREATE TABLE IF NOT EXISTS `PostalAddress` (
   `parent` varchar(64) NOT NULL default ''
 ) ENGINE=MyISAM DEFAULT CHARSET=latin1;
 
--- 
+--
 -- Dump dei dati per la tabella `PostalAddress`
--- 
+--
 
 
 -- --------------------------------------------------------
 
--- 
+--
 -- Struttura della tabella `practiceSettingCode`
--- 
+--
 
 CREATE TABLE IF NOT EXISTS `practiceSettingCode` (
   `code` varchar(255) NOT NULL default '',
@@ -775,11 +804,11 @@ CREATE TABLE IF NOT EXISTS `practiceSettingCode` (
   `codingScheme` varchar(255) NOT NULL default ''
 ) ENGINE=MyISAM DEFAULT CHARSET=latin1;
 
--- 
+--
 -- Dump dei dati per la tabella `practiceSettingCode`
--- 
+--
 
-INSERT INTO `practiceSettingCode` (`code`, `display`, `codingScheme`) VALUES 
+INSERT INTO `practiceSettingCode` (`code`, `display`, `codingScheme`) VALUES
 ('Anesthesia', 'Anesthesia', 'Connect-a-thon practiceSettingCodes'),
 ('Cardiology', 'Cardiology', 'Connect-a-thon practiceSettingCodes'),
 ('Case Manager', 'Case Manager', 'Connect-a-thon practiceSettingCodes'),
@@ -827,35 +856,9 @@ INSERT INTO `practiceSettingCode` (`code`, `display`, `codingScheme`) VALUES
 
 -- --------------------------------------------------------
 
--- 
--- Struttura della tabella `REGISTRY`
--- 
-
-CREATE TABLE IF NOT EXISTS `REGISTRY` (
-  `ID` bigint(30) NOT NULL auto_increment,
-  `host` varchar(255) NOT NULL default '',
-  `port` int(100) NOT NULL default '8090',
-  `SERVICE` varchar(255) NOT NULL default '',
-  `ACTIVE` char(1) NOT NULL default 'A',
-  `HTTP` varchar(30) NOT NULL default 'NORMAL',
-  PRIMARY KEY  (`ID`),
-  KEY `SERVICE` (`SERVICE`,`ACTIVE`),
-  KEY `HTTP` (`HTTP`)
-) ENGINE=MyISAM  DEFAULT CHARSET=latin1 AUTO_INCREMENT=3 ;
-
--- 
--- Dump dei dati per la tabella `REGISTRY`
--- 
-
-INSERT INTO `REGISTRY` (`ID`, `host`, `port`, `SERVICE`, `ACTIVE`, `HTTP`) VALUES 
-(1, '10.135.0.92', 80, 'SUBMISSION', 'A', 'NORMAL'),
-(2, '10.135.0.92', 80, 'QUERY', 'A', 'NORMAL');
-
--- --------------------------------------------------------
-
--- 
+--
 -- Struttura della tabella `RegistryPackage`
--- 
+--
 
 CREATE TABLE IF NOT EXISTS `RegistryPackage` (
   `key_prog` bigint(20) NOT NULL auto_increment,
@@ -872,16 +875,38 @@ CREATE TABLE IF NOT EXISTS `RegistryPackage` (
   KEY `id` (`id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=latin1 AUTO_INCREMENT=1 ;
 
--- 
+--
 -- Dump dei dati per la tabella `RegistryPackage`
--- 
+--
 
 
 -- --------------------------------------------------------
 
--- 
+--
+-- Struttura della tabella `REPOSITORY`
+--
+
+CREATE TABLE IF NOT EXISTS `REPOSITORY` (
+  `REP_HOST` varchar(100) NOT NULL,
+  `REP_UNIQUEID` varchar(100) NOT NULL,
+  PRIMARY KEY  (`REP_HOST`)
+) ENGINE=MyISAM DEFAULT CHARSET=latin1;
+
+--
+-- Dump dei dati per la tabella `REPOSITORY`
+--
+
+INSERT INTO `REPOSITORY` (`REP_HOST`, `REP_UNIQUEID`) VALUES
+('127.0.0.1', '1.3.6.1.4.1.21367.2008.2.5.115'),
+('10.135.0.95', '1.3.6.1.4.1.21367.2008.2.5.115'),
+('localhost', '1.3.6.1.4.1.21367.2008.2.5.115');
+
+
+-- --------------------------------------------------------
+
+--
 -- Struttura della tabella `Service`
--- 
+--
 
 CREATE TABLE IF NOT EXISTS `Service` (
   `accessControlPolicy` varchar(64) default NULL,
@@ -896,16 +921,16 @@ CREATE TABLE IF NOT EXISTS `Service` (
   PRIMARY KEY  (`id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=latin1;
 
--- 
+--
 -- Dump dei dati per la tabella `Service`
--- 
+--
 
 
 -- --------------------------------------------------------
 
--- 
+--
 -- Struttura della tabella `ServiceBinding`
--- 
+--
 
 CREATE TABLE IF NOT EXISTS `ServiceBinding` (
   `accessControlPolicy` varchar(64) default NULL,
@@ -917,16 +942,16 @@ CREATE TABLE IF NOT EXISTS `ServiceBinding` (
   PRIMARY KEY  (`id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=latin1;
 
--- 
+--
 -- Dump dei dati per la tabella `ServiceBinding`
--- 
+--
 
 
 -- --------------------------------------------------------
 
--- 
+--
 -- Struttura della tabella `Slot`
--- 
+--
 
 CREATE TABLE IF NOT EXISTS `Slot` (
   `key_prog` bigint(100) NOT NULL auto_increment,
@@ -939,16 +964,16 @@ CREATE TABLE IF NOT EXISTS `Slot` (
   KEY `value` (`value`)
 ) ENGINE=MyISAM DEFAULT CHARSET=latin1 AUTO_INCREMENT=1 ;
 
--- 
+--
 -- Dump dei dati per la tabella `Slot`
--- 
+--
 
 
 -- --------------------------------------------------------
 
--- 
+--
 -- Struttura della tabella `SpecificationLink`
--- 
+--
 
 CREATE TABLE IF NOT EXISTS `SpecificationLink` (
   `accessControlPolicy` varchar(64) default NULL,
@@ -960,16 +985,36 @@ CREATE TABLE IF NOT EXISTS `SpecificationLink` (
   PRIMARY KEY  (`id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=latin1;
 
--- 
+--
 -- Dump dei dati per la tabella `SpecificationLink`
--- 
+--
 
 
 -- --------------------------------------------------------
 
--- 
+--
+-- Struttura della tabella `STATS`
+--
+
+CREATE TABLE IF NOT EXISTS `STATS` (
+  `ID` int(11) NOT NULL auto_increment,
+  `REPOSITORY` varchar(20) NOT NULL,
+  `DATA` datetime NOT NULL,
+  `EXECUTION_TIME` varchar(20) NOT NULL,
+  `OPERATION` varchar(50) NOT NULL,
+  PRIMARY KEY  (`ID`)
+) ENGINE=MyISAM DEFAULT CHARSET=latin1 AUTO_INCREMENT=1 ;
+
+--
+-- Dump dei dati per la tabella `STATS`
+--
+
+
+-- --------------------------------------------------------
+
+--
 -- Struttura della tabella `TelephoneNumber`
--- 
+--
 
 CREATE TABLE IF NOT EXISTS `TelephoneNumber` (
   `areaCode` varchar(4) default NULL,
@@ -981,16 +1026,16 @@ CREATE TABLE IF NOT EXISTS `TelephoneNumber` (
   `parent` varchar(64) NOT NULL default ''
 ) ENGINE=MyISAM DEFAULT CHARSET=latin1;
 
--- 
+--
 -- Dump dei dati per la tabella `TelephoneNumber`
--- 
+--
 
 
 -- --------------------------------------------------------
 
--- 
+--
 -- Struttura della tabella `typeCode`
--- 
+--
 
 CREATE TABLE IF NOT EXISTS `typeCode` (
   `code` varchar(255) NOT NULL default '',
@@ -998,11 +1043,11 @@ CREATE TABLE IF NOT EXISTS `typeCode` (
   `codingScheme` varchar(255) NOT NULL default ''
 ) ENGINE=MyISAM DEFAULT CHARSET=latin1;
 
--- 
+--
 -- Dump dei dati per la tabella `typeCode`
--- 
+--
 
-INSERT INTO `typeCode` (`code`, `display`, `codingScheme`) VALUES 
+INSERT INTO `typeCode` (`code`, `display`, `codingScheme`) VALUES
 ('34096-8', 'Nursing Home Comprehensive History and Physical Note', 'LOINC'),
 ('34121-4', 'Interventional Procedure Note', 'LOINC'),
 ('18743-5', 'Autopsy Note', 'LOINC'),
@@ -1110,9 +1155,9 @@ INSERT INTO `typeCode` (`code`, `display`, `codingScheme`) VALUES
 
 -- --------------------------------------------------------
 
--- 
+--
 -- Struttura della tabella `UsageDescription`
--- 
+--
 
 CREATE TABLE IF NOT EXISTS `UsageDescription` (
   `charset` varchar(32) default NULL,
@@ -1122,32 +1167,32 @@ CREATE TABLE IF NOT EXISTS `UsageDescription` (
   PRIMARY KEY  (`parent`,`lang`,`value`)
 ) ENGINE=MyISAM DEFAULT CHARSET=latin1;
 
--- 
+--
 -- Dump dei dati per la tabella `UsageDescription`
--- 
+--
 
 
 -- --------------------------------------------------------
 
--- 
+--
 -- Struttura della tabella `UsageParameter`
--- 
+--
 
 CREATE TABLE IF NOT EXISTS `UsageParameter` (
   `value` varchar(255) NOT NULL default '',
   `parent` varchar(64) NOT NULL default ''
 ) ENGINE=MyISAM DEFAULT CHARSET=latin1;
 
--- 
+--
 -- Dump dei dati per la tabella `UsageParameter`
--- 
+--
 
 
 -- --------------------------------------------------------
 
--- 
+--
 -- Struttura della tabella `USERS`
--- 
+--
 
 CREATE TABLE IF NOT EXISTS `USERS` (
   `LOGIN` varchar(30) NOT NULL default '',
@@ -1155,18 +1200,18 @@ CREATE TABLE IF NOT EXISTS `USERS` (
   PRIMARY KEY  (`LOGIN`)
 ) ENGINE=MyISAM DEFAULT CHARSET=latin1;
 
--- 
+--
 -- Dump dei dati per la tabella `USERS`
--- 
+--
 
-INSERT INTO `USERS` (`LOGIN`, `PASSWORD`) VALUES 
+INSERT INTO `USERS` (`LOGIN`, `PASSWORD`) VALUES
 ('marisxds', 'xdSwGC7.aBWxk');
 
 -- --------------------------------------------------------
 
--- 
+--
 -- Struttura della tabella `User_`
--- 
+--
 
 CREATE TABLE IF NOT EXISTS `User_` (
   `accessControlPolicy` varchar(64) default NULL,
@@ -1181,7 +1226,7 @@ CREATE TABLE IF NOT EXISTS `User_` (
   PRIMARY KEY  (`id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=latin1;
 
--- 
+--
 -- Dump dei dati per la tabella `User_`
--- 
+--
 

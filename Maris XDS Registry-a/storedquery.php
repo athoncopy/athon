@@ -67,9 +67,10 @@ if(!is_dir($tmpQueryService_path)){
 		$folder_response = makeSoapedFailureResponse($error_message,$errorcode);
 		writeTimeFile($_SESSION['idfile']."--Registry: Folder error");
 		
-		$file_input=$idfile."-folder_failure_response-".$idfile;
-		writeTmpFiles($folder_response,$file_input);
-		SendResponse($folder_response);
+		$file_input=$idfile."-folder_failure_response.xml";
+		writeTmpFiles($folder_response,$file_input,true);
+		SendResponseFile($_SESSION['tmpQueryService_path'].$file_input);
+		//SendResponse($folder_response);
 		exit;
 	
 	}
@@ -180,9 +181,9 @@ if(count($error_code)>0){
 $SOAPED_failure_response = makeSoapedFailureStoredQueryResponse($failure_response,$error_code,$Action,$MessageID);
 
 	### SCRIVO LA RISPOSTA IN UN FILE
-	writeTmpQueryFiles($SOAPED_failure_response,$idfile."-SOAPED_failure_response-".$idfile);
-
-	SendResponse($SOAPED_failure_response);
+	writeTmpQueryFiles($SOAPED_failure_response,$idfile."-SOAPED_failure_response.xml");
+	SendResponseFile($_SESSION['tmpQueryService_path'].$file_input,true);
+	//SendResponse($SOAPED_failure_response);
 	exit;
 
 
@@ -198,7 +199,8 @@ $SQLResponse_array=array();
 $fp_SQLResponse = fopen($tmpQueryService_path.$idfile."-SQLResponse-".$idfile,"a+");
 fwrite($fp_SQLResponse,"RISPOSTA DAL DB:\n");
 
-for($SQcount=0;$SQcount<$contaQuery;$SQcount++){
+$trovato=true;
+for($SQcount=0;$SQcount<$contaQuery && $trovato;$SQcount++){
 $SQLQuery = $SQLStoredQuery[$SQcount];
 $controllo_query_array = controllaQuery($SQLQuery);
 ########################################################################
@@ -211,8 +213,12 @@ $SQLQuery_ESEGUITA=adjustQuery($SQLQuery);#### IMPORTANTE!!!
 ###### ESEGUO LA QUERY
 $SQLResponse_array = query_select($SQLQuery_ESEGUITA);
 writeTmpQueryFiles($SQLQuery_ESEGUITA,$idfile."-Query_eseguita-".$idfile);
-
-$SQLResponse=array_merge($SQLResponse,$SQLResponse_array);
+if($SQLResponse_array[0]!=""){
+	$SQLResponse=array_merge($SQLResponse,$SQLResponse_array);
+}
+else {
+	$trovato=true;
+}
 
 
 }
@@ -232,15 +238,15 @@ fclose($fp_SQLResponse);
 if(empty($SQLResponse))
 {
 	#### STRINGA DI ERRORE
-	$failure_response = "[EMPTY RESULT] - SQL QUERY[  ".avoidHtmlEntitiesInterpretation($SQLQuery)." ] DID NOT GIVE ANY RESULTS IN THIS REGISTRY";
+	$failure_response = "[EMPTY RESULT] - STORED QUERY[  ".avoidHtmlEntitiesInterpretation($SQLQuery)." ] DID NOT GIVE ANY RESULTS IN THIS REGISTRY";
 	
 	### RESTITUISCE IL MESSAGGIO DI SUCCESS IN SOAP
 	### ANCHE SE IL RISULTATO DELLA QUERY DA DB È VUOTO
     	$SOAPED_failure_response = makeSoapedSuccessStoredQueryResponse($Action,$MessageID,"");
-	writeTmpQueryFiles($SOAPED_failure_response,$idfile."-SOAPED_NORESULTS_response-".$idfile);
+	writeTmpQueryFiles($SOAPED_failure_response,$idfile."-SOAPED_NORESULTS_response.xml");
 
-
-	SendResponse($SOAPED_failure_response);
+	SendResponseFile($_SESSION['tmpQueryService_path'].$file_input);
+	//SendResponse($SOAPED_failure_response);
 	exit;
 
 }//END OF if(empty($SQLResponse))
@@ -749,7 +755,7 @@ else if($returnType_a=="LeafClass")
 		//$dom_ebXML_RegistryPackage_root->set_attribute("mimeType",$RegistryPackage_mimeType);
 		//$dom_ebXML_RegistryPackage_root->set_attribute("minorVersion",$RegistryPackage_minorVersion);
 		//$dom_ebXML_RegistryPackage_root->set_attribute("objectType",$RegistryPackage_objectType);
-		$dom_ebXML_RegistryPackage_root->set_attribute("status",$RegistryPackage_status);
+		$dom_ebXML_RegistryPackage_root->set_attribute("status",$namespace_status.$RegistryPackage_status);
 
 		appendSlot($dom_ebXML_RegistryPackage,$dom_ebXML_RegistryPackage_root,$ns_rim3_path,$RegistryPackage_id,$connessione);	
 
@@ -1197,38 +1203,14 @@ if($statActive=="A") {
 $ebXML_Response_SOAPED_string = makeSoapedSuccessStoredQueryResponse($Action,$MessageID,$ebXML_Response_string);
 
 ### SCRIVO LA RISPOSTA IN UN FILE
-writeTmpQueryFiles($ebXML_Response_SOAPED_string,$idfile."-ebxmlResponseSOAP.xml");
+$file_input=$idfile."-ebxmlResponseSOAP.xml";
+writeTmpQueryFiles($ebXML_Response_SOAPED_string,$file_input,true);
 writeTimeFile($idfile."--StoredQuery: Creo file ebxmlResponseSOAP");
 
 
-//PULISCO IL BUFFER DI USCITA
-ob_get_clean();//OKKIO FONDAMENTALE!!!!!
 
-########### QUI CI VA IL RESPONSE
-
-### HEADERS
-header("HTTP/1.1 200 OK");
-$path_header = "Path: $www_REG_path";
-if($http=="TLS")
-{
-	##### NEL CASO TLS AGGIUNGO LA DICITURA SECURE
-	$path_header = $path_header."; Secure";
-}
-//header($path_header);
-header("Content-Type: text/xml; charset=UTF-8");
-header("Content-Length: ".(string)filesize($tmpQueryService_path.$idfile."-ebxmlResponseSOAP.xml"));
-
-### FILE BODY
-if($file = fopen($tmpQueryService_path.$idfile."-ebxmlResponseSOAP.xml",'rb'))
-{
-   while((!feof($file)) && (connection_status()==0))
-   {
-      	print(fread($file, 1024*8));
-      	flush();//NOTA BENE!!!!!!!!!
-   }
-
-   fclose($file);
-}
+SendResponseFile($_SESSION['tmpQueryService_path'].$file_input);
+//SendResponse($ebXML_Response_SOAPED_string);
 
 
 // Clean tmp folder
@@ -1240,7 +1222,7 @@ $windows=substr_count(strtoupper($system),"WIN");
 if($clean_cache=="O")
 {
 	if ($windows>0){
-	exec('del tmp\\'.$idfile."* /q");	
+	exec('del tmpQueryService\\'.$idfile."* /q");	
 	}
 	else{	
 	exec('rm -Rf '.$tmpQueryService_path.$idfile."*");
@@ -1255,11 +1237,6 @@ unset($_SESSION['logActive']);
 unset($_SESSION['log_query_path']);
 unset($_SESSION['tmpQueryService_path']);
 
-
-
-
-//} // Fine for($SQcount=0;$SQcount<count($SQLStoredQuery);$SQcount++){
-################## END OF REGISTRY RESPONSE TO QUERY ####################
 
 
 ?>

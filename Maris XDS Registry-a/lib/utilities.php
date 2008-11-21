@@ -242,7 +242,8 @@ function idrandom()
 {
    if(function_exists('com_create_guid'))
    {
-       return com_create_guid();
+       // devo eliminare le parentesi {}
+       return substr(com_create_guid(),1,36);
    }else{
 
        mt_srand((double)microtime()*10000);
@@ -406,12 +407,14 @@ function giveboundary($headers){
  return $boundary;
 }
 
-/*
+
 //Funzione che invia la risposta da file
-function SendResponse($file_input){
+function SendResponseFile($file_input){
 
 	ob_get_clean();//OKKIO FONDAMENTALE!!!!!
-
+	if(!isset($_SESSION['tmp_path'])){
+		$file_input = "./tmp/".$file_input;
+	}
 	//HEADERS
 	header("HTTP/1.1 200 OK");
 	header("Path: ".$_SESSION['www_REG_path']);
@@ -434,24 +437,24 @@ function SendResponse($file_input){
 	//BLOCCO L'ESECUZIONE DELLO SCRIPT
 	exit;
 
-}*/
+}
 
 // Funzione che invia la risposta da stringa
 function SendResponse($string_input){
 
-	ob_get_clean();//OKKIO FONDAMENTALE!!!!!
+	//ob_get_clean();//OKKIO FONDAMENTALE!!!!!
 
 	//HEADERS
 	header("HTTP/1.1 200 OK");
 	header("Path: ".$_SESSION['www_REG_path']);
 	header("Content-Type: text/xml;charset=UTF-8");
-	//header("Content-Length: ".(string)filesize($file_input));
+	header("Content-Length: ");
 		//CONTENUTO DEL FILE DI RISPOSTA
-
+	ob_get_clean();
 	print($string_input);
 
 	//SPEDISCO E PULISCO IL BUFFER DI USCITA
-	ob_end_flush();
+	//ob_end_flush();
 	//BLOCCO L'ESECUZIONE DELLO SCRIPT
 	exit;
 

@@ -20,8 +20,6 @@ function fill_RegistryPackage_tables($dom,$language,$connessione)
 	#### LANGUAGECODE
 	$lang=$language;
 
-	
-
 	##### NODEREPRESENTATION
 	$value_nodeRepresentation_assigned='';
 
@@ -99,7 +97,7 @@ function fill_RegistryPackage_tables($dom,$language,$connessione)
 					
 						$ebxml_value = $value_value;
 						### QUERY AL DB
-    						$query = "SELECT registryObject FROM ExternalIdentifier WHERE value = '$ebxml_value'";
+    						$query = "SELECT registryObject FROM ExternalIdentifier WHERE value = '$ebxml_value' and identificationScheme = 'urn:uuid:75df8f67-9973-4fbe-a900-df66cefecc5a'";
 
     						$res = query_select2($query,$connessione); //array bidimensionale
 						writeSQLQuery($res.": ".$query); 

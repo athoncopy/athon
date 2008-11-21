@@ -28,7 +28,7 @@ $http_con = "SELECT HTTPD FROM HTTP WHERE HTTP.ACTIVE = 'A'";
 
 $ip_source=$_SERVER['REMOTE_ADDR']; //Repository IP
 $ip_server=$_SERVER['SERVER_NAME']; //Registry IP
-$port_server=$_SERVER['SERVER_PORT']; //Registry IP
+$port_server=$_SERVER['SERVER_PORT']; //Registry Port
 
 $res_http = query_select2($http_con,$connessione);
 
@@ -36,16 +36,16 @@ $res_http = query_select2($http_con,$connessione);
 $http = $res_http[0][0];
 
 ###### PARAMETRO PROTOCOLLO HTTPS
-if($http=="NORMAL"){
-$http_protocol = "http://";
-}
-else if ($http=="TLS"){
+if($http=="TLS"){
 $http_protocol = "https://";
+}
+else{
+$http_protocol = "http://";
 }
 
 $lib_path = "./lib/";      //nota: sempre con lo / finale!!!
 
-$select_config = "SELECT CACHE,PATIENTID,LOG,STAT,FOLDER FROM CONFIG";
+$select_config = "SELECT CACHE,PATIENTID,LOG,STAT,FOLDER,STATUS FROM CONFIG_A";
 $res_config = query_select2($select_config,$connessione);
 
 //------------------ LOCAL FILE SYSTEM PATHS --------------------//
@@ -112,6 +112,8 @@ $statActive = $res_config[0][3];
 ##### FOLDER 
 $controlFolderUniqueId = $res_config[0][4];
 
+##### STATUS 
+$registry_status = $res_config[0][5];
 
 ####### NAV
 $get_NAV="SELECT * FROM NAV";

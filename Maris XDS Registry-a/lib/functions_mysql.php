@@ -78,10 +78,10 @@ else {
 		$database_error_response = makeSoapedFailureResponse($error_message,$errorcode);
 		writeTimeFile($_SESSION['idfile']."--Registry: database_error_response");
 			
-		$file_input=$_SESSION['idfile']."-database_error_response-".$_SESSION['idfile'];
-		writeTmpFiles($database_error_response,$file_input);
-
-		SendResponse($database_error_response);
+		$file_input=$_SESSION['idfile']."-database_error_response.xml";
+		writeTmpFiles($database_error_response,$file_input,true);
+		SendResponseFile($_SESSION['tmp_path'].$file_input);
+		//SendResponse($database_error_response,"text/xml");
 		exit;
 	}
         //or die("Connessione non riuscita: " . mysql_error());
@@ -111,10 +111,10 @@ else {
 		$database_error_response = makeSoapedFailureResponse($error_message,$errorcode);
 		writeTimeFile($_SESSION['idfile']."--Registry: database_error_response");
 			
-		$file_input=$_SESSION['idfile']."-database_error_response-".$_SESSION['idfile'];
-		writeTmpFiles($database_error_response,$file_input);
-
-		SendResponse($database_error_response);
+		$file_input=$_SESSION['idfile']."-database_error_response.xml";
+		writeTmpFiles($database_error_response,$file_input,true);
+		SendResponseFile($_SESSION['tmp_path'].$file_input);
+		//SendResponse($database_error_response);
 		exit;
 	}
 
@@ -206,10 +206,10 @@ function query_exec2($query,$connessione) //ERA LA query_execute($query)
 			$database_error_response = makeSoapedFailureResponse($error_message,$errorcode);
 			writeTimeFile($_SESSION['idfile']."--Registry: database_error_response");
 				
-			$file_input=$_SESSION['idfile']."-database_error_response-".$_SESSION['idfile'];
-			writeTmpFiles($database_error_response,$file_input);
-	
-			SendResponse($database_error_response);
+			$file_input=$_SESSION['idfile']."-database_error_response.xml";
+			writeTmpFiles($database_error_response,$file_input,true);
+			SendResponseFile($_SESSION['tmp_path'].$file_input);
+			//SendResponse($database_error_response);
 			exit;
 		}
 		# open  db
@@ -234,10 +234,10 @@ function query_exec2($query,$connessione) //ERA LA query_execute($query)
 			$database_error_response = makeSoapedFailureResponse($error_message,$errorcode);
 			writeTimeFile($_SESSION['idfile']."--Registry: database_error_response");
 			
-			$file_input=$_SESSION['idfile']."-database_error_response-".$_SESSION['idfile'];
-			writeTmpFiles($database_error_response,$file_input);
-
-			SendResponse($database_error_response);
+			$file_input=$_SESSION['idfile']."-database_error_response.xml";
+			writeTmpFiles($database_error_response,$file_input,true);
+			SendResponseFile($_SESSION['tmp_path'].$file_input);
+			//SendResponse($database_error_response,"text/xml");
 			exit;
 		}
      	}
@@ -264,10 +264,10 @@ include('./config/registry_mysql_db.php');
 		$database_error_response = makeSoapedFailureResponse($error_message,$errorcode);
 		writeTimeFile($_SESSION['idfile']."--Registry: database_error_response");
 			
-		$file_input=$_SESSION['idfile']."-database_error_response-".$_SESSION['idfile'];
-		writeTmpFiles($database_error_response,$file_input);
-
-		SendResponse($database_error_response);
+		$file_input=$_SESSION['idfile']."-database_error_response.xml";
+		writeTmpFiles($database_error_response,$file_input,true);
+		SendResponseFile($_SESSION['tmp_path'].$file_input);
+		//SendResponse($database_error_response,"text/xml");
 		exit;
 	}	
 
