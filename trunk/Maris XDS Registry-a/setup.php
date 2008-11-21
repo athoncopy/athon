@@ -4,12 +4,20 @@
 # Copyright (C) 2007 - 2010  MARiS Project
 # Dpt. Medical and Diagnostic Sciences, University of Padova - csaccavini@rad.unipd.it
 # This program is distributed under the terms and conditions of the GPL
+
+# Contributor(s):
+# A-thon srl <info@a-thon.it>
+# Alberto Castellini
+
 # See the LICENSE files for details
 # ------------------------------------------------------------------------------------
 
 
 require('./config/config.php');
+require('./lib/utilities.php');
+require('./lib/log.php');
 require('./lib/functions_'.$database.'.php');
+ob_start();
 $connessione=connectDB();
 $autenticato = false;
 
@@ -90,7 +98,7 @@ return false;
 <title>
 <?php 
 
-$v_maris_registry="2.0.3";
+$v_maris_registry="2.1";
 
 echo "MARIS XDS REGISTRY-A v$v_maris_registry SETUP"; //."   (".$_SESSION["idcode"].")"; 
 	?></title>
@@ -160,73 +168,14 @@ else {
 	}
 
 
-
-################## REGISTRY SUBMISSION ###################
-echo "<h3>Registry parameters SUBMISSION</h3>";
-$get_REG="SELECT * FROM REGISTRY WHERE ACTIVE = 'A'";
-
-$res_REG = query_select2($get_REG,$connessione);
-
-$REG_host_submission = $res_REG[0][1];
-$REG_port_submission = $res_REG[0][2];
-$REG_http_submission = $res_REG[0][5];
-
-
-echo "Registry Host: <INPUT type=\"text\" name=\"registry_host_submission\" value=\"$REG_host_submission\" size=\"20\" maxlength=\"30\"><br></br>";
-echo "Registry Port: <INPUT type=\"text\" name=\"registry_port_submission\" value=\"$REG_port_submission\" size=\"4\" maxlength=\"10\"><br></br>";
-/*
-if($REG_http_submission=="NORMAL"){
-
-	echo "Registry HTTP: <select name=\"registry_http_submission\">
-  	<option value=\"NORMAL\" selected=\"selected\">NORMAL</option>
-   	<option value=\"TLS\">TLS</option>
-  	</select><br></br>";
-	}
-else if($REG_http_submission=="TLS"){
-
-	echo "Registry HTTP: <select name=\"registry_http_submission\">
-   	<option value=\"NORMAL\">NORMAL</option>
-  	<option value=\"TLS\" selected=\"selected\">TLS</option>
-  	</select><br></br>";
-	}
-*/
-
-#################### REGISTRY QUERY ####################
-
-$REG_host_query = $res_REG[1][1];
-$REG_port_query = $res_REG[1][2];
-$REG_http_query = $res_REG[1][5];
-
-echo "<h3>Registry parameters QUERY</h3>";
-
-echo "Registry Host: <INPUT type=\"text\" name=\"registry_host_query\" value=\"$REG_host_query\" size=\"20\" maxlength=\"30\"><br></br>";
-echo "Registry Port: <INPUT type=\"text\" name=\"registry_port_query\" value=\"$REG_port_query\" size=\"4\" maxlength=\"10\"><br></br>";
-/*
-if($REG_http_query=="NORMAL"){
-
-	echo "Registry HTTP: <select name=\"registry_http_query\">
-  	<option value=\"NORMAL\" selected=\"selected\">NORMAL</option>
-   	<option value=\"TLS\">TLS</option>
-  	</select><br></br>";
-	}
-else if($REG_http_query=="TLS"){
-;
-	echo "Registry HTTP: <select name=\"registry_http_query\">
-   	<option value=\"NORMAL\">NORMAL</option>
-  	<option value=\"TLS\" selected=\"selected\">TLS</option>
-  	</select><br></br>";
-	}
-*/
-$get_REG_config="SELECT WWW,CACHE,PATIENTID,LOG,JAVA_PATH FROM CONFIG";
+$get_REG_config="SELECT CACHE,PATIENTID,LOG,STAT,FOLDER FROM CONFIG";
 $res_REG_config = query_select2($get_REG_config,$connessione);
 
-$REG_www = str_replace('setup.php','',$script);
-$REG_cache = $res_REG_config[0][1];
-$REG_PatientID = $res_REG_config[0][2];
-$REG_log= $res_REG_config[0][3];
-//$REG_java = $res_REG_config[0][4];
-
-echo "<INPUT type=\"hidden\" name=\"registry_www\" value=\"$REG_www\" size=\"50\" maxlength=\"100\">";
+$REG_cache = $res_REG_config[0][0];
+$REG_PatientID = $res_REG_config[0][1];
+$REG_log= $res_REG_config[0][2];
+$REG_stat= $res_REG_config[0][3];
+$REG_folder= $res_REG_config[0][4];
 
 echo "<h3>Registry parameters</h3>";
 if($REG_cache=="O"){
@@ -268,15 +217,47 @@ else {
   	</select><br></br>";
 	}
 
+echo "<h3>Registry Folder uniqueID Control</h3>";
+echo "If you set \"<b>ON</b>\", when the Registry receives a document with an existing Folder.uniqueID, it rejects the submission.<br>";
+echo "If you set \"<b>OFF</b>\", when the Registry receives a document with an existing Folder.uniqueID, it adds the documet to folder and accept the submission.<br><br>";
+if($REG_folder=="A"){
+	echo "Validate Folder.uniqueID: <select name=\"folder\">
+  	<option value=\"A\" selected=\"selected\">ON</option>
+   	<option value=\"O\">OFF</option>
+  	</select><br></br>";
+	}
+else {
+	echo "Validate Folder.uniqueID: <select name=\"folder\">
+   	<option value=\"A\">ON</option>
+  	<option value=\"O\" selected=\"selected\">OFF</option>
+  	</select><br></br>";
+	}
+
+
 echo "<h3>Registry Log</h3>";
 if($REG_log=="A"){
-	echo "Log Active: <select name=\"registry_log\">
+	echo "Log: <select name=\"registry_log\">
   	<option value=\"A\" selected=\"selected\">ON</option>
    	<option value=\"O\">OFF</option>
   	</select><br></br>";
 	}
 else {
 	echo "Log: <select name=\"registry_log\">
+   	<option value=\"A\">ON</option>
+  	<option value=\"O\" selected=\"selected\">OFF</option>
+  	</select><br></br>";
+	}
+
+
+echo "<h3>Registry STATS</h3>";
+if($REG_stat=="A"){
+	echo "Statistics: <select name=\"registry_stat\">
+  	<option value=\"A\" selected=\"selected\">ON</option>
+   	<option value=\"O\">OFF</option>
+  	</select><br></br>";
+	}
+else {
+	echo "Statistics: <select name=\"registry_stat\">
    	<option value=\"A\">ON</option>
   	<option value=\"O\" selected=\"selected\">OFF</option>
   	</select><br></br>";

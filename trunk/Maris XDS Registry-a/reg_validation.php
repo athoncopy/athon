@@ -4,6 +4,11 @@
 # Copyright (C) 2007 - 2010  MARiS Project
 # Dpt. Medical and Diagnostic Sciences, University of Padova - csaccavini@rad.unipd.it
 # This program is distributed under the terms and conditions of the GPL
+
+# Contributor(s):
+# A-thon srl <info@a-thon.it>
+# Alberto Castellini
+
 # See the LICENSE files for details
 # ------------------------------------------------------------------------------------
 
@@ -38,25 +43,20 @@ function controllaPayload($input){
 		
 		if(!$isNotEmpty){
 			$errorcode[]="XDSMissingMetadata";
-			$error_message[] = "$service: No metadata\n";
+			$error_message[] = "$service: No metadata";
 			$empty_payload_response = makeSoapedFailureResponse($error_message,$errorcode);
 			writeTimeFile($_SESSION['idfile']."--Registry: empty_payload_response");
 			
-			$file_input=$_SESSION['tmp_path'].$_SESSION['idfile']."-empty_payload_response-".$_SESSION['idfile'];
-			$fp = fopen($file_input, "wb+");
-            			fwrite($fp,$empty_payload_response);
-         		fclose($fp);
+			$file_input=$_SESSION['idfile']."-empty_payload_response-".$_SESSION['idfile'];
+			writeTmpFiles($empty_payload_response,$file_input);
 
-			SendResponse($file_input);
+			SendResponse($empty_payload_response);
 			exit;
 	
 		}
 	return $isNotEmpty;
 
 }
-
-
-
 
 
 function validate_XDSSubmissionSetUniqueId($dom,$connessione)
@@ -851,7 +851,7 @@ function validate_XDSFolderUniqueId($dom,$connessione)
 	}//END OF for($index=0;$index<(count($dom_ebXML_RegistryPackage_node_array));$index++)
 
     	### QUERY AL DB
-    	$query = "SELECT * FROM ExternalIdentifier WHERE  value = '$ebxml_value'";
+    	$query = "SELECT id FROM ExternalIdentifier WHERE value = '$ebxml_value'";
 
     	$res = query_select2($query,$connessione); //array bidimensionale
 	writeSQLQuery($res.": ".$query); 
@@ -868,6 +868,111 @@ function validate_XDSFolderUniqueId($dom,$connessione)
     	return $ret;
 
 }//end of validate_XDSFolderUniqueId($dom)
+
+
+//Questa funzione permette di non verificare l'unicità del folder (Caso dianoema)
+function validate_XDSFolderUniqueIdInsert($dom,$connessione)
+{
+	writeSQLQuery('----------------------------validate_XDSFolderUniqueIdInser-------------------------------');
+		
+    	//$ebxml_value = searchForIds($dom,'RegistryPackage','uniqueId');
+    
+	$ebxml_value = '';
+
+##### RADICE DEL DOCUMENTO ebXML
+	$root_ebXML = $dom->document_element();
+	
+	##### ARRAY DEI NODI REGISTRYPACKAGE
+	$dom_ebXML_RegistryPackage_node_array=$root_ebXML->get_elements_by_tagname("RegistryPackage");
+
+	#### CICLO SU OGNI RegistryPackage ####
+	$isEmpty_4 = false;
+	$failure_4 = array();
+	$errorcode = array();
+	$conta_RegistryFolder=0;
+	for($index=0;$index<(count($dom_ebXML_RegistryPackage_node_array));$index++)
+	{
+	
+	##### NODO REGISTRYPACKAGE RELATIVO AL DOCUMENTO NUMERO $index
+	$RegistryPackage_node = $dom_ebXML_RegistryPackage_node_array[$index];
+	
+	#### ARRAY DEI FIGLI DEL NODO REGISTRYPACKAGE ##############	
+	$RegistryPackage_child_nodes = $RegistryPackage_node->child_nodes();
+	#################################################################
+
+################# PROCESSO TUTTI I NODI FIGLI DI REGISTRYPACKAGE
+	for($k=0;$k<count($RegistryPackage_child_nodes);$k++)
+	{
+		
+		#### SINGOLO NODO FIGLIO DI REGISTRYPACKAGE
+		$RegistryPackage_child_node=$RegistryPackage_child_nodes[$k];
+		#### NOME DEL NODO
+		$RegistryPackage_child_node_tagname = $RegistryPackage_child_node->node_name();
+
+		if($RegistryPackage_child_node_tagname=='ExternalIdentifier')
+		{
+			$externalidentifier_node = $RegistryPackage_child_node;
+			$value_value= avoidHtmlEntitiesInterpretation($externalidentifier_node->get_attribute('value'));
+			
+			#### NODI FIGLI DI EXTERNALIDENTIFIER
+			$externalidentifier_child_nodes = $externalidentifier_node->child_nodes();
+		//print_r($name_node);
+			for($q = 0;$q < count($externalidentifier_child_nodes);$q++)
+			{
+				$externalidentifier_child_node = $externalidentifier_child_nodes[$q];
+				$externalidentifier_child_node_tagname = $externalidentifier_child_node->node_name();
+				if($externalidentifier_child_node_tagname=='Name')
+				{
+					$name_node=$externalidentifier_child_node;
+
+					$LocalizedString_nodes = $name_node->child_nodes();
+		//print_r($LocalizedString_nodes);
+			for($p = 0;$p < count($LocalizedString_nodes);$p++)
+			{
+				$LocalizedString_node = $LocalizedString_nodes[$p];//->node_name();
+				$LocalizedString_node_tagname = $LocalizedString_node->node_name();
+
+				if($LocalizedString_node_tagname == 'LocalizedString')
+				{
+					$LocalizedString_value =$LocalizedString_node->get_attribute('value');
+					if(strpos(strtolower(trim($LocalizedString_value)),strtolower('Folder.uniqueId')))
+					{
+					
+						$ebxml_value = $value_value;
+						$FolderUniqueId[$conta_RegistryFolder] = $value_value;
+						$conta_RegistryFolder++;
+					}
+					
+				}
+
+			}
+
+				}
+			}
+		}
+
+	}
+
+	}//END OF for($index=0;$index<(count($dom_ebXML_RegistryPackage_node_array));$index++)
+
+    	### QUERY AL DB
+    	$query = "SELECT id FROM ExternalIdentifier WHERE value = '$ebxml_value'";
+
+    	$res = query_select2($query,$connessione); //array bidimensionale
+	writeSQLQuery($res.": ".$query); 
+
+    	$isEmpty_4 = (empty($res));
+	if(!$isEmpty_4)
+	{
+		writeSQLQuery("XDSFolder.uniqueId $ebxml_value already exists in registry");
+	}
+
+	//Restituisco sempre true
+    	$ret = array(true,$failure_4,$FolderUniqueId,$errorcode);
+
+    	return $ret;
+
+}//end of validate_XDSFolderUniqueIdInsert($dom)
 
 function validate_XDSFolderPatientId($dom,$XDSDocumentEntryPatientId_arr,$XDSSubmissionSetPatientId,$ExtrinsicObject_node_id,$connessione)
 {
@@ -1005,7 +1110,7 @@ function validate_XDSFolderPatientId($dom,$XDSDocumentEntryPatientId_arr,$XDSSub
 
 }//end of validate_XDSFolderPatientId($dom)
 
-### VERIFICA LA POSSIBILITA' DI AGGIUNGERE UN DOCUMENTO ADUN FOLDER VIA PATIENT IDs
+### VERIFICA LA POSSIBILITA' DI AGGIUNGERE UN DOCUMENTO AD UN FOLDER VIA PATIENT IDs
 function verifyAddDocToFolder($dom,$XDSDocumentEntryPatientId_arr,$connessione)
 {	
 	writeSQLQuery('----------------------------verifyAddDocToFolder-------------------------------');
@@ -1057,12 +1162,8 @@ function verifyAddDocToFolder($dom,$XDSDocumentEntryPatientId_arr,$connessione)
 				$ris_isFolderCreated=query_select2($query_for_isFolderCreated,$connessione);
 				writeSQLQuery($ris_isFolderCreated.": ".$query_for_isFolderCreated);
 
-				//$fp=fopen("tmp/query_for_isFolderCreated","w+");
-				//fwrite($fp,$query_for_isFolderCreated);
-				//fclose($fp);
-
 				#### FOLDER NON ESISTENTE
-				if($ris_isFolderCreated[0]['name']!="lastUpdateTime")
+				if($ris_isFolderCreated[0][0]!="lastUpdateTime")
 				{
 					$isFolderCreated=false && $isFolderCreated;
 					$errorcode[]="XDSRegistryMetadataError";
@@ -1074,13 +1175,9 @@ function verifyAddDocToFolder($dom,$XDSDocumentEntryPatientId_arr,$connessione)
 					for($t=0;$t<count($XDSDocumentEntryPatientId_arr);$t++)
 					{
 						$patId=$XDSDocumentEntryPatientId_arr[$t];
-						$query_for_isAddAllowed="SELECT * FROM ExternalIdentifier WHERE ExternalIdentifier.registryObject = '$value_sourceObject' AND ExternalIdentifier.value = '$patId'";
+						$query_for_isAddAllowed="SELECT id FROM ExternalIdentifier WHERE ExternalIdentifier.registryObject = '$value_sourceObject' AND ExternalIdentifier.value = '$patId'";
 						$ris_isAddAllowed=query_select2($query_for_isAddAllowed,$connessione);
 						writeSQLQuery($ris.": ".$query_for_isAddAllowed);
-
-						/*$fp=fopen("tmp/query_for_isAddAllowed","w+");
-						fwrite($fp,$query_for_isAddAllowed);
-						fclose($fp);*/
 
 						if(empty($ris_isAddAllowed))
 						{
@@ -1665,17 +1762,15 @@ function controllaQuery($SQLQuery)
 	if(!($pos_1===0) || $pos_2) // || $pos_3) // || $pos_4)
 	{
 		$isQueryAllowed = false;
-		$errorcode="XDSSqlError";
-		$error_message="[ERROR: NOT PROPER QUERY] - YOU ARE NOT ALLOWED TO PERFORM THIS KIND OF QUERY TO THIS REGISTRY[  ".avoidHtmlEntitiesInterpretation($SQLQuery)." ]";
+		$errorcode[]="XDSSqlError";
+		$error_message[]="[ERROR: NOT PROPER QUERY] - YOU ARE NOT ALLOWED TO PERFORM THIS KIND OF QUERY TO THIS REGISTRY[  ".avoidHtmlEntitiesInterpretation($SQLQuery)." ]";
 		$query_not_allowed_response = makeSoapedFailureResponse($error_message,$errorcode);
 
 		writeTimeFile($_SESSION['idfile']."--StoredQuery: Query NOT allowed");
-		$file_input=$_SESSION['tmpQueryService_path'].$_SESSION['idfile']."-query_not_allowed-".$_SESSION['idfile'];
-		$fp = fopen($file_input, "wb+");
-            		fwrite($fp,$query_not_allowed_response);
-         	fclose($fp);
+		$file_input=$_SESSION['idfile']."-query_not_allowed-".$_SESSION['idfile'];
+		writeTmpQueryFiles($query_not_allowed_response,$file_input);
 
-		SendResponse($file_input);
+		SendResponse($query_not_allowed_response);
 		exit;
 		
 	}
@@ -1711,12 +1806,10 @@ function isValid($ebxml_STRING_VALIDATION,$schema){
 
 		### SCRIVO LA RISPOSTA IN UN FILE
 		// File da scrivere
-		$file_input=$_SESSION['tmp_path'].$_SESSION['idfile']."-SOAPED_failure_VALIDATION_response-".$_SESSION['idfile'];
-	 	$fp = fopen($file_input,"w+");
-           	   fwrite($fp,$failure_response);
-        	fclose($fp);
+		$file_input=$_SESSION['idfile']."-SOAPED_failure_VALIDATION_response-".$_SESSION['idfile'];
+		writeTmpFiles($failure_response,$file_input);
 
-		SendResponse($file_input);
+		SendResponse($failure_response);
 		exit;
 	
 	}

@@ -1,10 +1,14 @@
 <?php
-
 # ------------------------------------------------------------------------------------
 # MARIS XDS REGISTRY
 # Copyright (C) 2007 - 2010  MARiS Project
 # Dpt. Medical and Diagnostic Sciences, University of Padova - csaccavini@rad.unipd.it
 # This program is distributed under the terms and conditions of the GPL
+
+# Contributor(s):
+# A-thon srl <info@a-thon.it>
+# Alberto Castellini
+
 # See the LICENSE files for details
 # ------------------------------------------------------------------------------------
 
@@ -15,22 +19,59 @@ ob_start();//OKKIO FONADAMENTALE!!!!!!!!!!
 ##### CONFIGURAZIONE DEL REPOSITORY
 include("REGISTRY_CONFIGURATION/REG_configuration.php");
 #######################################
-include_once($lib_path."domxml-php4-to-php5.php");
-include($lib_path."utilities.php");
-include("./lib/log.php");
+
+if($statActive=="A") {
+	//Parte per calcolare i tempi di esecuzione
+	$mtime = microtime();
+	$mtime = explode(" ",$mtime);
+	$mtime = $mtime[1] + $mtime[0];
+	$starttime = $mtime;
+}
+
 include_once('reg_validation.php');
+require_once('./lib/query_utilities.php');
 $idfile = idrandom_file();
 
 $_SESSION['tmp_path']=$tmp_path;
 $_SESSION['idfile']=$idfile;
 $_SESSION['logActive']=$logActive;
 $_SESSION['log_path']=$log_path;
-
+$_SESSION['tmpQueryService_path']=$tmpQueryService_path;
+$_SESSION['www_REG_path']=$_SERVER['PHP_SELF'];
+$www_REG_path = $_SERVER['PHP_SELF'];
 //PULISCO LA CACHE TEMPORANEA
-exec('rm -f '.$tmpQueryService_path."*");
-
+// Creo la cartella per i file temporanei
 if(!is_dir($tmpQueryService_path)){
-mkdir($tmpQueryService_path, 0777,true);
+	$createtmpdir=false;
+	$ntmpdir=0;
+	while(!$createtmpdir && $ntmpdir<10){
+		$cmdtmpdir=mkdir($tmpQueryService_path, 0777,true);
+		if($cmdtmpdir){
+			// Caso OK Riesce a creare il folder correttamente
+			writeTimeFile($idfile."--Ho creato il folder tmp correttamente");
+			$createtmpdir=true;
+			}
+		else {
+			sleep(1);
+			$ntmpdir++;
+		}
+	} //Fine while
+
+
+	// Se dopo 10 volte non sono riuscito a creare il folder riporto un errore
+	if(!$createtmpdir){
+		$errorcode[]="XDSRegistryError";
+		$error_message[] = "Registry can't create tmp folder. ";
+		$folder_response = makeSoapedFailureResponse($error_message,$errorcode);
+		writeTimeFile($_SESSION['idfile']."--Registry: Folder error");
+		
+		$file_input=$idfile."-folder_failure_response-".$idfile;
+		writeTmpQueryFiles($folder_response,$file_input);
+		SendResponse($folder_response);
+		exit;
+	
+	}
+	
 }
 
 $error_code=array();
@@ -40,20 +81,15 @@ $failure_response=array();
 $headers = apache_request_headers();
 
 //COPIO IN LOCALE TUTTI GLI HEADERS RICEVUTI
-$fp_headers_received = fopen($tmpQueryService_path."headers_received", "w+");
-foreach ($headers as $header => $value) 
-{
-   fwrite ($fp_headers_received, "$header = $value  \n");	
+if($clean_cache!="O"){
+writeTmpQueryFiles($headers,$idfile."-headers_received-".$idfile);
 }
-fclose($fp_headers_received);
 
-//AdhocQueryRequest IMBUSTATO
-$fp= fopen($tmpQueryService_path."AdhocQueryRequest_imbustato_soap", "w+");
-    fwrite($fp,$HTTP_RAW_POST_DATA);//RICAVO DALLA VAR $HTTP_RAW_POST_DATA
-fclose($fp);
 
-	//SBUSTO	
-$ebxml_imbustato_soap_STRING = file_get_contents($tmpQueryService_path."AdhocQueryRequest_imbustato_soap");
+$ebxml_imbustato_soap_STRING=$HTTP_RAW_POST_DATA;
+if($clean_cache!="O"){
+writeTmpQueryFiles($ebxml_imbustato_soap_STRING,$idfile."-AdhocQueryRequest_imbustato_soap-".$idfile);
+}
 
 
 #########################################################################
@@ -67,9 +103,9 @@ $ebxml_STRING=str_replace((substr($ebxml_imbustato_soap_STRING,strpos($ebxml_imb
 ###################################################################################
 
 //SCRIVO L'AdhocQueryRequest SBUSTATO
-$fp_AdhocQueryRequest = fopen($tmpQueryService_path."AdhocQueryRequest","w+");
-	fwrite($fp_AdhocQueryRequest,$ebxml_STRING);
-fclose($fp_AdhocQueryRequest);
+if($clean_cache!="O"){
+writeTmpQueryFiles($ebxml_STRING,$idfile."-AdhocQueryRequest-".$idfile);
+}
 
 
 $schema='schemas/query.xsd';
@@ -79,19 +115,11 @@ if ($isValid){
 	writeTimeFile($idfile."--Query: Il documento e' valido");
 }
 
-$fp_SCHEMA_val = fopen($tmp_path.$idfile."-SCHEMA_validation-".$idfile,"w+");
-	fwrite($fp_SCHEMA_val,"VALIDAZIONE DA SCHEMA ==> OK <==");
-fclose($fp_SCHEMA_val);
-
-
 
 #### OTTENGO L'OGGETTO DOM DALL'AdhocQueryRequest
-$contents=file_get_contents($tmpQueryService_path."AdhocQueryRequest");
-//writeTimeFile($contents);
 
-
-$dom_AdhocQueryRequest = domxml_open_mem($contents);
-if (!$dom = domxml_open_mem($contents)) {
+//$dom_AdhocQueryRequest = domxml_open_mem($ebxml_STRING);
+if (!$dom_AdhocQueryRequest = domxml_open_mem($ebxml_STRING)) {
   writeTimeFile($idfile."--Query: AdhocQueryRequest non corretto");
 }
 
@@ -175,13 +203,10 @@ if(empty($SQLResponse))
 	### ANCHE SE IL RISULTATO DELLA QUERY DA DB È VUOTO
     	$SOAPED_failure_response = makeSoapedSuccessQueryResponse($failure_response);
 
-	$file_input=$tmpQueryService_path.$idfile."-SOAPED_NORESULTS_response-".$idfile;
-	 $fp = fopen($file_input,"w+");
-           fwrite($fp,$SOAPED_failure_response);
-         fclose($fp);
+	$file_input=$idfile."-SOAPED_NORESULTS_response-".$idfile;
+	writeTmpQueryFiles($SOAPED_failure_response,$file_input);
 
-
-	SendResponse($file_input);
+	SendResponse($SOAPED_failure_response);
 	exit;
 
 }//END OF if(empty($SQLResponse))
@@ -354,108 +379,12 @@ else if($returnType_a=="LeafClass")
 		$dom_ebXML_ExtrinsicObject_root->set_attribute("objectType",$ExtrinsicObject_objectType);
 		$dom_ebXML_ExtrinsicObject_root->set_attribute("status",$ExtrinsicObject_status);
 
-		#### NAME
-		$dom_ebXML_ExtrinsicObject_Name=$dom_ebXML_ExtrinsicObject->create_element_ns($ns_rim_path,"Name");
-		$dom_ebXML_ExtrinsicObject_Name=$dom_ebXML_ExtrinsicObject_root->append_child($dom_ebXML_ExtrinsicObject_Name);
 
-		$queryForExtrinsicObject_Name="SELECT charset,value,lang FROM Name WHERE Name.parent = '$ExtrinsicObject_id'";
-		$Name_arr=query_select2($queryForExtrinsicObject_Name,$connessione);
-		writeSQLQueryService($queryForExtrinsicObject_Name);
+		appendName($dom_ebXML_ExtrinsicObject,$dom_ebXML_ExtrinsicObject_root,$ns_rim_path,$ExtrinsicObject_id,$connessione);
+		
+		appendDescription($dom_ebXML_ExtrinsicObject,$dom_ebXML_ExtrinsicObject_root,$ns_rim_path,$ExtrinsicObject_id,$connessione);
 
-		$Name_charset = $Name_arr[0][0];
-		$Name_value = $Name_arr[0][1];
-		$Name_lang = $Name_arr[0][2];
-
-		if(!empty($Name_arr))
-		{
-		$dom_ebXML_ExtrinsicObject_Name_LocalizedString=$dom_ebXML_ExtrinsicObject->create_element_ns($ns_rim_path,"LocalizedString");
-		$dom_ebXML_ExtrinsicObject_Name_LocalizedString=$dom_ebXML_ExtrinsicObject_Name->append_child($dom_ebXML_ExtrinsicObject_Name_LocalizedString);
-
-		$dom_ebXML_ExtrinsicObject_Name_LocalizedString->set_attribute("charset",$Name_charset);
-		$dom_ebXML_ExtrinsicObject_Name_LocalizedString->set_attribute("value",$Name_value);
-		$dom_ebXML_ExtrinsicObject_Name_LocalizedString->set_attribute("xml:lang",$Name_lang);
-		}
-
-		#### DESCRIPTION
-		$dom_ebXML_ExtrinsicObject_Description=$dom_ebXML_ExtrinsicObject->create_element_ns($ns_rim_path,"Description");
-		$dom_ebXML_ExtrinsicObject_Description=$dom_ebXML_ExtrinsicObject_root->append_child($dom_ebXML_ExtrinsicObject_Description);
-
-		$queryForExtrinsicObject_Description="SELECT charset,value,lang FROM Description WHERE Description.parent = '$ExtrinsicObject_id'";
-		$Description_arr=query_select2($queryForExtrinsicObject_Description,$connessione);
-		writeSQLQueryService($queryForExtrinsicObject_Description);
-
-		$Description_charset = $Description_arr[0][0];
-		$Description_value = $Description_arr[0][1];
-		$Description_lang = $Description_arr[0][2];
-
-		if(!empty($Description_arr) && $Description_value!="NOT DECLARED")
-		{
-		$dom_ebXML_ExtrinsicObject_Description_LocalizedString=$dom_ebXML_ExtrinsicObject->create_element_ns($ns_rim_path,"LocalizedString");
-		$dom_ebXML_ExtrinsicObject_Description_LocalizedString=$dom_ebXML_ExtrinsicObject_Description->append_child($dom_ebXML_ExtrinsicObject_Description_LocalizedString);
-
-		$dom_ebXML_ExtrinsicObject_Description_LocalizedString->set_attribute("charset",$Description_charset);
-		$dom_ebXML_ExtrinsicObject_Description_LocalizedString->set_attribute("value",$Description_value);
-		$dom_ebXML_ExtrinsicObject_Description_LocalizedString->set_attribute("xml:lang",$Description_lang);
-		}
-
-		##### SLOT
-		$select_Slots = "SELECT name,value FROM Slot WHERE Slot.parent = '$ExtrinsicObject_id'";
-		$Slot_arr=query_select2($select_Slots,$connessione);
-		writeSQLQueryService($select_Slots);
-		$Slot_arr_EO=$Slot_arr;
-		$repeat = true;
-		for($s=0;$s<count($Slot_arr);$s++)
-		{
-			$Slot = $Slot_arr[$s];
-			$Slot_name = $Slot[0];
-
-			if($Slot_name=="sourcePatientInfo" && $repeat)
-			{
-				$dom_ebXML_ExtrinsicObject_Slot=$dom_ebXML_ExtrinsicObject->create_element_ns($ns_rim_path,"Slot");
-				$dom_ebXML_ExtrinsicObject_Slot=$dom_ebXML_ExtrinsicObject_root->append_child($dom_ebXML_ExtrinsicObject_Slot);
-
-				$select_sourcePatientInfo_Slots = "SELECT value FROM Slot WHERE Slot.parent = '$ExtrinsicObject_id' AND Slot.name = 'sourcePatientInfo'";
-				$sourcePatientInfo_Slots=query_select2($select_sourcePatientInfo_Slots,$connessione);
-				writeSQLQueryService($select_sourcePatientInfo_Slots);
-				
-				$dom_ebXML_ExtrinsicObject_Slot->set_attribute("name",$Slot_name);
-				$dom_ebXML_ExtrinsicObject_Slot_ValueList=$dom_ebXML_ExtrinsicObject->create_element_ns($ns_rim_path,"ValueList");
-				$dom_ebXML_ExtrinsicObject_Slot_ValueList=$dom_ebXML_ExtrinsicObject_Slot->append_child($dom_ebXML_ExtrinsicObject_Slot_ValueList);
-
-				for($r=0;$r<count($sourcePatientInfo_Slots);$r++)
-				{
-					$sourcePatientInfo_Slot=$sourcePatientInfo_Slots[$r];
-					$Slot_value = $sourcePatientInfo_Slot[0];
-
-					$dom_ebXML_ExtrinsicObject_Slot_ValueList_Value=$dom_ebXML_ExtrinsicObject->create_element_ns($ns_rim_path,"Value");
-					$dom_ebXML_ExtrinsicObject_Slot_ValueList_Value=$dom_ebXML_ExtrinsicObject_Slot_ValueList->append_child($dom_ebXML_ExtrinsicObject_Slot_ValueList_Value);
-
-					$dom_ebXML_ExtrinsicObject_Slot_ValueList_Value->set_content($Slot_value);
-
-				}//END OF for($r=0;$r<count($sourcePatientInfo_Slots);$r++)
-
-				$repeat=false;
-
-			}//END OF if($Slot_name=="sourcePatientInfo")
-			if($Slot_name!="sourcePatientInfo")
-			{
-				$dom_ebXML_ExtrinsicObject_Slot=$dom_ebXML_ExtrinsicObject->create_element_ns($ns_rim_path,"Slot");
-				$dom_ebXML_ExtrinsicObject_Slot=$dom_ebXML_ExtrinsicObject_root->append_child($dom_ebXML_ExtrinsicObject_Slot);
-
-				$dom_ebXML_ExtrinsicObject_Slot->set_attribute("name",$Slot_name);
-			
-				$dom_ebXML_ExtrinsicObject_Slot_ValueList=$dom_ebXML_ExtrinsicObject->create_element_ns($ns_rim_path,"ValueList");
-				$dom_ebXML_ExtrinsicObject_Slot_ValueList=$dom_ebXML_ExtrinsicObject_Slot->append_child($dom_ebXML_ExtrinsicObject_Slot_ValueList);
-
-				$dom_ebXML_ExtrinsicObject_Slot_ValueList_Value=$dom_ebXML_ExtrinsicObject->create_element_ns($ns_rim_path,"Value");
-				$dom_ebXML_ExtrinsicObject_Slot_ValueList_Value=$dom_ebXML_ExtrinsicObject_Slot_ValueList->append_child($dom_ebXML_ExtrinsicObject_Slot_ValueList_Value);
-
-				$Slot_value = $Slot[1];
-				$dom_ebXML_ExtrinsicObject_Slot_ValueList_Value->set_content($Slot_value);
-
-			}//END OF elseif($Slot_name!="sourcePatientInfo")
-
-		}//END OF for($s=0;$s<count($slot_arr);$s++)
+		appendSlot($dom_ebXML_ExtrinsicObject,$dom_ebXML_ExtrinsicObject_root,$ns_rim_path,$ExtrinsicObject_id,$connessione);
 
 		#### GESTISCO IL CASO IN CUI DEVO RITORNARE OGGETTI COMPOSTI
 		if($returnComposedObjects_a=="true")
@@ -511,111 +440,12 @@ else if($returnType_a=="LeafClass")
 				$dom_ebXML_ExtrinsicObject_Classification->set_attribute("id",$ExtrinsicObject_Classification_id);
 				$dom_ebXML_ExtrinsicObject_Classification->set_attribute("nodeRepresentation",$ExtrinsicObject_Classification_nodeRepresentation);
 				$dom_ebXML_ExtrinsicObject_Classification->set_attribute("objectType",$ExtrinsicObject_Classification_objectType);
-				#### NAME
-				$dom_ebXML_Classification_Name=$dom_ebXML_ExtrinsicObject->create_element_ns($ns_rim_path,"Name");
-				$dom_ebXML_Classification_Name=$dom_ebXML_ExtrinsicObject_Classification->append_child($dom_ebXML_Classification_Name);
 
-				$queryForClassification_Name="SELECT charset,value,lang FROM Name WHERE Name.parent = '$ExtrinsicObject_Classification_id'";
-				$Name_arr=query_select2($queryForClassification_Name,$connessione);
-				writeSQLQueryService($queryForClassification_Name);
+				appendName_Classification($dom_ebXML_ExtrinsicObject,$dom_ebXML_ExtrinsicObject_Classification,$ns_rim_path,$ExtrinsicObject_Classification_id,$connessione);
 
-				$Name_charset = $Name_arr[0][0];
-				$Name_value = $Name_arr[0][1];
-				$Name_lang = $Name_arr[0][2];
-
-				if(!empty($Name_arr))
-				{
-				$dom_ebXML_Classification_Name_LocalizedString=$dom_ebXML_ExtrinsicObject->create_element_ns($ns_rim_path,"LocalizedString");
-				$dom_ebXML_Classification_Name_LocalizedString=$dom_ebXML_Classification_Name->append_child($dom_ebXML_Classification_Name_LocalizedString);
-
-				$dom_ebXML_Classification_Name_LocalizedString->set_attribute("charset",$Name_charset);
-				$dom_ebXML_Classification_Name_LocalizedString->set_attribute("value",$Name_value);
-				$dom_ebXML_Classification_Name_LocalizedString->set_attribute("xml:lang",$Name_lang);
-				}
-
-				#### DESCRIPTION
-				$queryForClassification_Description="SELECT charset,value,lang FROM Description WHERE Description.parent = '$ExtrinsicObject_Classification_id'";
-
-				//$fp = fopen($tmp_path."DESCRIPTION","w+");
-    				//fwrite($fp,$queryForClassification_Description);
-				//fclose($fp);
-
-				$Description_arr=query_select2($queryForClassification_Description,$connessione);
-				writeSQLQueryService($queryForClassification_Description);
-
-				$Description_charset = $Description_arr[0][0];
-				$Description_value = $Description_arr[0][1];
-				$Description_lang = $Description_arr[0][2];
-
-				if(!empty($Description_arr) && $Description_value!="NOT DECLARED")
-				{
-				$dom_ebXML_Classification_Description=$dom_ebXML_ExtrinsicObject->create_element_ns($ns_rim_path,"Description");
-				$dom_ebXML_Classification_Description=$dom_ebXML_ExtrinsicObject_Classification->append_child($dom_ebXML_Classification_Description);
-
-				$dom_ebXML_Classification_Description_LocalizedString=$dom_ebXML_ExtrinsicObject->create_element_ns($ns_rim_path,"LocalizedString");
-				$dom_ebXML_Classification_Description_LocalizedString=$dom_ebXML_Classification_Description->append_child($dom_ebXML_Classification_Description_LocalizedString);
-
-				$dom_ebXML_Classification_Description_LocalizedString->set_attribute("charset",$Description_charset);
-				$dom_ebXML_Classification_Description_LocalizedString->set_attribute("value",$Description_value);
-				$dom_ebXML_Classification_Description_LocalizedString->set_attribute("xml:lang",$Description_lang);
-				}
-
-// Parte per Slot Multipli
-
-				/*#### SLOT
-				$dom_ebXML_Classification_Slot=$dom_ebXML_ExtrinsicObject->create_element_ns($ns_rim_path,"Slot");
-				$dom_ebXML_Classification_Slot=$dom_ebXML_ExtrinsicObject_Classification->append_child($dom_ebXML_Classification_Slot);
-
-				$dom_ebXML_Classification_Slot_ValueList=$dom_ebXML_ExtrinsicObject->create_element_ns($ns_rim_path,"ValueList");
-				$dom_ebXML_Classification_Slot_ValueList=$dom_ebXML_Classification_Slot->append_child($dom_ebXML_Classification_Slot_ValueList);
-
-				$dom_ebXML_Classification_Slot_ValueList_Value=$dom_ebXML_ExtrinsicObject->create_element_ns($ns_rim_path,"Value");
-				$dom_ebXML_Classification_Slot_ValueList_Value=$dom_ebXML_Classification_Slot_ValueList->append_child($dom_ebXML_Classification_Slot_ValueList_Value);
-
-				$select_Slots = "SELECT name,value FROM Slot WHERE Slot.parent = '$ExtrinsicObject_Classification_id'";
-				$Slot_arr=query_select2($select_Slots,$connessione);
-				writeSQLQueryService($select_Slots);
-
-				#### RICAVO LE INFO SUL NODO SLOT
-				$Slot=$Slot_arr[0];
-				$Slot_name = $Slot[0];
-				$Slot_value = $Slot[1];
-
-				$dom_ebXML_Classification_Slot->set_attribute("name",$Slot_name);
-				$dom_ebXML_Classification_Slot_ValueList_Value->set_content($Slot_value);*/
-
-
-
-				#### SLOT
-
-				$select_Slots = "SELECT name,value FROM Slot WHERE Slot.parent = '$ExtrinsicObject_Classification_id'";
-				$Slot_arr=query_select2($select_Slots,$connessione);
-				writeSQLQueryService($select_Slots);
+				appendDescription_Classification($dom_ebXML_ExtrinsicObject,$dom_ebXML_ExtrinsicObject_Classification,$ns_rim_path,$ExtrinsicObject_Classification_id,$connessione);
 				
-				for($sl=0;$sl<count($Slot_arr);$sl++){
-
-				$dom_ebXML_Classification_Slot=$dom_ebXML_ExtrinsicObject->create_element_ns($ns_rim_path,"Slot");
-				$dom_ebXML_Classification_Slot=$dom_ebXML_ExtrinsicObject_Classification->append_child($dom_ebXML_Classification_Slot);
-
-				$dom_ebXML_Classification_Slot_ValueList=$dom_ebXML_ExtrinsicObject->create_element_ns($ns_rim_path,"ValueList");
-				$dom_ebXML_Classification_Slot_ValueList=$dom_ebXML_Classification_Slot->append_child($dom_ebXML_Classification_Slot_ValueList);
-
-				$dom_ebXML_Classification_Slot_ValueList_Value=$dom_ebXML_ExtrinsicObject->create_element_ns($ns_rim_path,"Value");
-				$dom_ebXML_Classification_Slot_ValueList_Value=$dom_ebXML_Classification_Slot_ValueList->append_child($dom_ebXML_Classification_Slot_ValueList_Value);
-
-
-
-				#### RICAVO LE INFO SUL NODO SLOT
-				$Slot=$Slot_arr[$sl];
-				$Slot_name = $Slot[0];
-				$Slot_value = $Slot[1];
-
-				$dom_ebXML_Classification_Slot->set_attribute("name",$Slot_name);
-				$dom_ebXML_Classification_Slot_ValueList_Value->set_content($Slot_value);
-				}
-
-
-
+				appendSlot_Classification($dom_ebXML_ExtrinsicObject,$dom_ebXML_ExtrinsicObject_Classification,$ns_rim_path,$ExtrinsicObject_Classification_id,$connessione);
 
 
 			}//END OF for($t=0;$t<count($ExtrinsicObject_Classification_arr);$t++)
@@ -641,16 +471,7 @@ else if($returnType_a=="LeafClass")
 		$ExtrinsicObject_ExternalIdentifier_identificationScheme_ARR_2[]=$ExtrinsicObject_ExternalIdentifier_identificationScheme;
 		########################
 
-// 				#### DEVO DICHIARARE identificationScheme IN OBJECTREF
-// 				$dom_ebXML_ObjectRef=$dom_ebXML_ExtrinsicObject->create_element_ns($ns_rim_path,"ObjectRef");
-// 				$dom_ebXML_ObjectRef=$dom_ebXML_ExtrinsicObject_root->append_child($dom_ebXML_ObjectRef);
-// 
-// 				#### SETTO I NAMESPACES
-// 				$dom_ebXML_ObjectRef->add_namespace($ns_rim_path,$ns_rim);
-// 				$dom_ebXML_ObjectRef->add_namespace($ns_q_path,$ns_q);
-// 
-// 				$dom_ebXML_ObjectRef->set_attribute("id",$ExtrinsicObject_ExternalIdentifier_identificationScheme);
-// 				############# OBJECTREF
+ 				############# OBJECTREF
 
 				$ExtrinsicObject_ExternalIdentifier_objectType=$ExtrinsicObject_ExternalIdentifier[1];
 				$ExtrinsicObject_ExternalIdentifier_id=$ExtrinsicObject_ExternalIdentifier[2];
@@ -661,49 +482,9 @@ else if($returnType_a=="LeafClass")
 				$dom_ebXML_ExtrinsicObject_ExternalIdentifier->set_attribute("id",$ExtrinsicObject_ExternalIdentifier_id);
 				$dom_ebXML_ExtrinsicObject_ExternalIdentifier->set_attribute("value",$ExtrinsicObject_ExternalIdentifier_value);
 
-				#### NAME
-				$dom_ebXML_ExternalIdentifier_Name=$dom_ebXML_ExtrinsicObject->create_element_ns($ns_rim_path,"Name");
-				$dom_ebXML_ExternalIdentifier_Name=$dom_ebXML_ExtrinsicObject_ExternalIdentifier->append_child($dom_ebXML_ExternalIdentifier_Name);
+				appendName_ExternalIdentifier($dom_ebXML_ExtrinsicObject,$dom_ebXML_ExtrinsicObject_ExternalIdentifier,$ns_rim_path,$ExtrinsicObject_ExternalIdentifier_id,$connessione);
 
-				$queryForExternalIdentifier_Name="SELECT charset,value,lang FROM Name WHERE Name.parent = '$ExtrinsicObject_ExternalIdentifier_id'";
-				$Name_arr=query_select2($queryForExternalIdentifier_Name,$connessione);
-				writeSQLQueryService($queryForExternalIdentifier_Name);
-
-				$Name_charset = $Name_arr[0][0];
-				$Name_value = $Name_arr[0][1];
-				$Name_lang = $Name_arr[0][2];
-
-				if(!empty($Name_arr))
-				{
-				$dom_ebXML_ExternalIdentifier_Name_LocalizedString=$dom_ebXML_ExtrinsicObject->create_element_ns($ns_rim_path,"LocalizedString");
-				$dom_ebXML_ExternalIdentifier_Name_LocalizedString=$dom_ebXML_ExternalIdentifier_Name->append_child($dom_ebXML_ExternalIdentifier_Name_LocalizedString);
-
-				$dom_ebXML_ExternalIdentifier_Name_LocalizedString->set_attribute("charset",$Name_charset);
-				$dom_ebXML_ExternalIdentifier_Name_LocalizedString->set_attribute("value",$Name_value);
-				$dom_ebXML_ExternalIdentifier_Name_LocalizedString->set_attribute("xml:lang",$Name_lang);
-				}
-
-				#### DESCRIPTION
-				$queryForExternalIdentifier_Description="SELECT charset,value,lang FROM Description WHERE Description.parent = '$ExtrinsicObject_ExternalIdentifier_id'";
-				$Description_arr=query_select2($queryForExternalIdentifier_Description,$connessione);
-				writeSQLQueryService($queryForExternalIdentifier_Description);
-
-				$Description_charset = $Description_arr[0][0];
-				$Description_value = $Description_arr[0][1];
-				$Description_lang = $Description_arr[0][2];
-
-				if(!empty($Description_arr) && $Description_value!="NOT DECLARED")
-				{
-				$dom_ebXML_ExternalIdentifier_Description=$dom_ebXML_ExtrinsicObject->create_element_ns($ns_rim_path,"Description");
-				$dom_ebXML_ExternalIdentifier_Description=$dom_ebXML_ExtrinsicObject_Classification->append_child($dom_ebXML_ExternalIdentifier_Description);
-
-				$dom_ebXML_ExternalIdentifier_Description_LocalizedString=$dom_ebXML_ExtrinsicObject->create_element_ns($ns_rim_path,"LocalizedString");
-				$dom_ebXML_ExternalIdentifier_Description_LocalizedString=$dom_ebXML_ExternalIdentifier_Description->append_child($dom_ebXML_ExternalIdentifier_Description_LocalizedString);
-
-				$dom_ebXML_ExternalIdentifier_Description_LocalizedString->set_attribute("charset",$Description_charset);
-				$dom_ebXML_ExternalIdentifier_Description_LocalizedString->set_attribute("value",$Description_value);
-				$dom_ebXML_ExternalIdentifier_Description_LocalizedString->set_attribute("xml:lang",$Description_lang);
-				}
+				appendDescription_ExternalIdentifier($dom_ebXML_ExtrinsicObject,$dom_ebXML_ExtrinsicObject_ExternalIdentifier,$ns_rim_path,$ExtrinsicObject_ExternalIdentifier_id,$connessione);
 
 			}//END OF for($e=0;$e<count($ExtrinsicObject_ExternalIdentifier_arr);$e++)
 
@@ -748,109 +529,13 @@ else if($returnType_a=="LeafClass")
 		//$dom_ebXML_RegistryPackage_root->set_attribute("objectType",$RegistryPackage_objectType);
 		$dom_ebXML_RegistryPackage_root->set_attribute("status",$RegistryPackage_status);
 
-		#### NAME
-		$dom_ebXML_RegistryPackage_Name=$dom_ebXML_RegistryPackage->create_element_ns($ns_rim_path,"Name");
-		$dom_ebXML_RegistryPackage_Name=$dom_ebXML_RegistryPackage_root->append_child($dom_ebXML_RegistryPackage_Name);
 
-		$queryForRegistryPackage_Name="SELECT charset,value,lang FROM Name WHERE Name.parent = '$RegistryPackage_id'";
-		$Name_arr=query_select2($queryForRegistryPackage_Name,$connessione);
-		writeSQLQueryService($queryForRegistryPackage_Name);
+		appendName($dom_ebXML_RegistryPackage,$dom_ebXML_RegistryPackage_root,$ns_rim_path,$RegistryPackage_id,$connessione);
 
-		$Name_charset = $Name_arr[0][0];
-		$Name_value = $Name_arr[0][1];
-		$Name_lang = $Name_arr[0][2];
+		appendDescription($dom_ebXML_RegistryPackage,$dom_ebXML_RegistryPackage_root,$ns_rim_path,$RegistryPackage_id,$connessione);
 
-		if(!empty($Name_arr))
-		{
-		$dom_ebXML_RegistryPackage_Name_LocalizedString=$dom_ebXML_RegistryPackage->create_element_ns($ns_rim_path,"LocalizedString");
-		$dom_ebXML_RegistryPackage_Name_LocalizedString=$dom_ebXML_RegistryPackage_Name->append_child($dom_ebXML_RegistryPackage_Name_LocalizedString);
-
-		$dom_ebXML_RegistryPackage_Name_LocalizedString->set_attribute("charset",$Name_charset);
-		$dom_ebXML_RegistryPackage_Name_LocalizedString->set_attribute("value",$Name_value);
-		$dom_ebXML_RegistryPackage_Name_LocalizedString->set_attribute("xml:lang",$Name_lang);
-		}
-
-		#### DESCRIPTION
-		$dom_ebXML_RegistryPackage_Description=$dom_ebXML_RegistryPackage->create_element_ns($ns_rim_path,"Description");
-		$dom_ebXML_RegistryPackage_Description=$dom_ebXML_RegistryPackage_root->append_child($dom_ebXML_RegistryPackage_Description);
-
-		$queryForRegistryPackage_Description="SELECT charset,value,lang FROM Description WHERE Description.parent = '$RegistryPackage_id'";
-		$Description_arr=query_select2($queryForRegistryPackage_Description,$connessione);
-		writeSQLQueryService($queryForRegistryPackage_Description);
-
-		$Description_charset = $Description_arr[0][0];
-		$Description_value = $Description_arr[0][1];
-		$Description_lang = $Description_arr[0][2];
-
-		if(!empty($Description_arr) && $Description_value!="NOT DECLARED")
-		{
-		$dom_ebXML_RegistryPackage_Description_LocalizedString=$dom_ebXML_RegistryPackage->create_element_ns($ns_rim_path,"LocalizedString");
-		$dom_ebXML_RegistryPackage_Description_LocalizedString=$dom_ebXML_RegistryPackage_Description->append_child($dom_ebXML_RegistryPackage_Description_LocalizedString);
-
-		$dom_ebXML_RegistryPackage_Description_LocalizedString->set_attribute("charset",$Description_charset);
-		$dom_ebXML_RegistryPackage_Description_LocalizedString->set_attribute("value",$Description_value);
-		$dom_ebXML_RegistryPackage_Description_LocalizedString->set_attribute("xml:lang",$Description_lang);
-		}
-
-		##### SLOT
-		$select_Slots = "SELECT name,value FROM Slot WHERE Slot.parent = '$RegistryPackage_id'";
-		$Slot_arr=query_select2($select_Slots,$connessione);
-		writeSQLQueryService($select_Slots);
-		$repeat = true;
-		for($s=0;$s<count($Slot_arr);$s++)
-		{
-			$Slot = $Slot_arr[$s];
-			$Slot_name = $Slot[0];
-
-			if($Slot_name=="authorPerson" && $repeat)
-			{
-				$dom_ebXML_RegistryPackage_Slot=$dom_ebXML_RegistryPackage->create_element_ns($ns_rim_path,"Slot");
-				$dom_ebXML_RegistryPackage_Slot=$dom_ebXML_RegistryPackage_root->append_child($dom_ebXML_RegistryPackage_Slot);
-
-				$select_authorPerson_Slots = "SELECT value FROM Slot WHERE Slot.parent = '$RegistryPackage_id' AND Slot.name = 'authorPerson'";
-				$authorPerson_Slots=query_select2($select_authorPerson_Slots,$connessione);
-				writeSQLQueryService($select_authorPerson_Slots);
-				
-				
-				$dom_ebXML_RegistryPackage_Slot->set_attribute("name",$Slot_name);
-				$dom_ebXML_RegistryPackage_Slot_ValueList=$dom_ebXML_RegistryPackage->create_element_ns($ns_rim_path,"ValueList");
-				$dom_ebXML_RegistryPackage_Slot_ValueList=$dom_ebXML_RegistryPackage_Slot->append_child($dom_ebXML_RegistryPackage_Slot_ValueList);
-
-				for($r=0;$r<count($authorPerson_Slots);$r++)
-				{
-					$authorPerson_Slot=$authorPerson_Slots[$r];
-					$Slot_value = $authorPerson_Slot[0];
-
-					$dom_ebXML_RegistryPackage_Slot_ValueList_Value=$dom_ebXML_RegistryPackage->create_element_ns($ns_rim_path,"Value");
-					$dom_ebXML_RegistryPackage_Slot_ValueList_Value=$dom_ebXML_RegistryPackage_Slot_ValueList->append_child($dom_ebXML_RegistryPackage_Slot_ValueList_Value);
-
-					$dom_ebXML_RegistryPackage_Slot_ValueList_Value->set_content($Slot_value);
-
-				}//END OF for($r=0;$r<count($authorPerson_Slots);$r++)
-
-				$repeat=false;
-
-			}//END OF if($Slot_name=="authorPerson")
-			if($Slot_name!="authorPerson")
-			{
-				$dom_ebXML_RegistryPackage_Slot=$dom_ebXML_RegistryPackage->create_element_ns($ns_rim_path,"Slot");
-				$dom_ebXML_RegistryPackage_Slot=$dom_ebXML_RegistryPackage_root->append_child($dom_ebXML_RegistryPackage_Slot);
-
-				$dom_ebXML_RegistryPackage_Slot->set_attribute("name",$Slot_name);
-			
-				$dom_ebXML_RegistryPackage_Slot_ValueList=$dom_ebXML_RegistryPackage->create_element_ns($ns_rim_path,"ValueList");
-				$dom_ebXML_RegistryPackage_Slot_ValueList=$dom_ebXML_RegistryPackage_Slot->append_child($dom_ebXML_RegistryPackage_Slot_ValueList);
-
-				$dom_ebXML_RegistryPackage_Slot_ValueList_Value=$dom_ebXML_RegistryPackage->create_element_ns($ns_rim_path,"Value");
-				$dom_ebXML_RegistryPackage_Slot_ValueList_Value=$dom_ebXML_RegistryPackage_Slot_ValueList->append_child($dom_ebXML_RegistryPackage_Slot_ValueList_Value);
-
-				$Slot_value = $Slot[1];
-				$dom_ebXML_RegistryPackage_Slot_ValueList_Value->set_content($Slot_value);
-
-			}//END OF elseif($Slot_name!="authorPerson")
-
-		}//END OF for($s=0;$s<count($slot_arr);$s++)
-
+		appendSlot($dom_ebXML_RegistryPackage,$dom_ebXML_RegistryPackage_root,$ns_rim_path,$RegistryPackage_id,$connessione);
+		
 		#### GESTISCO IL CASO IN CUI DEVO RITORNARE OGGETTI COMPOSTI
 		if($returnComposedObjects_a=="true")
 		{
@@ -902,75 +587,12 @@ else if($returnType_a=="LeafClass")
 				$dom_ebXML_RegistryPackage_Classification->set_attribute("id",$RegistryPackage_Classification_id);
 				$dom_ebXML_RegistryPackage_Classification->set_attribute("nodeRepresentation",$RegistryPackage_Classification_nodeRepresentation);
 				$dom_ebXML_RegistryPackage_Classification->set_attribute("objectType",$RegistryPackage_Classification_objectType);
-				#### NAME
-				$dom_ebXML_Classification_Name=$dom_ebXML_RegistryPackage->create_element_ns($ns_rim_path,"Name");
-				$dom_ebXML_Classification_Name=$dom_ebXML_RegistryPackage_Classification->append_child($dom_ebXML_Classification_Name);
+				
+				appendName_Classification($dom_ebXML_RegistryPackage,$dom_ebXML_RegistryPackage_Classification,$ns_rim_path,$RegistryPackage_Classification_id,$connessione);
 
-				$queryForClassification_Name="SELECT charset,value,lang FROM Name WHERE Name.parent = '$RegistryPackage_Classification_id'";
-				$Name_arr=query_select2($queryForClassification_Name,$connessione);
-				writeSQLQueryService($queryForClassification_Name);
+				appendDescription_Classification($dom_ebXML_RegistryPackage,$dom_ebXML_RegistryPackage_Classification,$ns_rim_path,$RegistryPackage_Classification_id,$connessione);
 
-				$Name_charset = $Name_arr[0][0];
-				$Name_value = $Name_arr[0][1];
-				$Name_lang = $Name_arr[0][2];
-
-				if(!empty($Name_arr))
-				{
-				$dom_ebXML_Classification_Name_LocalizedString=$dom_ebXML_RegistryPackage->create_element_ns($ns_rim_path,"LocalizedString");
-				$dom_ebXML_Classification_Name_LocalizedString=$dom_ebXML_Classification_Name->append_child($dom_ebXML_Classification_Name_LocalizedString);
-
-				$dom_ebXML_Classification_Name_LocalizedString->set_attribute("charset",$Name_charset);
-				$dom_ebXML_Classification_Name_LocalizedString->set_attribute("value",$Name_value);
-				$dom_ebXML_Classification_Name_LocalizedString->set_attribute("xml:lang",$Name_lang);
-				}
-
-				#### DESCRIPTION
-				$dom_ebXML_Classification_Description=$dom_ebXML_RegistryPackage->create_element_ns($ns_rim_path,"Description");
-				$dom_ebXML_Classification_Description=$dom_ebXML_RegistryPackage_Classification->append_child($dom_ebXML_Classification_Description);
-
-				$queryForClassification_Description="SELECT charset,value,lang FROM Description WHERE Description.parent = '$RegistryPackage_Classification_id'";
-				$Description_arr=query_select2($queryForClassification_Description,$connessione);
-				writeSQLQueryService($queryForClassification_Description);
-
-				$Description_charset = $Description_arr[0][0];
-				$Description_value = $Description_arr[0][1];
-				$Description_lang = $Description_arr[0][2];
-
-				if(!empty($Description_arr) && $Description_value!="NOT DECLARED")
-				{
-				$dom_ebXML_Classification_Description_LocalizedString=$dom_ebXML_RegistryPackage->create_element_ns($ns_rim_path,"LocalizedString");
-				$dom_ebXML_Classification_Description_LocalizedString=$dom_ebXML_Classification_Description->append_child($dom_ebXML_Classification_Description_LocalizedString);
-
-				$dom_ebXML_Classification_Description_LocalizedString->set_attribute("charset",$Description_charset);
-				$dom_ebXML_Classification_Description_LocalizedString->set_attribute("value",$Description_value);
-				$dom_ebXML_Classification_Description_LocalizedString->set_attribute("xml:lang",$Description_lang);
-				}
-
-				#### SLOT
-
-				for($sll=0;$sll<count($Slot_arr);$sll++){
-
-				$dom_ebXML_Classification_Slot=$dom_ebXML_RegistryPackage->create_element_ns($ns_rim_path,"Slot");
-				$dom_ebXML_Classification_Slot=$dom_ebXML_RegistryPackage_Classification->append_child($dom_ebXML_Classification_Slot);
-
-				$dom_ebXML_Classification_Slot_ValueList=$dom_ebXML_RegistryPackage->create_element_ns($ns_rim_path,"ValueList");
-				$dom_ebXML_Classification_Slot_ValueList=$dom_ebXML_Classification_Slot->append_child($dom_ebXML_Classification_Slot_ValueList);
-
-				$dom_ebXML_Classification_Slot_ValueList_Value=$dom_ebXML_RegistryPackage->create_element_ns($ns_rim_path,"Value");
-				$dom_ebXML_Classification_Slot_ValueList_Value=$dom_ebXML_Classification_Slot_ValueList->append_child($dom_ebXML_Classification_Slot_ValueList_Value);
-
-				$select_Slots = "SELECT name,value FROM Slot WHERE Slot.parent = '$RegistryPackage_Classification_id'";
-				$Slot_arr=query_select2($select_Slots,$connessione);
-				writeSQLQueryService($select_Slots);
-
-				#### RICAVO LE INFO SUL NODO SLOT
-				$Slot=$Slot_arr[$sll];
-				$Slot_name = $Slot[0];
-				$Slot_value = $Slot[1];
-
-				$dom_ebXML_Classification_Slot->set_attribute("name",$Slot_name);
-				$dom_ebXML_Classification_Slot_ValueList_Value->set_content($Slot_value);
-				}
+				appendSlot_Classification($dom_ebXML_RegistryPackage,$dom_ebXML_RegistryPackage_Classification,$ns_rim_path,$RegistryPackage_Classification_id,$connessione);
 
 			}//END OF for($t=0;$t<count($RegistryPackage_Classification_arr);$t++)
 
@@ -1015,49 +637,10 @@ else if($returnType_a=="LeafClass")
 				$dom_ebXML_RegistryPackage_ExternalIdentifier->set_attribute("id",$RegistryPackage_ExternalIdentifier_id);
 				$dom_ebXML_RegistryPackage_ExternalIdentifier->set_attribute("value",$RegistryPackage_ExternalIdentifier_value);
 
-				#### NAME
-				$dom_ebXML_ExternalIdentifier_Name=$dom_ebXML_RegistryPackage->create_element_ns($ns_rim_path,"Name");
-				$dom_ebXML_ExternalIdentifier_Name=$dom_ebXML_RegistryPackage_ExternalIdentifier->append_child($dom_ebXML_ExternalIdentifier_Name);
 
-				$queryForExternalIdentifier_Name="SELECT charset,value,lang FROM Name WHERE Name.parent = '$RegistryPackage_ExternalIdentifier_id'";
-				$Name_arr=query_select2($queryForExternalIdentifier_Name,$connessione);
-				writeSQLQueryService($queryForExternalIdentifier_Name);
+				appendName_ExternalIdentifier($dom_ebXML_RegistryPackage,$dom_ebXML_RegistryPackage_ExternalIdentifier,$ns_rim_path,$RegistryPackage_ExternalIdentifier_id,$connessione);
 
-				$Name_charset = $Name_arr[0][0];
-				$Name_value = $Name_arr[0][1];
-				$Name_lang = $Name_arr[0][2];
-
-				if(!empty($Name_arr))
-				{
-				$dom_ebXML_ExternalIdentifier_Name_LocalizedString=$dom_ebXML_RegistryPackage->create_element_ns($ns_rim_path,"LocalizedString");
-				$dom_ebXML_ExternalIdentifier_Name_LocalizedString=$dom_ebXML_ExternalIdentifier_Name->append_child($dom_ebXML_ExternalIdentifier_Name_LocalizedString);
-
-				$dom_ebXML_ExternalIdentifier_Name_LocalizedString->set_attribute("charset",$Name_charset);
-				$dom_ebXML_ExternalIdentifier_Name_LocalizedString->set_attribute("value",$Name_value);
-				$dom_ebXML_ExternalIdentifier_Name_LocalizedString->set_attribute("xml:lang",$Name_lang);
-				}
-
-				#### DESCRIPTION
-				$dom_ebXML_ExternalIdentifier_Description=$dom_ebXML_RegistryPackage->create_element_ns($ns_rim_path,"Description");
-				$dom_ebXML_ExternalIdentifier_Description=$dom_ebXML_RegistryPackage_ExternalIdentifier->append_child($dom_ebXML_ExternalIdentifier_Description);
-
-				$queryForExternalIdentifier_Description="SELECT charset,value,lang FROM Description WHERE Description.parent = '$RegistryPackage_ExternalIdentifier_id'";
-				$Description_arr=query_select2($queryForExternalIdentifier_Description,$connessione);
-				writeSQLQueryService($queryForExternalIdentifier_Description);
-
-				$Description_charset = $Description_arr[0][0];
-				$Description_value = $Description_arr[0][1];
-				$Description_lang = $Description_arr[0][2];
-
-				if(!empty($Description_arr) && $Description_value!="NOT DECLARED")
-				{
-				$dom_ebXML_ExternalIdentifier_Description_LocalizedString=$dom_ebXML_RegistryPackage->create_element_ns($ns_rim_path,"LocalizedString");
-				$dom_ebXML_ExternalIdentifier_Description_LocalizedString=$dom_ebXML_ExternalIdentifier_Description->append_child($dom_ebXML_ExternalIdentifier_Description_LocalizedString);
-
-				$dom_ebXML_ExternalIdentifier_Description_LocalizedString->set_attribute("charset",$Description_charset);
-				$dom_ebXML_ExternalIdentifier_Description_LocalizedString->set_attribute("value",$Description_value);
-				$dom_ebXML_ExternalIdentifier_Description_LocalizedString->set_attribute("xml:lang",$Description_lang);
-				}
+				appendDescription_ExternalIdentifier($dom_ebXML_RegistryPackage,$dom_ebXML_RegistryPackage_ExternalIdentifier,$ns_rim_path,$RegistryPackage_ExternalIdentifier_id,$connessione);
 
 			}//END OF for($e=0;$e<count($RegistryPackage_ExternalIdentifier_arr);$e++)
 
@@ -1071,10 +654,6 @@ else if($returnType_a=="LeafClass")
 	     if($objectType_code_from_RegistryPackage=="XDSFolder")
 	     {
 		writeSQLQueryService("Sono nel caso XDSFolder");
-
-		$fp=fopen("tmp/REQUEST_OBJECT","w+");
-    		fwrite($fp,"REQUESTED_OBJECT =  $objectType_code_from_RegistryPackage");
-		fclose($fp);
 
 		$RegistryPackage_id = $SQLResponse[$rr][0];
 
@@ -1107,111 +686,13 @@ else if($returnType_a=="LeafClass")
 		//$dom_ebXML_RegistryPackage_root->set_attribute("objectType",$RegistryPackage_objectType);
 		$dom_ebXML_RegistryPackage_root->set_attribute("status",$RegistryPackage_status);
 
-		#### NAME
-		$dom_ebXML_RegistryPackage_Name=$dom_ebXML_RegistryPackage->create_element_ns($ns_rim_path,"Name");
-		$dom_ebXML_RegistryPackage_Name=$dom_ebXML_RegistryPackage_root->append_child($dom_ebXML_RegistryPackage_Name);
+		appendName($dom_ebXML_RegistryPackage,$dom_ebXML_RegistryPackage_root,$ns_rim_path,$RegistryPackage_id,$connessione);
 
-		$queryForRegistryPackage_Name="SELECT charset,value,lang FROM Name WHERE Name.parent = '$RegistryPackage_id'";
-		$Name_arr=query_select2($queryForRegistryPackage_Name,$connessione);
-		writeSQLQueryService($queryForRegistryPackage_Name);
+		appendDescription($dom_ebXML_RegistryPackage,$dom_ebXML_RegistryPackage_root,$ns_rim_path,$RegistryPackage_id,$connessione);
 
-		$Name_charset = $Name_arr[0][0];
-		$Name_value = $Name_arr[0][1];
-		$Name_lang = $Name_arr[0][2];
+		appendSlot($dom_ebXML_RegistryPackage,$dom_ebXML_RegistryPackage_root,$ns_rim_path,$RegistryPackage_id,$connessione);
 
-		if(!empty($Name_arr))
-		{
-		$dom_ebXML_RegistryPackage_Name_LocalizedString=$dom_ebXML_RegistryPackage->create_element_ns($ns_rim_path,"LocalizedString");
-		$dom_ebXML_RegistryPackage_Name_LocalizedString=$dom_ebXML_RegistryPackage_Name->append_child($dom_ebXML_RegistryPackage_Name_LocalizedString);
 
-		$dom_ebXML_RegistryPackage_Name_LocalizedString->set_attribute("charset",$Name_charset);
-		$dom_ebXML_RegistryPackage_Name_LocalizedString->set_attribute("value",$Name_value);
-		$dom_ebXML_RegistryPackage_Name_LocalizedString->set_attribute("xml:lang",$Name_lang);
-		}
-
-		#### DESCRIPTION
-		$dom_ebXML_RegistryPackage_Description=$dom_ebXML_RegistryPackage->create_element_ns($ns_rim_path,"Description");
-		$dom_ebXML_RegistryPackage_Description=$dom_ebXML_RegistryPackage_root->append_child($dom_ebXML_RegistryPackage_Description);
-
-		$queryForRegistryPackage_Description="SELECT charset,value,lang FROM Description WHERE Description.parent = '$RegistryPackage_id'";
-		$Description_arr=query_select2($queryForRegistryPackage_Description,$connessione);
-		writeSQLQueryService($queryForRegistryPackage_Description);
-
-		$Description_charset = $Description_arr[0][0];
-		$Description_value = $Description_arr[0][1];
-		$Description_lang = $Description_arr[0][2];
-
-		if(!empty($Description_arr) && $Description_value!="NOT DECLARED")
-		{
-		$dom_ebXML_RegistryPackage_Description_LocalizedString=$dom_ebXML_RegistryPackage->create_element_ns($ns_rim_path,"LocalizedString");
-		$dom_ebXML_RegistryPackage_Description_LocalizedString=$dom_ebXML_RegistryPackage_Description->append_child($dom_ebXML_RegistryPackage_Description_LocalizedString);
-
-		$dom_ebXML_RegistryPackage_Description_LocalizedString->set_attribute("charset",$Description_charset);
-		$dom_ebXML_RegistryPackage_Description_LocalizedString->set_attribute("value",$Description_value);
-		$dom_ebXML_RegistryPackage_Description_LocalizedString->set_attribute("xml:lang",$Description_lang);
-		}
-
-		##### SLOT
-		$select_Slots = "SELECT name,value FROM Slot WHERE Slot.parent = '$RegistryPackage_id'";
-		$Slot_arr=query_select2($select_Slots,$connessione);
-		writeSQLQueryService($select_Slots);
-		$repeat = true;
-		if(!empty($Slot_arr))
-		{
-		for($s=0;$s<count($Slot_arr);$s++)
-		{
-			$Slot = $Slot_arr[$s];
-			$Slot_name = $Slot[0];
-
-			if($Slot_name=="authorPerson" && $repeat)
-			{
-				$dom_ebXML_RegistryPackage_Slot=$dom_ebXML_RegistryPackage->create_element_ns($ns_rim_path,"Slot");
-				$dom_ebXML_RegistryPackage_Slot=$dom_ebXML_RegistryPackage_root->append_child($dom_ebXML_RegistryPackage_Slot);
-
-				$select_authorPerson_Slots = "SELECT value FROM Slot WHERE Slot.parent = '$RegistryPackage_id' AND Slot.name = 'authorPerson'";
-				$authorPerson_Slots=query_select2($select_authorPerson_Slots,$connessione);
-				writeSQLQueryService($select_authorPerson_Slots);
-				
-				$dom_ebXML_RegistryPackage_Slot->set_attribute("name",$Slot_name);
-				$dom_ebXML_RegistryPackage_Slot_ValueList=$dom_ebXML_RegistryPackage->create_element_ns($ns_rim_path,"ValueList");
-				$dom_ebXML_RegistryPackage_Slot_ValueList=$dom_ebXML_RegistryPackage_Slot->append_child($dom_ebXML_RegistryPackage_Slot_ValueList);
-
-				for($r=0;$r<count($authorPerson_Slots);$r++)
-				{
-					$authorPerson_Slot=$authorPerson_Slots[$r];
-					$Slot_value = $authorPerson_Slot[0];
-
-					$dom_ebXML_RegistryPackage_Slot_ValueList_Value=$dom_ebXML_RegistryPackage->create_element_ns($ns_rim_path,"Value");
-					$dom_ebXML_RegistryPackage_Slot_ValueList_Value=$dom_ebXML_RegistryPackage_Slot_ValueList->append_child($dom_ebXML_RegistryPackage_Slot_ValueList_Value);
-
-					$dom_ebXML_RegistryPackage_Slot_ValueList_Value->set_content($Slot_value);
-
-				}//END OF for($r=0;$r<count($authorPerson_Slots);$r++)
-
-				$repeat=false;
-
-			}//END OF if($Slot_name=="authorPerson")
-			if($Slot_name!="authorPerson")
-			{
-				$dom_ebXML_RegistryPackage_Slot=$dom_ebXML_RegistryPackage->create_element_ns($ns_rim_path,"Slot");
-				$dom_ebXML_RegistryPackage_Slot=$dom_ebXML_RegistryPackage_root->append_child($dom_ebXML_RegistryPackage_Slot);
-
-				$dom_ebXML_RegistryPackage_Slot->set_attribute("name",$Slot_name);
-			
-				$dom_ebXML_RegistryPackage_Slot_ValueList=$dom_ebXML_RegistryPackage->create_element_ns($ns_rim_path,"ValueList");
-				$dom_ebXML_RegistryPackage_Slot_ValueList=$dom_ebXML_RegistryPackage_Slot->append_child($dom_ebXML_RegistryPackage_Slot_ValueList);
-
-				$dom_ebXML_RegistryPackage_Slot_ValueList_Value=$dom_ebXML_RegistryPackage->create_element_ns($ns_rim_path,"Value");
-				$dom_ebXML_RegistryPackage_Slot_ValueList_Value=$dom_ebXML_RegistryPackage_Slot_ValueList->append_child($dom_ebXML_RegistryPackage_Slot_ValueList_Value);
-
-				$Slot_value = $Slot[1];
-				$dom_ebXML_RegistryPackage_Slot_ValueList_Value->set_content($Slot_value);
-
-			}//END OF if($Slot_name!="authorPerson")
-
-		}//END OF for($s=0;$s<count($slot_arr);$s++)
-
-		}//END OF if(!empty($Slot_arr))
 
 		#### GESTISCO IL CASO IN CUI DEVO RITORNARE OGGETTI COMPOSTI
 		if($returnComposedObjects_a=="true")
@@ -1265,72 +746,13 @@ else if($returnType_a=="LeafClass")
 				$dom_ebXML_RegistryPackage_Classification->set_attribute("id",$RegistryPackage_Classification_id);
 				$dom_ebXML_RegistryPackage_Classification->set_attribute("nodeRepresentation",$RegistryPackage_Classification_nodeRepresentation);
 				$dom_ebXML_RegistryPackage_Classification->set_attribute("objectType",$RegistryPackage_Classification_objectType);
-				#### NAME
-				$dom_ebXML_Classification_Name=$dom_ebXML_RegistryPackage->create_element_ns($ns_rim_path,"Name");
-				$dom_ebXML_Classification_Name=$dom_ebXML_RegistryPackage_Classification->append_child($dom_ebXML_Classification_Name);
+				
+				appendName_Classification($dom_ebXML_RegistryPackage,$dom_ebXML_RegistryPackage_Classification,$ns_rim_path,$RegistryPackage_Classification_id,$connessione);
 
-				$queryForClassification_Name="SELECT charset,value,lang FROM Name WHERE Name.parent = '$RegistryPackage_Classification_id'";
-				$Name_arr=query_select2($queryForClassification_Name,$connessione);
-				writeSQLQueryService($queryForClassification_Name);
+				appendDescription_Classification($dom_ebXML_RegistryPackage,$dom_ebXML_RegistryPackage_Classification,$ns_rim_path,$RegistryPackage_Classification_id,$connessione);
 
-				$Name_charset = $Name_arr[0][0];
-				$Name_value = $Name_arr[0][1];
-				$Name_lang = $Name_arr[0][2];
-
-				if(!empty($Name_arr))
-				{
-				$dom_ebXML_Classification_Name_LocalizedString=$dom_ebXML_RegistryPackage->create_element_ns($ns_rim_path,"LocalizedString");
-				$dom_ebXML_Classification_Name_LocalizedString=$dom_ebXML_Classification_Name->append_child($dom_ebXML_Classification_Name_LocalizedString);
-
-				$dom_ebXML_Classification_Name_LocalizedString->set_attribute("charset",$Name_charset);
-				$dom_ebXML_Classification_Name_LocalizedString->set_attribute("value",$Name_value);
-				$dom_ebXML_Classification_Name_LocalizedString->set_attribute("xml:lang",$Name_lang);
-				}
-
-				#### DESCRIPTION
-				$dom_ebXML_Classification_Description=$dom_ebXML_RegistryPackage->create_element_ns($ns_rim_path,"Description");
-				$dom_ebXML_Classification_Description=$dom_ebXML_RegistryPackage_Classification->append_child($dom_ebXML_Classification_Description);
-
-				$queryForClassification_Description="SELECT charset,value,lang FROM Description WHERE Description.parent = '$RegistryPackage_Classification_id'";
-				$Description_arr=query_select2($queryForClassification_Description,$connessione);
-				writeSQLQueryService($queryForClassification_Description);
-
-				$Description_charset = $Description_arr[0][0];
-				$Description_value = $Description_arr[0][1];
-				$Description_lang = $Description_arr[0][2];
-
-				if(!empty($Description_arr) && $Description_value!="NOT DECLARED")
-				{
-				$dom_ebXML_Classification_Description_LocalizedString=$dom_ebXML_RegistryPackage->create_element_ns($ns_rim_path,"LocalizedString");
-				$dom_ebXML_Classification_Description_LocalizedString=$dom_ebXML_Classification_Description->append_child($dom_ebXML_Classification_Description_LocalizedString);
-
-				$dom_ebXML_Classification_Description_LocalizedString->set_attribute("charset",$Description_charset);
-				$dom_ebXML_Classification_Description_LocalizedString->set_attribute("value",$Description_value);
-				$dom_ebXML_Classification_Description_LocalizedString->set_attribute("xml:lang",$Description_lang);
-				}
-
-				#### SLOT
-				$dom_ebXML_Classification_Slot=$dom_ebXML_RegistryPackage->create_element_ns($ns_rim_path,"Slot");
-				$dom_ebXML_Classification_Slot=$dom_ebXML_RegistryPackage_Classification->append_child($dom_ebXML_Classification_Slot);
-
-				$dom_ebXML_Classification_Slot_ValueList=$dom_ebXML_RegistryPackage->create_element_ns($ns_rim_path,"ValueList");
-				$dom_ebXML_Classification_Slot_ValueList=$dom_ebXML_Classification_Slot->append_child($dom_ebXML_Classification_Slot_ValueList);
-
-				$dom_ebXML_Classification_Slot_ValueList_Value=$dom_ebXML_RegistryPackage->create_element_ns($ns_rim_path,"Value");
-				$dom_ebXML_Classification_Slot_ValueList_Value=$dom_ebXML_Classification_Slot_ValueList->append_child($dom_ebXML_Classification_Slot_ValueList_Value);
-
-				$select_Slots = "SELECT name,value FROM Slot WHERE Slot.parent = '$RegistryPackage_Classification_id'";
-				$Slot_arr=query_select2($select_Slots,$connessione);
-				writeSQLQueryService($select_Slots);
-
-				#### RICAVO LE INFO SUL NODO SLOT
-				$Slot=$Slot_arr[0];
-				$Slot_name = $Slot[0];
-				$Slot_value = $Slot[1];
-
-				$dom_ebXML_Classification_Slot->set_attribute("name",$Slot_name);
-				$dom_ebXML_Classification_Slot_ValueList_Value->set_content($Slot_value);
-
+				appendSlot_Classification($dom_ebXML_RegistryPackage,$dom_ebXML_RegistryPackage_Classification,$ns_rim_path,$RegistryPackage_Classification_id,$connessione);
+				
 			}//END OF for($t=0;$t<count($RegistryPackage_Classification_arr);$t++)
 
 			}//END OF if(!empty($RegistryPackage_Classification_arr))
@@ -1375,49 +797,9 @@ else if($returnType_a=="LeafClass")
 				$dom_ebXML_RegistryPackage_ExternalIdentifier->set_attribute("id",$RegistryPackage_ExternalIdentifier_id);
 				$dom_ebXML_RegistryPackage_ExternalIdentifier->set_attribute("value",$RegistryPackage_ExternalIdentifier_value);
 
-				#### NAME
-				$dom_ebXML_ExternalIdentifier_Name=$dom_ebXML_RegistryPackage->create_element_ns($ns_rim_path,"Name");
-				$dom_ebXML_ExternalIdentifier_Name=$dom_ebXML_RegistryPackage_ExternalIdentifier->append_child($dom_ebXML_ExternalIdentifier_Name);
+				appendName_ExternalIdentifier($dom_ebXML_RegistryPackage,$dom_ebXML_RegistryPackage_ExternalIdentifier,$ns_rim_path,$RegistryPackage_ExternalIdentifier_id,$connessione);
 
-				$queryForExternalIdentifier_Name="SELECT charset,value,lang FROM Name WHERE Name.parent = '$RegistryPackage_ExternalIdentifier_id'";
-				$Name_arr=query_select2($queryForExternalIdentifier_Name,$connessione);
-				writeSQLQueryService($queryForExternalIdentifier_Name);
-
-				$Name_charset = $Name_arr[0][0];
-				$Name_value = $Name_arr[0][1];
-				$Name_lang = $Name_arr[0][2];
-
-				if(!empty($Name_arr))
-				{
-				$dom_ebXML_ExternalIdentifier_Name_LocalizedString=$dom_ebXML_RegistryPackage->create_element_ns($ns_rim_path,"LocalizedString");
-				$dom_ebXML_ExternalIdentifier_Name_LocalizedString=$dom_ebXML_ExternalIdentifier_Name->append_child($dom_ebXML_ExternalIdentifier_Name_LocalizedString);
-
-				$dom_ebXML_ExternalIdentifier_Name_LocalizedString->set_attribute("charset",$Name_charset);
-				$dom_ebXML_ExternalIdentifier_Name_LocalizedString->set_attribute("value",$Name_value);
-				$dom_ebXML_ExternalIdentifier_Name_LocalizedString->set_attribute("xml:lang",$Name_lang);
-				}
-
-				#### DESCRIPTION
-				$dom_ebXML_ExternalIdentifier_Description=$dom_ebXML_RegistryPackage->create_element_ns($ns_rim_path,"Description");
-				$dom_ebXML_ExternalIdentifier_Description=$dom_ebXML_RegistryPackage_ExternalIdentifier->append_child($dom_ebXML_ExternalIdentifier_Description);
-
-				$queryForExternalIdentifier_Description="SELECT charset,value,lang FROM Description WHERE Description.parent = '$RegistryPackage_ExternalIdentifier_id'";
-				$Description_arr=query_select2($queryForExternalIdentifier_Description,$connessione);
-				writeSQLQueryService($queryForExternalIdentifier_Description);
-
-				$Description_charset = $Description_arr[0][0];
-				$Description_value = $Description_arr[0][1];
-				$Description_lang = $Description_arr[0][2];
-
-				if(!empty($Description_arr) && $Description_value!="NOT DECLARED")
-				{
-				$dom_ebXML_ExternalIdentifier_Description_LocalizedString=$dom_ebXML_RegistryPackage->create_element_ns($ns_rim_path,"LocalizedString");
-				$dom_ebXML_ExternalIdentifier_Description_LocalizedString=$dom_ebXML_ExternalIdentifier_Description->append_child($dom_ebXML_ExternalIdentifier_Description_LocalizedString);
-
-				$dom_ebXML_ExternalIdentifier_Description_LocalizedString->set_attribute("charset",$Description_charset);
-				$dom_ebXML_ExternalIdentifier_Description_LocalizedString->set_attribute("value",$Description_value);
-				$dom_ebXML_ExternalIdentifier_Description_LocalizedString->set_attribute("xml:lang",$Description_lang);
-				}
+				appendDescription_ExternalIdentifier($dom_ebXML_RegistryPackage,$dom_ebXML_RegistryPackage_ExternalIdentifier,$ns_rim_path,$RegistryPackage_ExternalIdentifier_id,$connessione);
 
 			}//END OF for($e=0;$e<count($RegistryPackage_ExternalIdentifier_arr);$e++)
 
@@ -1467,76 +849,13 @@ else if($returnType_a=="LeafClass")
 		$Association_targetObject_ARR_2[]=$Association_targetObject;
 		##################################################
 
-		#### NAME
-		$dom_ebXML_Association_Name=$dom_ebXML_Association->create_element_ns($ns_rim_path,"Name");
-		$dom_ebXML_Association_Name=$dom_ebXML_Association_root->append_child($dom_ebXML_Association_Name);
 
-		$queryForAssociation_Name="SELECT charset,value,lang FROM Name WHERE Name.parent = '$Association_id'";
-		$Name_arr=query_select2($queryForAssociation_Name,$connessione);
-		writeSQLQueryService($queryForAssociation_Name);
+		appendName($dom_ebXML_Association,$dom_ebXML_Association_root,$ns_rim_path,$Association_id,$connessione);
 
-		$Name_charset = $Name_arr[0][0];
-		$Name_value = $Name_arr[0][1];
-		$Name_lang = $Name_arr[0][2];
+		appendDescription($dom_ebXML_Association,$dom_ebXML_Association_root,$ns_rim_path,$Association_id,$connessione);
 
-		if(!empty($Name_arr))
-		{
-		$dom_ebXML_Association_Name_LocalizedString=$dom_ebXML_Association->create_element_ns($ns_rim_path,"LocalizedString");
-		$dom_ebXML_Association_Name_LocalizedString=$dom_ebXML_Association_Name->append_child($dom_ebXML_Association_Name_LocalizedString);
-
-		$dom_ebXML_Association_Name_LocalizedString->set_attribute("charset",$Name_charset);
-		$dom_ebXML_Association_Name_LocalizedString->set_attribute("value",$Name_value);
-		$dom_ebXML_Association_Name_LocalizedString->set_attribute("xml:lang",$Name_lang);
-		}
-
-		#### DESCRIPTION
-		$dom_ebXML_Association_Description=$dom_ebXML_Association->create_element_ns($ns_rim_path,"Description");
-		$dom_ebXML_Association_Description=$dom_ebXML_Association_root->append_child($dom_ebXML_Association_Description);
-
-		$queryForAssociation_Description="SELECT charset,value,lang FROM Description WHERE Description.parent = '$Association_id'";
-		$Description_arr=query_select2($queryForAssociation_Description,$connessione);
-		writeSQLQueryService($queryForAssociation_Description);
-
-		$Description_charset = $Description_arr[0][0];
-		$Description_value = $Description_arr[0][1];
-		$Description_lang = $Description_arr[0][2];
-
-		if(!empty($Description_arr) && $Description_value!="NOT DECLARED")
-		{
-		$dom_ebXML_Association_Description_LocalizedString=$dom_ebXML_Association->create_element_ns($ns_rim_path,"LocalizedString");
-		$dom_ebXML_Association_Description_LocalizedString=$dom_ebXML_Association_Description->append_child($dom_ebXML_Association_Description_LocalizedString);
-
-		$dom_ebXML_Association_Description_LocalizedString->set_attribute("charset",$Description_charset);
-		$dom_ebXML_Association_Description_LocalizedString->set_attribute("value",$Description_value);
-		$dom_ebXML_Association_Description_LocalizedString->set_attribute("xml:lang",$Description_lang);
-		}
-
-		##### SLOT
-		$select_Slots = "SELECT name,value FROM Slot WHERE Slot.parent = '$Association_id'";
-		$Slot_arr=query_select2($select_Slots,$connessione);
-		writeSQLQueryService($select_Slots);
-		$repeat = true;
-		for($s=0;$s<count($Slot_arr);$s++)
-		{
-			$Slot = $Slot_arr[$s];
-			$Slot_name = $Slot[0];
-
-			$dom_ebXML_Association_Slot=$dom_ebXML_Association->create_element_ns($ns_rim_path,"Slot");
-			$dom_ebXML_Association_Slot=$dom_ebXML_Association_root->append_child($dom_ebXML_Association_Slot);
-
-			$dom_ebXML_Association_Slot->set_attribute("name",$Slot_name);
-			
-			$dom_ebXML_Association_Slot_ValueList=$dom_ebXML_Association->create_element_ns($ns_rim_path,"ValueList");
-			$dom_ebXML_Association_Slot_ValueList=$dom_ebXML_Association_Slot->append_child($dom_ebXML_Association_Slot_ValueList);
-
-			$dom_ebXML_Association_Slot_ValueList_Value=$dom_ebXML_Association->create_element_ns($ns_rim_path,"Value");
-			$dom_ebXML_Association_Slot_ValueList_Value=$dom_ebXML_Association_Slot_ValueList->append_child($dom_ebXML_Association_Slot_ValueList_Value);
-
-			$Slot_value = $Slot[1];
-			$dom_ebXML_Association_Slot_ValueList_Value->set_content($Slot_value);
-
-		}//END OF for($s=0;$s<count($Slot_arr);$s++)
-
+		appendSlot($dom_ebXML_Association,$dom_ebXML_Association_root,$ns_rim_path,$Association_id,$connessione);
+		
 		#### CONCATENO LE STINGHE RISULTANTI
 		$ebXML_Response_string = $ebXML_Response_string.substr($dom_ebXML_Association->dump_mem(),21);
 
@@ -1615,9 +934,11 @@ else if($returnType_a=="LeafClass")
 
 	}##### EXTRINSICOBJECT
 
+	/*	
 	$fp= fopen("tmp/CONTROLLO_OBJECTREF", "w+");
     	fwrite($fp,"RegistryPackage_Classification_classificationScheme_ARR_1 = ".count($RegistryPackage_Classification_classificationScheme_ARR_1)."  RegistryPackage_Classification_classificationNode_ARR_1 = ".count($RegistryPackage_Classification_classificationNode_ARR_1)."   RegistryPackage_ExternalIdentifier_identificationScheme_ARR_1 = ".count($RegistryPackage_ExternalIdentifier_identificationScheme_ARR_1));
 	fclose($fp);
+	*/
 
 	###### REGISTRYPACKAGE
 	if(!empty($RegistryPackage_Classification_classificationScheme_ARR_1) && !empty($RegistryPackage_Classification_classificationNode_ARR_1) && !empty($RegistryPackage_ExternalIdentifier_identificationScheme_ARR_1))
@@ -1751,54 +1072,6 @@ else if($returnType_a=="LeafClass")
 #### METTO L'ebXML SU STRINGA
 //$ebXML_Response_string = substr($dom_ebXML_Response->dump_mem(),21);
 
-##### IMBUSTO PER LA SPEDIZIONE
-$ebXML_Response_SOAPED_string = makeSoapedSuccessQueryResponse($ebXML_Response_string);
-
-#####################################################################
-#################### RISPONDO ALLA QUERY ############################
-
-###### SCRIVO L'ebXML IMBUSTATO SOAP
-$fp_ebxml_response_imbustato = fopen($tmpQueryService_path."ebxmlResponseSOAP.xml","wb+");
-	fwrite($fp_ebxml_response_imbustato,$ebXML_Response_SOAPED_string);
-fclose($fp_ebxml_response_imbustato);
-
-############## PULISCO IL BUFFER DI USCITA
-ob_get_clean();### OKKIO FONDAMENTALE!!!!!
-
-################QUI CI VA IL RESPONSE
-
-#### HEADERS
-header("HTTP/1.1 200 OK");
-$path_header = "Path: $www_REG_path";
-if($http=="TLS")
-{
-	##### NEL CASO TLS AGGIUNGO LA DICITURA SECURE
-	$path_header = $path_header."; Secure";
-}
-header($path_header);
-header("Content-Type: text/xml;charset=UTF-8");
-header("Content-Length: ".(string)filesize($tmpQueryService_path."ebxmlResponseSOAP.xml"));
-
-##### FILE BODY
-if($file = fopen($tmpQueryService_path."ebxmlResponseSOAP.xml",'rb'))
-{
-   	while((!feof($file)) && (connection_status()==0))
-   	{
-      		print(fread($file,1024*8));
-      		flush();//NOTA BENE!!!!!!!!!
-
-   	}//END OF while((!feof($file)) && (connection_status()==0))
-
-   	fclose($file);
-
-}//END OF if($file = fopen($tmpQueryService_path."ebxmlResponseSOAP.xml",'rb'))
-
-//------------------------------------------------//
-//SPEDISCO E PULISCO IL BUFFER DI USCITA
-ob_end_flush();//OKKIO FONDAMENTALE!!!!!!!!
-
-
-
 // ATNA Query
 if($ATNA_active=='A'){
 		$today = date("Y-m-d");
@@ -1815,7 +1088,7 @@ $message_query ="<AuditMessage xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-inst
 		<ActiveParticipant UserID=\"MARIS VIEW\" NetworkAccessPointTypeCode=\"2\" NetworkAccessPointID=\"".$_SERVER['REMOTE_ADDR']."\"  UserIsRequestor=\"true\">
         		<RoleIDCode code=\"110153\" codeSystemName=\"DCM\" displayName=\"Source\"/>
 		</ActiveParticipant>
-		<ActiveParticipant UserID=\"http://".$reg_host.":".$reg_port.$reg_path."\" NetworkAccessPointTypeCode=\"2\" NetworkAccessPointID=\"".$reg_host."\"  UserIsRequestor=\"false\">
+		<ActiveParticipant UserID=\"".$http_protocol.$ip_server.":".$port_server.$www_REG_path."\" NetworkAccessPointTypeCode=\"2\" NetworkAccessPointID=\"".$reg_host."\"  UserIsRequestor=\"false\">
         		<RoleIDCode code=\"110152\" codeSystemName=\"DCM\" displayName=\"Destination\"/>
     		</ActiveParticipant>
 		<ParticipantObjectIdentification ParticipantObjectID=\"empty\" ParticipantObjectTypeCode=\"2\" ParticipantObjectTypeCodeRole=\"24\">
@@ -1836,6 +1109,68 @@ $message_query ="<AuditMessage xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-inst
 
 
 ################## END OF REGISTRY RESPONSE TO QUERY ####################
+//Statistiche
+if($statActive=="A") {
+	//Parte per calcolare i tempi di esecuzione
+	$mtime = microtime();
+	$mtime = explode(" ",$mtime);
+	$mtime = $mtime[1] + $mtime[0];
+	$endtime = $mtime;
+	$totaltime = number_format($endtime - $starttime,15);
+
+	$STAT_QUERY="INSERT INTO STATS (REPOSITORY,DATA,EXECUTION_TIME,OPERATION) VALUES ('".$_SERVER['REMOTE_ADDR']."',CURRENT_TIMESTAMP,'$totaltime','QUERY-A')";
+	$ris = query_exec2($STAT_QUERY,$connessione);
+	writeSQLQueryService($ris.": ".$STAT_QUERY);
+}
+
+
+
+##### IMBUSTO PER LA SPEDIZIONE
+$ebXML_Response_SOAPED_string = makeSoapedSuccessQueryResponse($ebXML_Response_string);
+
+#####################################################################
+#################### RISPONDO ALLA QUERY ############################
+
+###### SCRIVO L'ebXML IMBUSTATO SOAP
+writeTmpQueryFiles($ebXML_Response_SOAPED_string,$idfile."-ebxmlResponseSOAP.xml");
+
+
+############## PULISCO IL BUFFER DI USCITA
+ob_get_clean();### OKKIO FONDAMENTALE!!!!!
+
+################QUI CI VA IL RESPONSE
+
+#### HEADERS
+header("HTTP/1.1 200 OK");
+$path_header = "Path: $www_REG_path";
+if($http=="TLS")
+{
+	##### NEL CASO TLS AGGIUNGO LA DICITURA SECURE
+	$path_header = $path_header."; Secure";
+}
+header($path_header);
+header("Content-Type: text/xml;charset=UTF-8");
+header("Content-Length: ".(string)filesize($tmpQueryService_path.$idfile."-ebxmlResponseSOAP.xml"));
+
+##### FILE BODY
+if($file = fopen($tmpQueryService_path.$idfile."-ebxmlResponseSOAP.xml",'rb'))
+{
+   	while((!feof($file)) && (connection_status()==0))
+   	{
+      		print(fread($file,1024*8));
+      		flush();//NOTA BENE!!!!!!!!!
+
+   	}//END OF while((!feof($file)) && (connection_status()==0))
+
+   	fclose($file);
+
+}//END OF if($file = fopen($tmpQueryService_path."ebxmlResponseSOAP.xml",'rb'))
+
+//------------------------------------------------//
+//SPEDISCO E PULISCO IL BUFFER DI USCITA
+ob_end_flush();//OKKIO FONDAMENTALE!!!!!!!!
+
+
 
 
 //Mi disconnetto dal DB
@@ -1845,5 +1180,5 @@ unset($_SESSION['tmp_path']);
 unset($_SESSION['idfile']);
 unset($_SESSION['logActive']);
 unset($_SESSION['log_query_path']);
-
+unset($_SESSION['www_REG_path']);
 ?>
