@@ -1,4 +1,5 @@
 <?php
+
 # ------------------------------------------------------------------------------------
 # MARIS XDS REGISTRY
 # Copyright (C) 2007 - 2010  MARiS Project
@@ -179,9 +180,10 @@ function writeTmpFiles($log_text,$file_name,$mandatory=false)
 			$tmp_response = makeSoapedFailureResponse($error_message,$errorcode);
 			writeTimeFile($_SESSION['idfile']."--Registry: Tmp File error");
 		
-			$file_input=$idfile."-tmp_failure_response-".$idfile;
+			$file_input=$idfile."-tmp_failure_response.xml";
 			writeTmpFiles($tmp_response,$file_input);
 			SendResponse($tmp_response);
+			//SendResponseFile($_SESSION['tmp_path'].$file_input);
 			exit;
 		}
 		
@@ -266,8 +268,9 @@ function writeTmpQueryFiles($log_text,$file_name,$mandatory=false)
 			$tmp_response = makeSoapedFailureResponse($error_message,$errorcode);
 			writeTimeFile($_SESSION['idfile']."--Registry: Tmp File error");
 		
-			$file_input=$idfile."-tmp_failure_response-".$idfile;
+			$file_input=$idfile."-tmp_failure_response.xml";
 			writeTmpQueryFiles($tmp_response,$file_input);
+			//SendResponseFile($_SESSION['tmpQueryService_path'].$file_input);
 			SendResponse($tmp_response);
 			exit;
 		}

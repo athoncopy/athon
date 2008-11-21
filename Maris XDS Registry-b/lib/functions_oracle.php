@@ -62,10 +62,10 @@ $risultato = ociexecute($statement);
 		$database_error_response = makeSoapedFailureResponse($error_message,$errorcode);
 		writeTimeFile($_SESSION['idfile']."--Registry: database_error_response");
 			
-		$file_input=$_SESSION['idfile']."-database_error_response-".$_SESSION['idfile'];
-		writeTmpFiles($database_error_response,$file_input);
-	
-		SendResponse($database_error_response);
+		$file_input=$_SESSION['idfile']."-database_error_response.xml";
+		writeTmpFiles($database_error_response,$file_input,true);
+		SendResponseFile($_SESSION['tmp_path'].$file_input);
+		//SendResponse($database_error_response);
 		exit;
 	}
 	$statement = ociparse($conn, $query);
@@ -88,10 +88,10 @@ $risultato = ociexecute($statement);
 		$database_error_response = makeSoapedFailureResponse($error_message,$errorcode);
 		writeTimeFile($_SESSION['idfile']."--Registry: database_error_response");
 			
-		$file_input=$_SESSION['idfile']."-database_error_response-".$_SESSION['idfile'];
+		$file_input=$_SESSION['idfile']."-database_error_response.xml";
 		writeTmpFiles($database_error_response,$file_input);
-
-		SendResponse($database_error_response);
+		SendResponseFile($_SESSION['tmp_path'].$file_input);
+		//SendResponse($database_error_response);
 		exit;
 	}
      }
@@ -166,10 +166,10 @@ else {
 			$database_error_response = makeSoapedFailureResponse($error_message,$errorcode);
 			writeTimeFile($_SESSION['idfile']."--Registry: database_error_response");
 				
-			$file_input=$_SESSION['idfile']."-database_error_response-".$_SESSION['idfile'];
-			writeTmpFiles($database_error_response,$file_input);
-	
-			SendResponse($database_error_response);
+			$file_input=$_SESSION['idfile']."-database_error_response.xml";
+			writeTmpFiles($database_error_response,$file_input,true);
+			SendResponseFile($_SESSION['tmp_path'].$file_input);
+			//SendResponse($database_error_response);
 			exit;
 		}
 	$statement = ociparse($conn, $query);
@@ -195,10 +195,10 @@ else {
 			$database_error_response = makeSoapedFailureResponse($error_message,$errorcode);
 			writeTimeFile($_SESSION['idfile']."--Registry: database_error_response");
 			
-			$file_input=$_SESSION['idfile']."-database_error_response-".$_SESSION['idfile'];
-			writeTmpFiles($database_error_response,$file_input);
-
-			SendResponse($database_error_response);
+			$file_input=$_SESSION['idfile']."-database_error_response.xml";
+			writeTmpFiles($database_error_response,$file_input,true);
+			SendResponseFile($_SESSION['tmp_path'].$file_input);
+			//SendResponse($database_error_response);
 			exit;
 		}
 
@@ -263,10 +263,10 @@ $conn = oci_connect($user_db,$password_db,$db);
 			$database_error_response = makeSoapedFailureResponse($error_message,$errorcode);
 			writeTimeFile($_SESSION['idfile']."--Registry: database_error_response");
 				
-			$file_input=$_SESSION['idfile']."-database_error_response-".$_SESSION['idfile'];
-			writeTmpFiles($database_error_response,$file_input);
-	
-			SendResponse($database_error_response);
+			$file_input=$_SESSION['idfile']."-database_error_response.xml";
+			writeTmpFiles($database_error_response,$file_input,true);
+			SendResponseFile($_SESSION['tmp_path'].$file_input);
+			//SendResponse($database_error_response);
 			exit;
 		}
 return $conn;

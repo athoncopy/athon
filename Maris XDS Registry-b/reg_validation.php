@@ -1859,7 +1859,7 @@ function arePresent_HASH_SIZE_repositoryUniqueId($dom)
 ##################################################################################
 ###### FUNZIONE DI CONTROLLO DELLA QUERY
 ##### ACCETTO SOLO QUERY DEL TIPO:  SELECT eo.id  FROM...
-function controllaQuery($SQLQuery)
+function controllaQuery($SQLQuery,$Action,$MessageID)
 {
 	$errorcode=array();
 	$error_message=array();
@@ -1879,13 +1879,13 @@ function controllaQuery($SQLQuery)
 		$isQueryAllowed = false;
 		$errorcode[]="XDSSqlError";
 		$error_message[]="[ERROR: NOT PROPER QUERY] - YOU ARE NOT ALLOWED TO PERFORM THIS KIND OF QUERY TO THIS REGISTRY[  ".avoidHtmlEntitiesInterpretation($SQLQuery)." ]";
-		$query_not_allowed_response = makeSoapedFailureResponse($error_message,$errorcode);
+		$query_not_allowed_response = makeSoapedFailureResponse($error_message,$errorcode,$Action,$MessageID);
 
 		writeTimeFile($_SESSION['idfile']."--StoredQuery: Query NOT allowed");
-		$file_input=$_SESSION['idfile']."-query_not_allowed-".$_SESSION['idfile'];
-		writeTmpQueryFiles($query_not_allowed_response,$file_input);
-
-		SendResponse($query_not_allowed_response);
+		$file_input=$_SESSION['idfile']."-query_not_allowed.xml";
+		writeTmpQueryFiles($query_not_allowed_response,$file_input,true);
+		SendResponseFile($_SESSION['tmpQueryService_path'].$file_input);
+		//SendResponse($query_not_allowed_response);
 		exit;
 		
 	}
@@ -1920,10 +1920,10 @@ function controllaPayload($input){
 			writeTimeFile($_SESSION['idfile']."--Registry: empty_payload_response");
 			
 			
-			$file_input=$_SESSION['idfile']."-empty_payload_response-".$_SESSION['idfile'];
-			writeTmpFiles($empty_payload_response,$file_input);
-
-			SendResponse($empty_payload_response);
+			$file_input=$_SESSION['idfile']."-empty_payload_response.xml";
+			writeTmpFiles($empty_payload_response,$file_input,true);
+			SendResponseFile($_SESSION['tmp_path'].$file_input);
+			//SendResponse($empty_payload_response);
 			exit;
 	
 		}
@@ -1952,10 +1952,10 @@ function isValid($ebxml_STRING_VALIDATION,$schema){
 
 		### SCRIVO LA RISPOSTA IN UN FILE
 		// File da scrivere
-		$file_input=$_SESSION['idfile']."-SOAPED_failure_VALIDATION_response-".$_SESSION['idfile'];
-		writeTmpFiles($failure_response,$file_input);
-
-		SendResponse($failure_response);
+		$file_input=$_SESSION['idfile']."-SOAPED_failure_VALIDATION_response.xml";
+		writeTmpFiles($failure_response,$file_input,true);
+		SendResponseFile($_SESSION['tmp_path'].$file_input);
+		//SendResponse($failure_response);
 		exit;
 	
 	}

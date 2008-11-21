@@ -228,6 +228,27 @@ function fill_Association_tables($dom,$RegistryPackage_id_array,$ExtrinsicObject
 		##### CASO RPLC Accept Document Replace
 		if($value_associationType=="RPLC")
 		{
+		    // devo verificare se il documento da sostituire è dentro ad un folder, se è dentro ad un folder devo creare una association Folder Document.
+
+			$query_SELECT_RegistryPackage = "SELECT id from RegistryPackage where id IN (SELECT sourceObject from Association where targetObject = '$value_targetObject') and objectType = 'urn:uuid:d9d542f3-6cc4-48b6-8870-ea235fbc94c2'";
+			$Association_folder_array = query_select2($query_SELECT_RegistryPackage,$connessione);
+			writeSQLQuery($Association_folder_array.": ".$query_SELECT_RegistryPackage);
+
+				//Se trovo qualche RegistryPackage di tipo folder
+				$conta_Folder=count($Association_folder_array);
+				for ($i_Folder=0;$i_Folder<$conta_Folder;$i_Folder++){
+	
+					$insert_Association_folderDoc = "INSERT INTO Association (id,objectType,associationType,sourceObject,targetObject) VALUES ('urn:uuid:".idrandom()."','Association','HasMember','".$Association_folder_array[$i_Folder][0]."','".$value_sourceObject."')";
+					
+		    			$res_insert_Association = query_exec2($insert_Association_folderDoc,$connessione);
+					writeSQLQuery($res_insert_Association.": ".$insert_Association_folderDoc);
+				}
+
+			
+			
+
+		
+		    // devo cambiare lo stato del documento a Deprecated	
 		    $query_UPDATE_targetObject="UPDATE ExtrinsicObject SET status = 'Deprecated' WHERE ExtrinsicObject.id = '$value_targetObject'";
 
 		    $ex = query_exec2($query_UPDATE_targetObject,$connessione);

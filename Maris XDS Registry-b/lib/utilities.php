@@ -123,7 +123,7 @@ function unhtmlentities($string)
 	
 }//END OF function unhtmlentities($string)
 
-function makeSoapedFailureResponse($failure_response,$errorcode)
+function makeSoapedFailureResponse($failure_response,$errorcode,$action="",$docid="")
 {
 
 	$response = "<?xml version='1.0' encoding='UTF-8'?>\r\n<soapenv:Envelope xmlns:soapenv=\"http://www.w3.org/2003/05/soap-envelope\" xmlns:wsa=\"http://www.w3.org/2005/08/addressing\">
@@ -252,7 +252,7 @@ function idrandom()
    if(function_exists('com_create_guid'))
    {
        // devo eliminare le parentesi {}
-       return com_create_guid();
+       return substr(com_create_guid(),1,36);
    }else{
 
        mt_srand((double)microtime()*10000);
@@ -415,11 +415,13 @@ function giveboundary($headers){
  return $boundary;
 }
 
-/*
-function SendResponse($file_input){
+
+function SendResponseFile($file_input){
 
 	ob_get_clean();//OKKIO FONDAMENTALE!!!!!
-
+	if(!isset($_SESSION['tmp_path'])){
+		$file_input = "./tmp/".$file_input;
+	}
 	//HEADERS
 	header("HTTP/1.1 200 OK");
 	header("Path: ".$_SESSION['www_REG_path']);
@@ -442,10 +444,10 @@ function SendResponse($file_input){
 	//BLOCCO L'ESECUZIONE DELLO SCRIPT
 	exit;
 
-}*/
+}
 
 // Funzione che invia la risposta da stringa
-function SendResponse($string_input,$content_type="application/soap+xml"){
+function SendResponse($string_input,$content_type="application/soap+xml",$file_length="0"){
 
 	ob_get_clean();//OKKIO FONDAMENTALE!!!!!
 
@@ -453,7 +455,7 @@ function SendResponse($string_input,$content_type="application/soap+xml"){
 	header("HTTP/1.1 200 OK");
 	header("Path: ".$_SESSION['www_REG_path']);
 	header("Content-Type: $content_type;charset=UTF-8");
-	header("Content-Length: ");
+	header("Content-Length: $file_length");
 		//CONTENUTO DEL FILE DI RISPOSTA
 	
 	print($string_input);

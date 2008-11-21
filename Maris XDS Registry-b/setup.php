@@ -98,7 +98,7 @@ return false;
 <title>
 <?php
 
-$v_maris_registry="3.1";
+$v_maris_registry="3.2";
 
 echo "MARIS XDS REGISTRY-B v$v_maris_registry SETUP"; //."   (".$_SESSION["idcode"].")";
 	?></title>
@@ -129,9 +129,13 @@ $stored_query_link="http://".$ip.str_replace('setup.php', 'storedquery.php',$scr
 
 echo '<table width="100%" border=0 cellpadding="10" cellspacing="0">
 <tr bgcolor="black"><td><img src="./img/logo+scritta.jpg"></td>
-<td><div align="right"><img src="./img/logo-A-thon-XDS-registry.jpg"></div></td></tr>';
+</tr>';
 echo '<tr bgcolor="#FF8F10"><td colspan="2">';
 echo "<h2>Registry-b v$v_maris_registry Setup</h2>";
+
+echo "This version of MARiS XDS Registry is not certified as a commercial medical device (FDA or CE-1)<br><br>";
+
+
 
 echo "The link to the registry you have to set in your software (XDS Repository) is:";
 echo "<br><b>".$registry_link."</b><br><br>";
@@ -145,12 +149,43 @@ echo "<br><b>".$stored_query_link."</b>";
 
 
 
+$get_REG_config="SELECT CACHE,PATIENTID,LOG,STAT,FOLDER,STATUS FROM CONFIG_B";
+$res_REG_config = query_select2($get_REG_config,$connessione);
+
+$REG_cache = $res_REG_config[0][0];
+$REG_PatientID = $res_REG_config[0][1];
+$REG_log= $res_REG_config[0][2];
+$REG_stat= $res_REG_config[0][3];
+$REG_folder= $res_REG_config[0][4];
+$REG_status = $res_REG_config[0][5];
+
+echo "<FORM action=\"updatesetup.php\" method=\"POST\">";
+
+############## REGISTRY ACTIVE ################
+
+echo "<h3>Registry Status</h3>";
+
+if($REG_status=="A"){
+
+	echo "Registry Status: <select name=\"registry_status\">
+  	<option value=\"A\" selected=\"selected\">ON</option>
+   	<option value=\"O\">OFF</option>
+  	</select><br></br>";
+	}
+else {
+
+	echo "Registry Status: <select name=\"registry_status\">
+   	<option value=\"A\">ON</option>
+  	<option value=\"O\" selected=\"selected\">OFF</option>
+  	</select><br></br>";
+	}
+
+
 ############## HTTP ################
 
 $get_HTTP="SELECT * FROM HTTP";
 
 $res_REG_HTTP = query_select2($get_HTTP,$connessione);
-echo "<FORM action=\"updatesetup.php\" method=\"POST\">";
 $REG_HTTP = $res_REG_HTTP[0][0];
 echo "<h3>Registry connection</h3>";
 
@@ -169,17 +204,6 @@ else {
   	</select><br></br>";
 	}
 
-
-
-
-$get_REG_config="SELECT CACHE,PATIENTID,LOG,STAT,FOLDER FROM CONFIG";
-$res_REG_config = query_select2($get_REG_config,$connessione);
-
-$REG_cache = $res_REG_config[0][0];
-$REG_PatientID = $res_REG_config[0][1];
-$REG_log= $res_REG_config[0][2];
-$REG_stat= $res_REG_config[0][3];
-$REG_folder= $res_REG_config[0][4];
 
 echo "<h3>Registry parameters</h3>";
 if($REG_cache=="O"){
@@ -226,13 +250,13 @@ echo "<h3>Registry Folder uniqueID Control</h3>";
 echo "If you set \"<b>ON</b>\", when the Registry receives a document with an existing Folder.uniqueID, it rejects the submission.<br>";
 echo "If you set \"<b>OFF</b>\", when the Registry receives a document with an existing Folder.uniqueID, it adds the documet to folder and accept the submission.<br><br>";
 if($REG_folder=="A"){
-	echo "Validate Folder.uniqueID: <select name=\"folder\">
+	echo "Validate Folder.uniqueID: <select name=\"registry_folder\">
   	<option value=\"A\" selected=\"selected\">ON</option>
    	<option value=\"O\">OFF</option>
   	</select><br></br>";
 	}
 else {
-	echo "Validate Folder.uniqueID: <select name=\"folder\">
+	echo "Validate Folder.uniqueID: <select name=\"registry_folder\">
    	<option value=\"A\">ON</option>
   	<option value=\"O\" selected=\"selected\">OFF</option>
   	</select><br></br>";
