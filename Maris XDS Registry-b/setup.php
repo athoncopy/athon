@@ -79,7 +79,7 @@ return true;
    }
 }
 //  End -->
-</script>
+</SCRIPT>
 
 
 <SCRIPT LANGUAGE="JavaScript">
@@ -92,7 +92,7 @@ else
 return false;
 }
 //  End -->
-</script>
+</SCRIPT>
 
 
 <title>
@@ -114,16 +114,10 @@ $script = $_SERVER['PHP_SELF'];
 $root = $_SERVER['DOCUMENT_ROOT'];
 
 
-if($ip=="127.0.0.1" || $ip=="localhost"){
-$registry_link="http://registry.ip".str_replace('setup.php', 'registry.php',$script);
-$query_link="http://registry.ip".str_replace('setup.php', 'query.php',$script);
-$stored_query_link="http://registry.ip".str_replace('setup.php', 'storedquery.php',$script);
-}
-else {
 $registry_link="http://".$ip.str_replace('setup.php', 'registry.php',$script);
 $query_link="http://".$ip.str_replace('setup.php', 'query.php',$script);
 $stored_query_link="http://".$ip.str_replace('setup.php', 'storedquery.php',$script);
-}
+
 
 
 
@@ -133,7 +127,7 @@ echo '<table width="100%" border=0 cellpadding="10" cellspacing="0">
 echo '<tr bgcolor="#FF8F10"><td colspan="2">';
 echo "<h2>Registry-b v$v_maris_registry Setup</h2>";
 
-echo "This version of MARiS XDS Registry is not certified as a commercial medical device (FDA or CE-1)<br><br>";
+echo "This version of MARiS XDS Registry is not certified as a commercial medical device (FDA or CE)<br><br>";
 
 
 
@@ -161,7 +155,7 @@ $REG_status = $res_REG_config[0][5];
 
 echo "<FORM action=\"updatesetup.php\" method=\"POST\">";
 
-############## REGISTRY ACTIVE ################
+############## REGISTRY STATUS ################
 
 echo "<h3>Registry Status</h3>";
 

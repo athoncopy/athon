@@ -151,13 +151,13 @@ $MessageID=$MessageID_node->get_content();
 if($registry_status=="O") {
 	$errorcode[]="XDSRegistryNotAvailable";
 	$error_message[] = "Registry is down for maintenance";
-	$folder_response = makeSoapedFailureResponse($error_message,$errorcode,$Action,$MessageID);
+	$status_response = makeSoapedFailureResponse($error_message,$errorcode,$Action,$MessageID);
 	writeTimeFile($_SESSION['idfile']."--Registry: Registry is down");
 	
 	$file_input=$idfile."-down_failure_response.xml";
-	writeTmpFiles($folder_response,$file_input,true);
+	writeTmpFiles($status_response,$file_input,true);
 	SendResponseFile($tmp_path.$file_input);
-	//SendResponse($folder_response);
+	//SendResponse($status_response);
 	exit;
 }
 
@@ -469,7 +469,8 @@ header("Content-Length: ".(string)filesize($tmp_path.$idfile."-registry_response
 
 
 ### FILE BODY
-if($file = fopen($tmp_path.$idfile."-registry_response.xml",'rb'))
+$file = fopen($tmp_path.$idfile."-registry_response.xml",'rb');
+if($file)
 {
    while((!feof($file)) && (connection_status()==0))
    {
