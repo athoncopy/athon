@@ -11,7 +11,6 @@
 
 # See the LICENSE files for details
 # ------------------------------------------------------------------------------------
-
 require_once('./config/config.php');
 require_once('./lib/utilities.php');
 require_once('./lib/log.php');
@@ -77,7 +76,7 @@ return true;
    }
 }
 //  End -->
-</script>
+</SCRIPT>
 
 <SCRIPT LANGUAGE="JavaScript">
 function conferma()
@@ -89,7 +88,7 @@ else
 return false;
 }
 //  End -->
-</script>
+</SCRIPT>
 
 
 <title>

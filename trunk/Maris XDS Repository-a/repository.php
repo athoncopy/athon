@@ -181,7 +181,7 @@ $log->writeLogFile("RECEIVED:",1);
 $log->writeLogFile($ebxml_imbustato_soap,0);
 
 if($save_files){
-writeTmpFiles($ebxml_imbustato_soap,$idfile."-ebxml_imbustato_soap-".$idfile);}
+writeTmpFiles($ebxml_imbustato_soap,$idfile."-ebxml_imbustato_soap.xml");}
 
 #### ebXML
 $dom_SOAP_ebXML = domxml_open_mem($ebxml_imbustato_soap);
@@ -198,16 +198,9 @@ for($i = 0;$i<count($dom_SOAP_ebXML_node_array);$i++)
 $log->writeLogFile("RECEIVED:",1);
 $log->writeLogFile($ebxml_STRING,0);
 
-if($save_files){
-writeTmpFiles($ebxml_STRING,$idfile."-ebxml-".$idfile);}
-
-
 ### SCRIVO L'ebXML DA VALIDARE (urn:uuid: ---> urn-uuid-)
 $ebxml_STRING_VALIDATION = adjustURN_UUIDs($ebxml_STRING);
 
-//file da scrivere!!!!!
-if($save_files){
-writeTmpFiles($ebxml_STRING_VALIDATION,$idfile."-ebxml_for_validation-".$idfile);}
 
 $isValid = isValid($ebxml_STRING_VALIDATION);
 
@@ -368,7 +361,8 @@ for($o = 0 ; $o < $conta_EO ; $o++)
 		$writef=false;
 		$nfile=0;
 		while(!$writef && $nfile<10){
-			if($fp_allegato = fopen($document_URI,"wb+")){
+            $fp_allegato = fopen($document_URI,"wb+");
+			if($fp_allegato){
 	
 				if (fwrite($fp_allegato,$allegato_STRING) === FALSE) {
 					sleep(1);
@@ -499,7 +493,7 @@ $log->writeLogFile("SENT:",1);
 $log->writeLogFile($post_data,0);
 
 //File da scrivere!!!!
-$file_forwarded_written = writeTmpFiles($post_data,$idfile."-forwarded-".$idfile,true);
+$file_forwarded_written = writeTmpFiles($post_data,$idfile."-forwarded.xml",true);
 ## 4- SPEDISCO IL MESSAGGIO AL REGISTRY E RICAVO LA RESPONSE
 
 
@@ -605,8 +599,8 @@ header("Content-Length: ".(string)filesize($tmp_path.$idfile."-body_response-".$
 ob_get_clean();//OKKIO FONDAMENTALE!!!!!
 //print($body);
 //flush();
-
-if($file = fopen($tmp_path.$idfile."-body_response-".$idfile,'rb'))
+$file = fopen($tmp_path.$idfile."-body_response-".$idfile,'rb');
+if($file)
 {
    while((!feof($file)) && (connection_status()==0))
    {
