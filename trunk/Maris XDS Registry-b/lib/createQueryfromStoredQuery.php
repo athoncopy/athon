@@ -13,7 +13,8 @@
 # ------------------------------------------------------------------------------------
 
 #### OTTENGO L'OGGETTO DOM DALL'AdhocQueryRequest
-if (!$dom_AdhocQueryRequest = domxml_open_mem($ebxml_STRING)) {
+$dom_AdhocQueryRequest = domxml_open_mem($ebxml_STRING);
+if (!$dom_AdhocQueryRequest) {
   writeTimeFile($idfile."--StoredQuery: AdhocQueryRequest non corretto");
 }
 ##############################################################################

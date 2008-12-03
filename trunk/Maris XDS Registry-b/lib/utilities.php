@@ -428,7 +428,8 @@ function SendResponseFile($file_input){
 	header("Content-Type: application/soap+xml;charset=UTF-8");
 	header("Content-Length: ".(string)filesize($file_input));
 		//CONTENUTO DEL FILE DI RISPOSTA
-	if($file = fopen($file_input,'rb'))
+    $file = fopen($file_input,'rb');
+	if($file)
 	{
    		while((!feof($file)) && (connection_status()==0))
    		{

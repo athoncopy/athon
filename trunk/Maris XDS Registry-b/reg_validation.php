@@ -1348,7 +1348,7 @@ function validate_Replacement($dom,$DocumentEntryPatientId_array,$connessione)
 
 				if(!empty($patId_res))//ECCEZIONE
 				{
-				     $targetObject_patID=$patId_res[0]["value"];
+				     $targetObject_patID=$patId_res[0][0];
 				     $source_patID=$DocumentEntryPatientId_array[0];
 				     #### VERIFICO IL MATCHING
 				     if($targetObject_patID!=$source_patID)
@@ -1501,7 +1501,7 @@ function validate_Append($dom,$DocumentEntryPatientId_array,$connessione)
 
 				if(!empty($patId_res))//ECCEZIONE
 				{
-				     $targetObject_patID=$patId_res[0]["value"];
+				     $targetObject_patID=$patId_res[0][0];
 				     $source_patID=$DocumentEntryPatientId_array[0];
 				     #### VERIFICO IL MATCHING
 				     if($targetObject_patID!=$source_patID)

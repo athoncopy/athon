@@ -92,7 +92,7 @@ writeTmpQueryFiles($headers,$idfile."-headers_received-".$idfile);
 //AdhocQueryRequest IMBUSTATO
 $ebxml_imbustato_soap_STRING=$HTTP_RAW_POST_DATA;
 if($clean_cache!="O"){
-writeTmpQueryFiles($ebxml_imbustato_soap_STRING,$idfile."-AdhocQueryRequest_imbustato_soap-".$idfile);
+writeTmpQueryFiles($ebxml_imbustato_soap_STRING,$idfile."-AdhocQueryRequest_imbustato_soap.xml");
 }
 
 //SBUSTO	
@@ -105,6 +105,25 @@ $root_completo = $dom_XML_completo->document_element();
 $Action_array = $root_completo->get_elements_by_tagname("Action");
 $Action_node = $Action_array[0];
 $Action=$Action_node->get_content();
+
+//Ottengo MessageID
+$MessageID_array = $root_completo->get_elements_by_tagname("MessageID");
+$MessageID_node = $MessageID_array[0];
+$MessageID=$MessageID_node->get_content();
+
+
+if($registry_status=="O") {
+	$errorcode[]="XDSRegistryNotAvailable";
+	$error_message[] = "Registry is down for maintenance";
+	$status_response = makeSoapedFailureResponse($error_message,$errorcode,$Action,$MessageID);
+	writeTimeFile($_SESSION['idfile']."--Registry: Registry is down");
+	
+	$file_input=$idfile."-down_failure_response.xml";
+	writeTmpQueryFiles($status_response,$file_input,true);
+	SendResponseFile($tmpQueryService_path.$file_input);
+	//SendResponse($status_response);
+	exit;
+}
 
 if($Action==""){
 	$failure_response=array("You must set the Action of the Request");
@@ -124,11 +143,6 @@ elseif($Action!="urn:ihe:iti:2007:RegistryStoredQuery"){
 	SendResponseFile($_SESSION['tmpQueryService_path'].$file_input);
 	exit;
 }
-
-//Ottengo MessageID
-$MessageID_array = $root_completo->get_elements_by_tagname("MessageID");
-$MessageID_node = $MessageID_array[0];
-$MessageID=$MessageID_node->get_content();
 
 //Ottengo Reply Address
 
