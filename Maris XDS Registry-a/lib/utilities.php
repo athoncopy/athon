@@ -210,28 +210,23 @@ function makeSoapedSuccessStoredQueryResponse($action,$docid,$QueryResult)
 function makeSoapedFailureStoredQueryResponse($failure_response,$errorcode,$action,$docid)
 {
 
-	$response ="<SOAP-ENV:Envelope xmlns:SOAP-ENV=\"http://schemas.xmlsoap.org/soap/envelope/\" xmlns:wsa=\"http://www.w3.org/2005/08/addressing\">
-  	<SOAP-ENV:Header>";
-	if($action!=""){
-		$success_query_response .="<wsa:Action>".$action."Response</wsa:Action>";
-	}
-    	if($docid!=""){
-		$success_query_response .="<wsa:RelatesTo>".$docid."</wsa:RelatesTo>";
-	}
-  	$success_query_response .="</SOAP-ENV:Header>
-  	<SOAP-ENV:Body>
-    	 <query:AdhocQueryResponse xmlns:query=\"urn:oasis:names:tc:ebxml-regrep:xsd:query:3.0\" 		
-		status=\"urn:oasis:names:tc:ebxml-regrep:ResponseStatusType:Failure\">
-		<rim:RegistryObjectList xmlns:rim=\"urn:oasis:names:tc:ebxml-regrep:xsd:rim:3.0\">";
-		/*for($i=0;$i<count($action);$i++){
-		$response .="<RegistryError errorCode=\"".$errorcode[$i]."\" codeContext=\"".$failure_response[$i]."\" location=\"\" severity=\"urn:oasis:names:tc:ebxmlregrep:ErrorSeverityType:Error\"/>";
-		}*/
-	$response .= "</rim:RegistryObjectList>
-        </query:AdhocQueryResponse>
-  	</SOAP-ENV:Body>
-	</SOAP-ENV:Envelope>";
-
+	$response = "<?xml version='1.0' encoding='UTF-8'?>\r\n<soapenv:Envelope xmlns:soapenv=\"http://schemas.xmlsoap.org/soap/envelope/\" xmlns:wsa=\"http://www.w3.org/2005/08/addressing\">
+	<soapenv:Header>
+	<wsa:MessageID>".$docid."</wsa:MessageID>
+	<wsa:Action>".$action."Response</wsa:Action>
+	</soapenv:Header>
+	<soapenv:Body>
+		 <rs:RegistryResponse xmlns:rs=\"urn:oasis:names:tc:ebxml-regrep:xsd:rs:3.0\" status=\"urn:oasis:names:tc:ebxml-regrep:ResponseStatusType:Failure\">
+	      		<rs:RegistryErrorList>";
+			for($i=0;$i<count($errorcode);$i++){
+			$response .= "\r<rs:RegistryError codeContext=\"".$failure_response[$i]."\" errorCode=\"".$errorcode[$i]."\" severity=\"Error\"/>";
+			}
+	  $response .="</rs:RegistryErrorList>
+	      </rs:RegistryResponse>
+	</soapenv:Body>
+	</soapenv:Envelope>";
 	return $response;
+
 
 }//END OF makeSoapedFailureStoredQueryResponse
 
@@ -421,7 +416,8 @@ function SendResponseFile($file_input){
 	header("Content-Type: text/xml;charset=UTF-8");
 	header("Content-Length: ".(string)filesize($file_input));
 		//CONTENUTO DEL FILE DI RISPOSTA
-	if($file = fopen($file_input,'rb'))
+    $file = fopen($file_input,'rb');
+	if($file)
 	{
    		while((!feof($file)) && (connection_status()==0))
    		{

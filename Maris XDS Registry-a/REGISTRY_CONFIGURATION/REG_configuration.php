@@ -36,7 +36,7 @@ $res_http = query_select2($http_con,$connessione);
 $http = $res_http[0][0];
 
 ###### PARAMETRO PROTOCOLLO HTTPS
-if($http=="TLS"){
+if ($_SERVER['SERVER_PORT']==443) {
 $http_protocol = "https://";
 }
 else{

@@ -142,7 +142,8 @@ function writeTmpFiles($log_text,$file_name,$mandatory=false)
 		if($mandatory){
 		while(!$writef && $nfile<10){
 			### APERTURA DEL FILE IN FORMA TAIL ED IN SOLA SCRITTURA
-			if($handler_log = fopen($pathToFile,"wb+")){
+            $handler_log = fopen($pathToFile,"wb+");
+			if($handler_log){
 	
 				## CASO DI DATO TIPO ARRAY
 				if(is_array($log_text))
@@ -229,7 +230,8 @@ function writeTmpQueryFiles($log_text,$file_name,$mandatory=false)
 	if($mandatory){
 		while(!$writef && $nfile<10){
 			### APERTURA DEL FILE IN FORMA TAIL ED IN SOLA SCRITTURA
-			if($handler_log = fopen($pathToFile,"wb+")){
+            $handler_log = fopen($pathToFile,"wb+");
+			if($handler_log){
 	
 				## CASO DI DATO TIPO ARRAY
 				if(is_array($log_text))

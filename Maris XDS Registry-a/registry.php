@@ -46,13 +46,13 @@ $_SESSION['www_REG_path']=$www_REG_path;
 if($registry_status=="O") {
 	$errorcode[]="XDSRegistryNotAvailable";
 	$error_message[] = "Registry is down for maintenance";
-	$folder_response = makeSoapedFailureResponse($error_message,$errorcode);
+	$status_response = makeSoapedFailureResponse($error_message,$errorcode);
 	writeTimeFile($_SESSION['idfile']."--Registry: Registry is down");
 	
 	$file_input=$idfile."-down_failure_response.xml";
-	writeTmpFiles($folder_response,$file_input,true);
+	writeTmpFiles($status_response,$file_input,true);
 	SendResponseFile($tmp_path.$file_input);
-	//SendResponse($folder_response);
+	//SendResponse($status_response);
 	exit;
 }
 
@@ -428,7 +428,8 @@ ob_get_clean();//OKKIO FONDAMENTALE!!!!!
 ### HEADERS
 header("HTTP/1.1 200 OK");
 $path_header = "Path: $www_REG_path";
-if($http=="TLS")
+//if($http=="TLS")
+if ($_SERVER['SERVER_PORT']!=443) {
 {
 	##### NEL CASO TLS AGGIUNGO LA DICITURA SECURE
 	$path_header = $path_header."; Secure";
@@ -438,7 +439,8 @@ header("Content-Type: text/xml; charset=UTF-8");
 header("Content-Length: ".(string)filesize($tmp_path.$idfile."-registry_response.xml"));
 
 ### FILE BODY
-if($file = fopen($tmp_path.$idfile."-registry_response.xml",'rb'))
+$file = fopen($tmp_path.$idfile."-registry_response.xml",'rb');
+if($file)
 {
    while((!feof($file)) && (connection_status()==0))
    {
@@ -617,5 +619,4 @@ if($clean_cache=="O")
 	}
 
 }
-
 ?>

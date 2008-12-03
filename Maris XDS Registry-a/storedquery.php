@@ -92,7 +92,7 @@ writeTmpQueryFiles($headers,$idfile."-headers_received-".$idfile);
 //AdhocQueryRequest IMBUSTATO
 $ebxml_imbustato_soap_STRING=$HTTP_RAW_POST_DATA;
 if($clean_cache!="O"){
-writeTmpQueryFiles($ebxml_imbustato_soap_STRING,$idfile."-AdhocQueryRequest_imbustato_soap-".$idfile);
+writeTmpQueryFiles($ebxml_imbustato_soap_STRING,$idfile."-AdhocQueryRequest_imbustato_soap.xml");
 }
 
 //SBUSTO	
@@ -107,6 +107,26 @@ $Action_array = $root_completo->get_elements_by_tagname("Action");
 if(count($Action_array)>0){
 	$Action_node = $Action_array[0];
 	$Action=$Action_node->get_content();
+
+	if($Action==""){
+		$failure_response=array("You must set the Action of the Request");
+		$error_code=array("XDSRegistryActionError");
+		$SOAPED_failure_response = makeSoapedFailureResponse($failure_response,$error_code,$Action,$MessageID);
+		$file_input=$idfile."-SOAPED_Action_failure.xml";
+		writeTmpQueryFiles($SOAPED_failure_response,$file_input,true);
+		SendResponseFile($_SESSION['tmpQueryService_path'].$file_input);
+		exit;
+	}
+	elseif($Action!="urn:ihe:iti:2007:RegistryStoredQuery"){
+		$failure_response=array("This is a Registry Stored Query transaction and you don't use the Action urn:ihe:iti:2007:RegistryStoredQuery");
+		$error_code=array("XDSRegistryActionError");
+		$SOAPED_failure_response = makeSoapedFailureResponse($failure_response,$error_code,$Action,$MessageID);
+		$file_input=$idfile."-SOAPED_Action_failure.xml";
+		writeTmpQueryFiles($SOAPED_failure_response,$file_input,true);
+		SendResponseFile($_SESSION['tmpQueryService_path'].$file_input);
+		exit;
+	}
+
 }
 else 
 {
@@ -122,6 +142,20 @@ if(count($MessageID_array)>0){
 else 
 {
 	$MessageID="";
+}
+
+
+if($registry_status=="O") {
+	$errorcode[]="XDSRegistryNotAvailable";
+	$error_message[] = "Registry is down for maintenance";
+	$status_response = makeSoapedFailureStoredQueryResponse($error_message,$errorcode,$Action,$MessageID);
+	writeTimeFile($_SESSION['idfile']."--Registry: Registry is down");
+	
+	$file_input=$idfile."-down_failure_response.xml";
+	writeTmpQueryFiles($status_response,$file_input,true);
+	SendResponseFile($tmpQueryService_path.$file_input);
+	//SendResponse($status_response);
+	exit;
 }
 //Ottengo Reply Address
 
@@ -243,7 +277,8 @@ if(empty($SQLResponse))
 	### RESTITUISCE IL MESSAGGIO DI SUCCESS IN SOAP
 	### ANCHE SE IL RISULTATO DELLA QUERY DA DB È VUOTO
     	$SOAPED_failure_response = makeSoapedSuccessStoredQueryResponse($Action,$MessageID,"");
-	writeTmpQueryFiles($SOAPED_failure_response,$idfile."-SOAPED_NORESULTS_response.xml");
+	$file_input=$idfile."-SOAPED_NORESULTS_response.xml";
+	writeTmpQueryFiles($SOAPED_failure_response,$file_input);
 
 	SendResponseFile($_SESSION['tmpQueryService_path'].$file_input);
 	//SendResponse($SOAPED_failure_response);

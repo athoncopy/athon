@@ -12,6 +12,6 @@
 # See the LICENSE files for details
 # ------------------------------------------------------------------------------------
 
-//$database="oracle";
-$database="mysql";
+$database="oracle";
+//$database="mysql";
 ?>
