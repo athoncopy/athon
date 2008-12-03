@@ -204,7 +204,11 @@ $idDoc=array();
 
 $SOAP_stringaxml= "<?xml version='1.0' encoding='UTF-8'?>".CRLF.
 "<soapenv:Envelope xmlns:soapenv=\"http://www.w3.org/2003/05/soap-envelope\"
-    xmlns:wsa=\"http://www.w3.org/2005/08/addressing\">";
+    xmlns:wsa=\"http://www.w3.org/2005/08/addressing\">
+    <soapenv:Header>
+        <wsa:Action>urn:ihe:iti:2007:RetrieveDocumentSetResponse</wsa:Action>
+        <wsa:RelatesTo>$MessageID</wsa:RelatesTo>
+    </soapenv:Header>";
 
 $SOAP_stringaxml.="
     <soapenv:Body>
