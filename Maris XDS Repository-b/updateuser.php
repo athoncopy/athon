@@ -17,7 +17,7 @@ include_once('./config/config.php');
 include_once('./lib/functions_'.$database.'.php');
 
 $Login = $_POST['login'];
-$Password = crypt($_POST['password'],'xds');
+$Password = crypt($_POST['password2'],'xds');
 
 
 

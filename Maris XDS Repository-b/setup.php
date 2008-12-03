@@ -77,7 +77,7 @@ return true;
    }
 }
 //  End -->
-</script>
+</SCRIPT>
 
 <SCRIPT LANGUAGE="JavaScript">
 function conferma()
@@ -89,7 +89,7 @@ else
 return false;
 }
 //  End -->
-</script>
+</SCRIPT>
 
 
 <title>

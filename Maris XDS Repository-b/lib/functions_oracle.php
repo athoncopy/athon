@@ -77,8 +77,20 @@ $risultato = ociexecute($statement);
 		}
 	// Se non riesce nemmeno adesso ritorna un errore
 	else {
-		
-		return "FALSE";
+		$errorcode=array();
+		$error_message=array();
+
+		$errorcode[]="XDSRepositoryError";
+		$err=ocierror();
+		$error_message[] = $err['message'];
+		$database_error_response = makeSoapedFailureResponse($error_message,$errorcode);
+		writeTimeFile($_SESSION['idfile']."--Repository: database_error_response");
+
+		$file_input=$_SESSION['idfile']."-database_error_response-".$_SESSION['idfile'];
+		writeTmpFiles($database_error_response,$file_input);
+
+		SendResponse($database_error_response);
+		exit;
 	}
      }
 	
@@ -172,7 +184,20 @@ else {
 	// Se non riesce nemmeno adesso ritorna un errore
 	else {
 		
-	return "FALSE";
+		$errorcode=array();
+		$error_message=array();
+
+		$errorcode[]="XDSRepositoryError";
+		$err=ocierror();
+		$error_message[] = $err['message'];
+		$database_error_response = makeSoapedFailureResponse($error_message,$errorcode);
+		writeTimeFile($_SESSION['idfile']."--Repository: database_error_response");
+
+		$file_input=$_SESSION['idfile']."-database_error_response-".$_SESSION['idfile'];
+		writeTmpFiles($database_error_response,$file_input);
+
+		SendResponse($database_error_response);
+		exit;
 	}
 
 }

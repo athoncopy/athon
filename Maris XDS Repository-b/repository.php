@@ -156,13 +156,6 @@ $boundary = "--".$boundary;
 $log->writeLogFile("BOUNDARY:",1);
 $log->writeLogFile($boundary,0);
 
-
-if($save_files){
-writeTmpFiles($boundary,$idfile."-boundary-".$idfile);
-}
-
-
-
 writeTimeFile($idfile."--Repository: Scrivo boundary");
 
 //////////////////nuovo/////////////////////////
@@ -202,7 +195,7 @@ $log->writeLogFile("RECEIVED:",1);
 $log->writeLogFile($ebxml_imbustato_soap,0);
 
 if($save_files){
-writeTmpFiles($ebxml_imbustato_soap,$idfile."-ebxml_imbustato_soap-".$idfile);}
+writeTmpFiles($ebxml_imbustato_soap,$idfile."-ebxml_imbustato_soap.xml");}
 
 
 
@@ -260,18 +253,9 @@ for($i = 0;$i<count($dom_SOAP_ebXML_node_array);$i++)
 $log->writeLogFile("RECEIVED:",1);
 $log->writeLogFile($ebxml_STRING,0);
 
-if($save_files){
-writeTmpFiles($ebxml_STRING,$idfile."-ebxml-".$idfile);}
-
-
 
 ### SCRIVO L'ebXML DA VALIDARE (urn:uuid: ---> urn-uuid-)
 $ebxml_STRING_VALIDATION = adjustURN_UUIDs($ebxml_STRING);
-
-//file da scrivere!!!!!
-if($save_files){
-writeTmpFiles($ebxml_STRING_VALIDATION,$idfile."-ebxml_for_validation-".$idfile);}
-
 
 $isValid = isValid($ebxml_STRING_VALIDATION);
 
@@ -375,7 +359,7 @@ for($o = 0 ; $o < $conta_EO ; $o++)
 	$ExtrinsicObject_mimeType_attr = $ExtrinsicObject_node->get_attribute('mimeType');
 	#### RICAVO LA RELATIVA ESTENSIONE PER IL FILE
 	$get_extension = "SELECT EXTENSION FROM MIMETYPE WHERE CODE = '$ExtrinsicObject_mimeType_attr'";
-		$res = query_select($get_extension);
+		$res = query_select2($get_extension,$connessione);
 
 	$file_extension = $res[0][0];
 	##### COMPONGO IL NOME DEL FILE (nomefile.estensione)
@@ -465,7 +449,8 @@ else {
 		$writef=false;
 		$nfile=0;
 		while(!$writef && $nfile<10){
-			if($fp_allegato = fopen($document_URI,"wb+")){
+            $fp_allegato = fopen($document_URI,"wb+");
+			if($fp_allegato){
 	
 				if (fwrite($fp_allegato,$allegato_STRING) === FALSE) {
 					sleep(1);
@@ -508,14 +493,6 @@ else {
 	$mod = modifiable($ExtrinsicObject_node);
 
 
-	if($save_files){
-	$fp = fopen($tmp_path.$idfile."-MOD-".$idfile, "w+");
-		fwrite($fp,$mod);
-	fclose($fp);
-
-	}
-
-
 	$datetime="CURRENT_TIMESTAMP";
 	$insert_into_DOCUMENTS = "INSERT INTO DOCUMENTS (XDSDOCUMENTENTRY_UNIQUEID,DATA,URI,MIMETYPE) VALUES ('".$UniqueId_valid_array[1][$o]."',".$datetime.",'".$document_URI2."','".$AllegatiExtrinsicObject[2][$o]."')";
 	//writeTimeFile($idfile."--Repository: INSERT INTO DOCUMENTS".$insert_into_DOCUMENTS);
@@ -525,13 +502,13 @@ else {
 	fclose($fp_insert_into_DOCUMENTS);
 
 
-	$ris = query_execute($insert_into_DOCUMENTS); //FINO A QUA OK!!!
+	$ris = query_execute2($insert_into_DOCUMENTS,$connessione); //FINO A QUA OK!!!
 
 
 	$selectTOKEN="SELECT KEY_PROG FROM DOCUMENTS WHERE XDSDOCUMENTENTRY_UNIQUEID = '".$UniqueId_valid_array[1][$o]."'";
 	//writeTimeFile($idfile."--Repository: uniqueid".$selectTOKEN);
 	//$selectTOKEN= "SELECT MAX(TOKEN_ID) AS TOKEN_ID FROM TOKEN";
-		$res_token = query_select($selectTOKEN);
+		$res_token = query_select2($selectTOKEN,$connessione);
 		$next_token = $res_token[0][0];
 
 	$document_token = $www_REP_path."getDocument.php?token=".$next_token;
@@ -615,7 +592,7 @@ $log->writeLogFile("SENT:",1);
 $log->writeLogFile($post_data,0);
 
 //File da scrivere!!!!
-$file_forwarded_written = writeTmpFiles($post_data,$idfile."-forwarded-".$idfile,true);
+$file_forwarded_written = writeTmpFiles($post_data,$idfile."-forwarded.xml",true);
 $size_doc=filesize($file_forwarded_written);
 
 ## 4- SPEDISCO IL MESSAGGIO AL REGISTRY E RICAVO LA RESPONSE
@@ -742,8 +719,8 @@ header("Content-Type: application/soap+xml;charset=UTF-8");
 ##### PULISCO IL BUFFER DI USCITA
 ob_get_clean();//OKKIO FONDAMENTALE!!!!!
 //print($body_response);
-
-if($file = fopen($tmp_path.$idfile."-body_response-".$idfile,'rb'))
+$file = fopen($tmp_path.$idfile."-body_response-".$idfile,'rb');
+if($file)
 {
    while((!feof($file)) && (connection_status()==0))
    {

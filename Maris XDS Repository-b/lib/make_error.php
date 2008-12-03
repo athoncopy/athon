@@ -38,7 +38,8 @@ function error_schema(){
 	header("Content-Type: text/xml;charset=UTF-8");
 	header("Content-Length: ".(string)filesize($tmp_path.$idfile."-SOAPED_failure_VALIDATION_response-".$idfile));
 	### CONTENUTO DEL FILE DI RISPOSTA
-	if($file = fopen($tmp_path.$idfile."-SOAPED_failure_VALIDATION_response-".$idfile,'rb'))
+    $file = fopen($tmp_path.$idfile."-SOAPED_failure_VALIDATION_response-".$idfile,'rb');
+	if($file)
 	{
    		while((!feof($file)) && (connection_status()==0))
    		{
