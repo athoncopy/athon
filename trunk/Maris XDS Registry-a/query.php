@@ -120,8 +120,8 @@ if ($isValid){
 
 #### OTTENGO L'OGGETTO DOM DALL'AdhocQueryRequest
 
-//$dom_AdhocQueryRequest = domxml_open_mem($ebxml_STRING);
-if (!$dom_AdhocQueryRequest = domxml_open_mem($ebxml_STRING)) {
+$dom_AdhocQueryRequest = domxml_open_mem($ebxml_STRING);
+if (!$dom_AdhocQueryRequest) {
   writeTimeFile($idfile."--Query: AdhocQueryRequest non corretto");
 }
 
@@ -1155,7 +1155,8 @@ header("Content-Type: text/xml;charset=UTF-8");
 header("Content-Length: ".(string)filesize($tmpQueryService_path.$idfile."-ebxmlResponseSOAP.xml"));
 
 ##### FILE BODY
-if($file = fopen($tmpQueryService_path.$idfile."-ebxmlResponseSOAP.xml",'rb'))
+$file = fopen($tmpQueryService_path.$idfile."-ebxmlResponseSOAP.xml",'rb');
+if($file)
 {
    	while((!feof($file)) && (connection_status()==0))
    	{
