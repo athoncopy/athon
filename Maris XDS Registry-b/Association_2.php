@@ -18,7 +18,6 @@ writeSQLQuery('Association_2');
 function fill_Association_tables($dom,$RegistryPackage_id_array,$ExtrinsicObject_id_array,$simbolic_RegistryPackage_FOL_id_array,$connessione)
 {
 
-	writeTimeFile("Registry: sono entrato in fill_Association_tables");
 	##### RADICE DEL DOCUMENTO ebXML
 	$root_ebXML = $dom->document_element();
 
@@ -86,7 +85,22 @@ function fill_Association_tables($dom,$RegistryPackage_id_array,$ExtrinsicObject
 				$value_associationType = "APND";
 			}
 			$value_sourceObject= $association_node->get_attribute('sourceObject');
-			writeSQLQuery('Valore fuori dall if '.$value_sourceObject);
+
+            if($value_sourceObject==""){
+
+                $errorcode[]="XDSRegistryError";
+                $error_message[] = "The sourceObject in Association is empty. ";
+                $folder_response = makeSoapedFailureResponse($error_message,$errorcode,$_SESSION['Action'],$_SESSION['MessageID']);
+                writeTimeFile($_SESSION['idfile']."--Registry: targetObject error");
+
+                $file_input=$idfile."-sourceObject_failure_response.xml";
+                writeTmpFiles($folder_response,$file_input,true);
+                SendResponseFile($_SESSION['tmp_path'].$file_input);
+                //SendResponse($folder_response,"application/soap+xml",filesize($tmp_path.$idfile."-folder_failure_response.xml"));
+                exit;
+
+            }
+
 			if(isSimbolic($value_sourceObject))
 			{
 				$value_sourceObject_1=$ExtrinsicObject_id_array[$value_sourceObject];
@@ -101,6 +115,22 @@ function fill_Association_tables($dom,$RegistryPackage_id_array,$ExtrinsicObject
 			}//END OF if(isSimbolic($value_sourceObject))
 			$value_targetObject= $association_node->get_attribute('targetObject');
 			$simbolic_value_targetObject= $association_node->get_attribute('targetObject');
+
+            if($value_targetObject==""){
+
+                $errorcode[]="XDSRegistryError";
+                $error_message[] = "The targetObject in Association is empty. ";
+                $folder_response = makeSoapedFailureResponse($error_message,$errorcode,$_SESSION['Action'],$_SESSION['MessageID']);
+                writeTimeFile($_SESSION['idfile']."--Registry: targetObject error");
+
+                $file_input=$idfile."-targetObject_failure_response.xml";
+                writeTmpFiles($folder_response,$file_input,true);
+                SendResponseFile($_SESSION['tmp_path'].$file_input);
+                //SendResponse($folder_response,"application/soap+xml",filesize($tmp_path.$idfile."-folder_failure_response.xml"));
+                exit;
+
+            }
+
 
 			if(isSimbolic($value_targetObject))
 			{
@@ -307,11 +337,11 @@ function fill_Association_tables($dom,$RegistryPackage_id_array,$ExtrinsicObject
 					#### ricavo data-ora correnti
 					$today = date("Ymd");
 					$cur_hour = date("His");
-					//$datetime = $today.$cur_hour;
-					$datetime = "CURRENT_TIMESTAMP";
+					$datetime = $today.$cur_hour;
+					//$datetime = "CURRENT_TIMESTAMP";
 
 					####UPDATE DI lastUpdateTime
-					$update_lastUpdateTime="UPDATE Slot SET Slot.value = $datetime WHERE Slot.name = 'lastUpdateTime' AND Slot.parent = '$value_sourceObject'";
+					$update_lastUpdateTime="UPDATE Slot SET Slot.value = '$datetime' WHERE Slot.name = 'lastUpdateTime' AND Slot.parent = '$value_sourceObject'";
 
 
 					$ex = query_exec2($update_lastUpdateTime,$connessione);
@@ -391,7 +421,6 @@ function fill_Association_tables($dom,$RegistryPackage_id_array,$ExtrinsicObject
 		else continue;
 
 	}//END OF for($i=0;$i<count($dom_ebXML_RegistryObjectList_child_nodes);$i++)
-	writeTimeFile("Registry: esco da fill_Association_tables");
 }//END OF function fill_Association_tables($dom)
 
 ?>

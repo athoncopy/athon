@@ -443,8 +443,6 @@ function validate_XDSDocumentEntryUniqueId($dom,$connessione)
 						if($value_node_tagname=='Value')
 						{
 					  	   $hash_value = $value_node->get_content();
-						writeTimeFile($idfile."--Registry: Hash".$hash_value);
-
 						}
 					}
 					/*

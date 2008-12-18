@@ -148,6 +148,9 @@ $MessageID_array = $root_completo->get_elements_by_tagname("MessageID");
 $MessageID_node = $MessageID_array[0];
 $MessageID=$MessageID_node->get_content();
 
+$_SESSION['Action']=$Action;
+$_SESSION['MessageID']=$MessageID;
+
 if($registry_status=="O") {
 	$errorcode[]="XDSRegistryNotAvailable";
 	$error_message[] = "Registry is down for maintenance";
@@ -226,10 +229,17 @@ $schema='schemas3/lcm.xsd';
 $isValid = isValid($ebxml_STRING_VALIDATION,$schema);
 
 if ($isValid){
-writeTimeFile($idfile."--Registry: Il metadata e' valido");}
+writeTimeFile($idfile."--Registry: Ho superato la prima validazione dell'ebxml");}
 
 
+## Qui valido l'ebxml con gli schemi più restrittivi v2 trasformati in v3
+$schema2='schemas3/lcm3.xsd';
 
+$isValid2 = isValid($ebxml_STRING_VALIDATION,$schema2);
+
+
+if ($isValid2){
+writeTimeFile($idfile."--Registry: Ho superato la seconda validazione dell'ebxml");}
 
 
 ##################################################################
@@ -366,12 +376,6 @@ if($ExtrinsicObject_mimeType_array[0] || $DocumentEntryPatientId_valid_array[0] 
 	exit;
 
 }######## END OF VALIDAZIONE ===NON=== PASSATA
-
-#### SE SONO QUI HO SUPERATO TUTTI I VINCOLI DI VALIDAZIONE
-
-$fp = fopen($tmp_path.$idfile."-POST_VALIDATION-".$idfile, "w+");
-      fwrite($fp,'SUPERATO IL VINCOLO DI VALIDAZIONE SU SCHEMAS + UNIQUEID + PATIENTID + FOLDER');
-fclose($fp);
 
 ######################################################
 ###### POSSO RIEMPIRE IL DATABASE DEL REGISTRY #######
