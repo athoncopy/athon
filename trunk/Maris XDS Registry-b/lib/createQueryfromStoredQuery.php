@@ -414,7 +414,7 @@ switch ($AdhocQuery) {
 
 		if (strpos(strtoupper($Value[$SQI][0]),"XDSFOLDERCODELIST")) {
 			$SQLStoredQuery_From .= ", Classification cl ";
-			$SQLStoredQuery_Optional .= " AND (cl.classifiedObject = fol.id AND cl.classificationScheme = 'urn:uuid:1ba97051-7806-41a8-a48b-8fce7af683c5' AND cl.nodeRepresentation = '".trim($Value[$SQI][1])."')";
+			$SQLStoredQuery_Optional .= " AND (cl.classifiedObject = fol.id AND cl.classificationScheme = 'urn:uuid:1ba97051-7806-41a8-a48b-8fce7af683c5' AND cl.nodeRepresentation IN ".trim($Value[$SQI][1]).")";
 		}
 
 		/*Qui andrebbe ????????	
