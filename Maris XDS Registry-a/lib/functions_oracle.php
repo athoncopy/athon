@@ -210,6 +210,47 @@ else {
 }
 
 
+//Per pagina di verifica
+function query_select3($query,$table)
+{
+
+$flag_green="img/flag-green.png";
+$flag_red="img/flag-red.png";
+
+$rec=array();
+include('./config/registry_oracle_db.php');
+# open connection to db
+$conn = OCILogOn($user_db,$password_db,$db)
+or die( "Could not connect to Oracle database!") or die (ocierror());;
+   //$rec=array();
+# execute the EXEC query
+$statement = ociparse($conn, $query);
+$risultato = ociexecute($statement);
+
+if ($risultato){
+?>
+    <tr class="patient">
+        <td class="valore" width="50"><img src="<?php echo $flag_green; ?>" width="32" height="32"/></td>
+        <td class="valore"><?php echo "$table: OK";?></td>
+    </tr>
+<?php
+
+}
+else {
+$err=array();
+$err=ocierror($statement);
+$error_message = $err['message'];
+
+?>
+    <tr class="patient">
+        <td class="valore" width="50"><img src="<?php echo $flag_red; ?>" width="32" height="32"/></td>
+        <td class="valore"><?php echo $table.": ".$error_message; ?></td>
+    </tr>
+<?php
+}
+
+}//END OF query_select3($query)
+
 function query($query)
 {
 /*
