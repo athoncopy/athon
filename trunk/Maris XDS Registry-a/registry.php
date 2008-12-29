@@ -430,7 +430,6 @@ header("HTTP/1.1 200 OK");
 $path_header = "Path: $www_REG_path";
 //if($http=="TLS")
 if ($_SERVER['SERVER_PORT']!=443) {
-{
 	##### NEL CASO TLS AGGIUNGO LA DICITURA SECURE
 	$path_header = $path_header."; Secure";
 }

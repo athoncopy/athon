@@ -173,7 +173,7 @@ else {
 
 
 ############## HTTP ################
-
+/*
 $get_HTTP="SELECT * FROM HTTP";
 
 $res_REG_HTTP = query_select2($get_HTTP,$connessione);
@@ -197,7 +197,7 @@ else {
 	}
 
 
-
+*/
 
 echo "<h3>Registry parameters</h3>";
 

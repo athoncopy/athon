@@ -16,7 +16,7 @@ require('./config/config.php');
 require('./lib/functions_'.$database.'.php');
 $connessione=connectDB();
 ############## HTTP ################
-
+/*
 $REG_http_post = $_POST['registry_http'];
 
 $deleteREG_HTTP = "DELETE FROM HTTP";
@@ -24,7 +24,7 @@ $REG_HTTP_delete = query_exec2($deleteREG_HTTP,$connessione);
 
 $insertREG_HTTP = "INSERT INTO HTTP (httpd,active) VALUES ('$REG_http_post','A')";
 $REG_HTTP_insert = query_exec2($insertREG_HTTP,$connessione);
-
+*/
 
 ################## REGISTRY CACHE ###################
 
