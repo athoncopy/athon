@@ -254,14 +254,14 @@ function controllaPayload($input){
 }
 
 
-function isValid($ebxml_STRING_VALIDATION){
+function isValid($ebxml_STRING_VALIDATION,$schema){
 
 	####### VALIDAZIONE DELL'ebXML SECONDO LO SCHEMA
 	libxml_use_internal_errors(true);
 	$domEbxml = DOMDocument::loadXML($ebxml_STRING_VALIDATION);
 
 	// Valido il messaggio da uno schema
-	if (!$domEbxml->schemaValidate('schemas3/lcm.xsd')) {
+	if (!$domEbxml->schemaValidate($schema)) {
 	$errors = libxml_get_errors();
     		foreach ($errors as $error) {
 			$errorcode[] = "XDSRepositoryMetadataError"; 
