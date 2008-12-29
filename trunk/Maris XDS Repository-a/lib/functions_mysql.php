@@ -218,6 +218,45 @@ else {
 
 
 
+//Per pagina di verifica
+function query_select3($query,$table)
+{
+
+$flag_green="img/flag-green.png";
+$flag_red="img/flag-red.png";
+
+
+include('./config/repository_mysql_db.php');
+# open connection to db
+    $rec=array();
+    $connessione = mysql_connect($ip,$user_db,$password_db)
+        or die("Connessione non riuscita: " . mysql_error());
+# open  db
+   mysql_select_db($db_name);
+# execute the SELECT query
+   $risultato = mysql_query($query);
+
+if ($risultato){
+?>
+    <tr class="patient">
+        <td class="valore" width="50"><img src="<?php echo $flag_green; ?>" width="32" height="32"/></td>
+        <td class="valore"><?php echo "$table: OK";?></td>
+    </tr>
+<?php
+
+}
+else {
+?>
+    <tr class="patient">
+        <td class="valore" width="50"><img src="<?php echo $flag_red; ?>" width="32" height="32"/></td>
+        <td class="valore"><?php echo $table.": ".mysql_error(); ?></td>
+    </tr>
+<?php
+}
+# close connection
+    mysql_close($connessione);
+
+}//END OF query_select($query)
 
 function connectDB(){
 
