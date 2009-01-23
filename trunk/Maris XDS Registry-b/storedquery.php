@@ -92,7 +92,7 @@ writeTmpQueryFiles($headers,$idfile."-headers_received-".$idfile);
 //AdhocQueryRequest IMBUSTATO
 $ebxml_imbustato_soap_STRING=$HTTP_RAW_POST_DATA;
 if($clean_cache!="O"){
-writeTmpQueryFiles($ebxml_imbustato_soap_STRING,$idfile."-AdhocQueryRequest_imbustato_soap.xml");
+writeTmpQueryFiles($ebxml_imbustato_soap_STRING,$idfile."-AdhocQueryRequest.xml");
 }
 
 //SBUSTO	
@@ -179,13 +179,6 @@ $ebxml_STRING=str_replace((substr($ebxml_imbustato_soap_STRING,strpos($ebxml_imb
 $error_code=array();
 $failure_response=array();
 
-
-
-//SCRIVO L'AdhocQueryRequest SBUSTATO
-if($clean_cache!="O"){
-writeTmpQueryFiles($ebxml_STRING,$idfile."-AdhocQueryRequest-".$idfile);
-}
-
 ####### VALIDAZIONE DELL'ebXML SECONDO LO SCHEMA
 $schema='schemas3/query.xsd';
 $isValid = isValid($ebxml_STRING,$schema);
@@ -233,7 +226,7 @@ $SQLQuery_ESEGUITA=adjustQuery($SQLQuery);#### IMPORTANTE!!!
 ###SCRIVO LA QUERY CHE EFFETTIVAMENTE LANCIO A DB
 ###### ESEGUO LA QUERY
 $SQLResponse_array = query_select($SQLQuery_ESEGUITA);
-writeTmpQueryFiles($SQLQuery_ESEGUITA,$idfile."-Query_eseguita-".$idfile);
+//writeTmpQueryFiles($SQLQuery_ESEGUITA,$idfile."-Query_eseguita-".$idfile);
 if($SQLResponse_array[0]!=""){
 	$SQLResponse=array_merge($SQLResponse,$SQLResponse_array);
 }
@@ -660,7 +653,7 @@ else if($returnType_a=="LeafClass")
 
 				$dom_ebXML_RegistryPackage_Classification->set_attribute("classificationScheme",$RegistryPackage_Classification_classificationScheme);
 				//Non so se ci va o no
-				$dom_ebXML_RegistryPackage_Classification->set_attribute("classificationNode",$RegistryPackage_Classification_classificationNode);
+				//$dom_ebXML_RegistryPackage_Classification->set_attribute("classificationNode",$RegistryPackage_Classification_classificationNode);
 				$dom_ebXML_RegistryPackage_Classification->set_attribute("classifiedObject",$RegistryPackage_Classification_classifiedObject);
 				$dom_ebXML_RegistryPackage_Classification->set_attribute("id",$RegistryPackage_Classification_id);
 				$dom_ebXML_RegistryPackage_Classification->set_attribute("nodeRepresentation",$RegistryPackage_Classification_nodeRepresentation);
@@ -676,13 +669,13 @@ else if($returnType_a=="LeafClass")
 			}//END OF for($t=0;$t<count($RegistryPackage_Classification_arr);$t++)
 
 
-
+            //Ho bisogno di una classification di con classificationNode="urn:uuid:a54d6aa5-d40d-43f9-88c5-b4633d873bdd"
 	
 		$dom_ebXML_RegistryPackage_Classification=$dom_ebXML_RegistryPackage->create_element_ns($ns_rim3_path,"Classification");
 		$dom_ebXML_RegistryPackage_Classification=$dom_ebXML_RegistryPackage_root->append_child($dom_ebXML_RegistryPackage_Classification);
 
-		$dom_ebXML_RegistryPackage_Classification->set_attribute("classificationNode",$RegistryPackage_Classification_classificationNode);
-		$dom_ebXML_RegistryPackage_Classification->set_attribute("classifiedObject",$RegistryPackage_Classification_classifiedObject);
+		$dom_ebXML_RegistryPackage_Classification->set_attribute("classificationNode","urn:uuid:a54d6aa5-d40d-43f9-88c5-b4633d873bdd");
+		$dom_ebXML_RegistryPackage_Classification->set_attribute("classifiedObject",$RegistryPackage_id);
 		$dom_ebXML_RegistryPackage_Classification->set_attribute("id","urn:uuid:18e31fd4-9368-4457-8a69-e7f3a372e9e3");
 		$dom_ebXML_RegistryPackage_Classification->set_attribute("objectType",$namespace_objectType.$RegistryPackage_Classification_objectType);
 
@@ -841,7 +834,7 @@ else if($returnType_a=="LeafClass")
 				$dom_ebXML_RegistryPackage_Classification->set_attribute("classifiedObject",$RegistryPackage_Classification_classifiedObject);
 				$dom_ebXML_RegistryPackage_Classification->set_attribute("id",$RegistryPackage_Classification_id);
 				$dom_ebXML_RegistryPackage_Classification->set_attribute("nodeRepresentation",$RegistryPackage_Classification_nodeRepresentation);
-				$dom_ebXML_RegistryPackage_Classification->set_attribute("objectType",$RegistryPackage_Classification_objectType);
+				$dom_ebXML_RegistryPackage_Classification->set_attribute("objectType",$namespace_objectType.$RegistryPackage_Classification_objectType);
 	
 				appendSlot_Classification($dom_ebXML_RegistryPackage,$dom_ebXML_RegistryPackage_Classification,$ns_rim3_path,$RegistryPackage_Classification_id,$connessione);	
 			
@@ -854,7 +847,25 @@ else if($returnType_a=="LeafClass")
 
 			}//END OF for($t=0;$t<count($RegistryPackage_Classification_arr);$t++)
 
+
 			}//END OF if(!empty($RegistryPackage_Classification_arr))
+
+
+
+
+            //Ho bisogno di una classification di con classificationNode="urn:uuid:d9d542f3-6cc4-48b6-8870-ea235fbc94c2"
+
+		$dom_ebXML_RegistryPackage_Classification=$dom_ebXML_RegistryPackage->create_element_ns($ns_rim3_path,"Classification");
+		$dom_ebXML_RegistryPackage_Classification=$dom_ebXML_RegistryPackage_root->append_child($dom_ebXML_RegistryPackage_Classification);
+
+		$dom_ebXML_RegistryPackage_Classification->set_attribute("classificationNode","urn:uuid:d9d542f3-6cc4-48b6-8870-ea235fbc94c2");
+		$dom_ebXML_RegistryPackage_Classification->set_attribute("classifiedObject",$RegistryPackage_id);
+		$dom_ebXML_RegistryPackage_Classification->set_attribute("id","urn:uuid:18e31fd4-9368-4457-8a69-e7f3a372e9e4");
+		$dom_ebXML_RegistryPackage_Classification->set_attribute("objectType",$namespace_objectType.$RegistryPackage_Classification_objectType);
+
+
+
+
 
 			#### NODI EXTERNALIDENTIFIER
 			$get_RegistryPackage_ExternalIdentifier="SELECT identificationScheme,objectType,id,value,registryObject FROM ExternalIdentifier WHERE ExternalIdentifier.registryObject = '$RegistryPackage_id'";

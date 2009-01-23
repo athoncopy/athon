@@ -1333,7 +1333,7 @@ function validate_Replacement($dom,$DocumentEntryPatientId_array,$connessione)
 			$performControls = true;
 			$patId_coherence_failure="";
 			$patId_coherence = true;
-			if($Association_node_associationType_attr=='urn:oasis:names:tc:ebxml-regrep:AssociationType:RPLC' || $Association_node_associationType_attr=='urn:oasis:names:tc:ebxml-regrep:AssociationType:XFRM_RPLC')
+			if($Association_node_associationType_attr=='urn:ihe:iti:2007:AssociationType:RPLC' || $Association_node_associationType_attr=='urn:ihe:iti:2007:AssociationType:XFRM_RPLC')
 			{
 				$Association_node_sourceObject_attr_arr[]=$Association_node_sourceObject_attr;
 
@@ -1486,7 +1486,7 @@ function validate_Append($dom,$DocumentEntryPatientId_array,$connessione)
 			$performControls = true;
 			$patId_coherence_failure="";
 			$patId_coherence = true;
-			if($Association_node_associationType_attr=='urn:oasis:names:tc:ebxml-regrep:AssociationType:APND' || $Association_node_associationType_attr=='urn:oasis:names:tc:ebxml-regrep:AssociationType:XFRM')
+			if($Association_node_associationType_attr=='urn:ihe:iti:2007:AssociationType:APND' || $Association_node_associationType_attr=='urn:ihe:iti:2007:AssociationType:XFRM')
 			{
 				$Association_node_sourceObject_attr_arr[]=$Association_node_sourceObject_attr;
 
