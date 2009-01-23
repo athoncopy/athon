@@ -660,8 +660,14 @@ switch ($AdhocQuery) {
 	for ($contaDoc=1;$contaDoc<count($DocUUIDs_arr);$contaDoc++){
 	$DocUUIDs .= ",'".trim($DocUUIDs_arr[$contaDoc][0])."'";
 	}
-	
-	$SQLStoredQuery[3] = "SELECT ass.id FROM Association ass WHERE ass.associationType = 'HasMember' AND ass.sourceObject = ".trim($REGUUID)." AND (ass.targetObject IN (".$DocUUIDs.") OR ass.targetObject IN (".$FolUUIDs."))";
+
+	//$SQLStoredQuery[3] = "SELECT ass.id FROM Association ass WHERE ass.associationType = 'HasMember' AND ass.sourceObject = ".trim($REGUUID)." AND (ass.targetObject IN (".$DocUUIDs.") OR ass.targetObject IN (".$FolUUIDs."))";
+
+	//$SQLStoredQuery[3] = "SELECT ass.id FROM Association ass WHERE ass.associationType = 'HasMember'  AND (ass.targetObject IN (".$DocUUIDs.") OR ass.targetObject IN (".$FolUUIDs."))";
+
+    $SQLStoredQuery[3] = "SELECT ass.id FROM Association ass WHERE ass.associationType = 'HasMember'  AND (ass.targetObject IN (".$DocUUIDs.") OR ass.targetObject IN (".$FolUUIDs.") OR ass.sourceObject = ".trim($REGUUID).")";
+
+
 
         break;
 

@@ -149,7 +149,7 @@ function fill_Classification_tables($dom,$RegistryPackage_id_array,$simbolic_Reg
 			$DB_array_classification_attributes['classificationNode'] = $value_classificationNode;
 			$DB_array_classification_attributes['nodeRepresentation'] = $value_nodeRepresentation;
 
-			if($value_classificationNode!='urn:uuid:a54d6aa5-d40d-43f9-88c5-b4633d873bdd'){
+			if($value_classificationNode!='urn:uuid:a54d6aa5-d40d-43f9-88c5-b4633d873bdd' && $value_classificationNode!='urn:uuid:d9d542f3-6cc4-48b6-8870-ea235fbc94c2' ){
 			##### SONO PRONTO A SCRIVERE NEL DB
 			$INSERT_INTO_Classification = "INSERT INTO Classification (id,accessControlPolicy,objectType,classificationNode,classificationScheme,classifiedObject,nodeRepresentation) VALUES ('".trim($DB_array_classification_attributes['id'])."','".trim($DB_array_classification_attributes['accessControlPolicy'])."','".trim($DB_array_classification_attributes['objectType'])."','".trim($DB_array_classification_attributes['classificationNode'])."','".trim($DB_array_classification_attributes['classificationScheme'])."','".trim($DB_array_classification_attributes['classifiedObject'])."','".trim($DB_array_classification_attributes['nodeRepresentation'])."')";
 

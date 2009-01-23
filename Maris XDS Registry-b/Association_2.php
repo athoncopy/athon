@@ -68,19 +68,19 @@ function fill_Association_tables($dom,$RegistryPackage_id_array,$ExtrinsicObject
 			{
 				$value_associationType = "HasMember";
 			}
-			else if($value_associationType == 'urn:oasis:names:tc:ebxml-regrep:AssociationType:RPLC')
+			else if($value_associationType == 'urn:ihe:iti:2007:AssociationType:RPLC')
 			{
 				$value_associationType = "RPLC";
 			}
-			else if($value_associationType == 'urn:oasis:names:tc:ebxml-regrep:AssociationType:XFRM_RPLC')
+			else if($value_associationType == 'urn:ihe:iti:2007:AssociationType:XFRM_RPLC')
 			{
 				$value_associationType = "XFRM_RPLC";
 			}
-			else if($value_associationType == 'urn:oasis:names:tc:ebxml-regrep:AssociationType:XFRM')
+			else if($value_associationType == 'urn:ihe:iti:2007:AssociationType:XFRM')
 			{
 				$value_associationType = "XFRM";
 			}
-			else if($value_associationType == 'urn:oasis:names:tc:ebxml-regrep:AssociationType:APND')
+			else if($value_associationType == 'urn:ihe:iti:2007:AssociationType:APND')
 			{
 				$value_associationType = "APND";
 			}
