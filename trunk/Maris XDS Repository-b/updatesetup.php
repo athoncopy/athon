@@ -14,6 +14,8 @@
 
 include_once('./config/config.php');
 include_once('./lib/functions_'.$database.'.php');
+require_once('./lib/utilities.php');
+require_once('./lib/log.php');
 
 $REG_host_post = $_POST['registry_host'];
 $REG_port_post = $_POST['registry_port'];
@@ -47,11 +49,12 @@ $REP_cache_post = $_POST['repository_cache'];
 $REP_files_post = $_POST['repository_files'];
 $REP_uniqueID = $_POST['repository_uniqueid'];
 $REP_status = $_POST['repository_status'];
+$REP_crypt = $_POST['repository_crypt'];
 
 $deleteREP_config = "DELETE FROM CONFIG_B";
 $REP_delete_config = query_execute($deleteREP_config);
 
-$insertREP_config = "INSERT INTO CONFIG_B (WWW,LOG,CACHE,FILES,UNIQUEID,STATUS) VALUES ('$REP_www_post','$REP_log_post','$REP_cache_post','$REP_files_post','$REP_uniqueID','$REP_status')";
+$insertREP_config = "INSERT INTO CONFIG_B (WWW,LOG,CACHE,FILES,UNIQUEID,STATUS,CRYPT) VALUES ('$REP_www_post','$REP_log_post','$REP_cache_post','$REP_files_post','$REP_uniqueID','$REP_status','$REP_crypt')";
 //echo $insertREP_config;
 $REP_insert_config = query_execute($insertREP_config);
 

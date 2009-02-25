@@ -49,7 +49,7 @@ $lib_path = "./lib/";
 
 
 
-$select_config = "SELECT WWW,LOG,CACHE,FILES,UNIQUEID,STORAGE,STORAGESIZE,STATUS FROM CONFIG_B";
+$select_config = "SELECT WWW,LOG,CACHE,FILES,UNIQUEID,STORAGE,STORAGESIZE,STATUS,CRYPT FROM CONFIG_B";
 $res_config = query_select2($select_config,$connessione);
 
 //$www_REP_path = "/MARIS_xds3/xdsServices2/repository/";
@@ -142,6 +142,13 @@ $rep_uniqueID = $res_config[0][4];
 
 ##### STATUS 
 $repository_status = $res_config[0][7];
+
+
+##### Crypt Documents
+$REP_crypt = $res_config[0][8];
+$keycrypt = "athonxdskey123";
+
+
 
 #### MESSAGGI
 $service = "repository.php";

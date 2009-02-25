@@ -12,7 +12,7 @@
 # See the LICENSE files for details
 # ------------------------------------------------------------------------------------
 
-$db = "(DESCRIPTION = (ADDRESS_LIST = (ADDRESS = (PROTOCOL = TCP)(HOST = 10.135.0.95)(PORT = 1521)) ) (CONNECT_DATA = (SID = XE) ) )";
+$db = "(DESCRIPTION = (ADDRESS_LIST = (ADDRESS = (PROTOCOL = TCP)(HOST = 10.135.0.92)(PORT = 1521)) ) (CONNECT_DATA = (SID = XE) ) )";
 
 $user_db = 'xds-repository';
 

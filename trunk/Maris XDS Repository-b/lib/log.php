@@ -484,7 +484,7 @@ function writeTmpFiles($log_text,$file_name,$mandatory=false)
 
 	}//END OF writeTmpFiles($log_text)
 
-function writeTmpRetriveFiles($log_text,$file_name,$mandatory=false)
+function writeTmpRetrieveFiles($log_text,$file_name,$mandatory=false)
 	{
 		### PATH COMPLETO AL FILE 
 		if(!isset($_SESSION['tmp_retrieve_path'])){
@@ -535,7 +535,7 @@ function writeTmpRetriveFiles($log_text,$file_name,$mandatory=false)
 			$errorcode[]="XDSRepositoryError";
 			$error_message[] = "Repository can't create tmp file. ";
 			$tmp_response = makeSoapedFailureResponse($error_message,$errorcode);
-			writeTimeFile($_SESSION['idfile']."--Repository: Tmp File error");
+			writeTimeFile($_SESSION['idfile']."--Repository: TmpRetrieve File error");
 		
 			$file_input=$idfile."-tmp_failure_response-".$idfile;
 			writeTmpFiles($tmp_response,$file_input);

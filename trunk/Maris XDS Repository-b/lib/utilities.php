@@ -325,6 +325,43 @@ function SendResponse($string_input){
 
 }
 
+function SendResponseFile($file_input){
 
+	ob_get_clean();
+	//HEADERS
+	header("HTTP/1.1 200 OK");
+	header("Path: ".$_SESSION['www_REG_path']);
+	header("Content-Type: application/soap+xml;charset=UTF-8");
+	header("Content-Length: ".(string)filesize($file_input));
+		//CONTENUTO DEL FILE DI RISPOSTA
+    $file = fopen($file_input,'rb');
+	if($file)
+	{
+   		while((!feof($file)) && (connection_status()==0))
+   		{
+     			print(fread($file, 1024*8));
+      			flush();//NOTA BENE!!!!!!!!!
+   		}
+
+   		fclose($file);
+	}
+
+	//SPEDISCO E PULISCO IL BUFFER DI USCITA
+	ob_end_flush();
+
+    if($_SESSION['clean_cache']=='O'){
+        if ($windows>0){
+            exec('del tmp\\'.$idfile."* /q");
+            exec('del tmp_retrieve\\'.$idfile."* /q");
+        }
+        else{
+            exec('rm -f '.$_SESSION['tmp_path'].$idfile."*");
+            exec('rm -f '.$_SESSION['tmp_retrieve_path'].$idfile."*");
+        }
+    }
+	//BLOCCO L'ESECUZIONE DELLO SCRIPT
+	exit;
+
+}
 
 ?>

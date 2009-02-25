@@ -19,7 +19,15 @@ include_once("config/REP_configuration.php");
 include_once('./lib/functions_'.$database.'.php');
 include_once("./lib/log.php");
 include_once("./lib/utilities.php");
-//include_once("./lib/domxml-php4-to-php5.php");
+require_once('lib/mcrypt.php');
+
+$_SESSION['tmp_path']=$tmp_path;
+$_SESSION['tmp_retrieve_path']=$tmp_retrieve_path;
+$_SESSION['idfile']=$idfile;
+$_SESSION['logActive']=$logActive;
+$_SESSION['log_path']=$log_path;
+$_SESSION['clean_cache']=$clean_cache;
+
 
 if($repository_status=="O") {
 	$errorcode[]="XDSRepositoryNotAvailable";
@@ -28,7 +36,7 @@ if($repository_status=="O") {
 	writeTimeFile($_SESSION['idfile']."--Repository: Repository is down");
 	
 	$file_input=$idfile."-down_failure_response.xml";
-	writeTmpFiles($status_response,$file_input,true);
+	writeTmpRetrieveFiles($status_response,$file_input,true);
 	//SendResponseFile($tmp_path.$file_input);
 	SendResponse($status_response);
 	exit;
@@ -36,24 +44,14 @@ if($repository_status=="O") {
 
 $idfile = idrandom_file();
 
-$log = new Log("REP");
-$log->set_tmp_path($tmp_retrieve_path);
-$log->set_idfile($idfile);
-$log->setLogActive($logActive);
-$log->setCurrentLogPath($log_path);
-$log->setCurrentFileSLogPath($tmp_retrieve_path);
 
-$_SESSION['tmp_path']=$tmp_retrieve_path;
-$_SESSION['idfile']=$idfile;
-$_SESSION['logActive']=$logActive;
-$_SESSION['log_path']=$log_path;
 
 $headers = apache_request_headers();
 
-writeTimeFile($idfile."--Repository Retrive: RECUPERO GLI HEADERS RICEVUTI DA APACHE");
+writeTimeFile($idfile."--Repository Retrieve: RECUPERO GLI HEADERS RICEVUTI DA APACHE");
 
 if($save_files){
-writeTmpRetriveFiles($headers,$idfile."-headers_received-".$idfile);
+writeTmpRetrieveFiles($headers,$idfile."-headers_received-".$idfile);
 }
 
 //$input = $HTTP_RAW_POST_DATA;
@@ -67,7 +65,7 @@ $input = $HTTP_RAW_POST_DATA;
 
 
 if($save_files){
-writeTmpRetriveFiles($input,$idfile."-pre_decode_received-".$idfile);
+writeTmpRetrieveFiles($input,$idfile."-pre_decode_received-".$idfile);
 }
 
 preg_match('(<([^\t\n\r\f\v";<]+:)?(ENVELOPE))',strtoupper($input),$matches);
@@ -77,7 +75,7 @@ $body = substr($input,strpos(strtoupper($input),"<".$presoap."ENVELOPE"));
 
 
 if($save_files){
-writeTmpRetriveFiles($body,$idfile."-body-".$idfile);
+writeTmpRetrieveFiles($body,$idfile."-body-".$idfile);
 }
 
 writeTimeFile($idfile."--Repository Retrieve: Ho recuperato soapenv");
@@ -100,8 +98,8 @@ if($Action==""){
 	$error_code=array("XDSRepositoryActionError");
 	$SOAPED_failure_response = makeSoapedFailureResponse($failure_response,$error_code,$Action,$MessageID);
 	$file_input=$idfile."-SOAPED_Action_failure.xml";
-	writeTmpQueryFiles($SOAPED_failure_response,$file_input,true);
-	SendResponseFile($_SESSION['tmpQueryService_path'].$file_input);
+	writeTmpFiles($SOAPED_failure_response,$file_input,true);
+	SendResponseFile($_SESSION['tmp_retrieve_path'].$file_input);
 	exit;
 }
 elseif($Action!="urn:ihe:iti:2007:RetrieveDocumentSet"){
@@ -109,8 +107,8 @@ elseif($Action!="urn:ihe:iti:2007:RetrieveDocumentSet"){
 	$error_code=array("XDSRepositoryActionError");
 	$SOAPED_failure_response = makeSoapedFailureResponse($failure_response,$error_code,$Action,$MessageID);
 	$file_input=$idfile."-SOAPED_Action_failure.xml";
-	writeTmpFiles($SOAPED_failure_response,$file_input,true);
-	SendResponseFile($_SESSION['tmp_path'].$file_input);
+	writeTmpRetrieveFiles($SOAPED_failure_response,$file_input,true);
+	SendResponseFile($_SESSION['tmp_retrieve_path'].$file_input);
 	exit;
 }
 
@@ -134,12 +132,16 @@ elseif($Action!="urn:ihe:iti:2007:RetrieveDocumentSet"){
 		$res_repUniqueId=query_select($get_repUniqueId);
 		if($res_repUniqueId[0][0]==$DocumentRequests_array[$i][0]){
 		//se il repository unique id corrisponde alla richiesta
-		$get_DocUniqueId="SELECT XDSDOCUMENTENTRY_UNIQUEID,URI,MIMETYPE FROM DOCUMENTS WHERE XDSDOCUMENTENTRY_UNIQUEID='".$DocumentRequests_array[$i][1]."'";
-		$res_DocUniqueId=query_select($get_DocUniqueId);
-		$file[$i] = file_get_contents("./".$res_DocUniqueId[0][1], "r");
-		$log->writeLogFileS($file[$i],$idfile."-file-".$i."-".$idfile,"M");
-		
-		//writeTimeFile($idfile."--GetDocument Retrieve: File $i: ".$file[$i]);
+        $get_DocUniqueId="SELECT XDSDOCUMENTENTRY_UNIQUEID,URI,MIMETYPE,CRYPT FROM DOCUMENTS WHERE XDSDOCUMENTENTRY_UNIQUEID='".$DocumentRequests_array[$i][1]."'";
+            $res_DocUniqueId=query_select($get_DocUniqueId);
+            if($res_DocUniqueId[0][3]=="A"){
+                $file[$i] = decrypt($keycrypt,file_get_contents("./".$res_DocUniqueId[0][1], "r"));
+            }
+            else {
+                $file[$i] = file_get_contents("./".$res_DocUniqueId[0][1], "r");
+            }
+		$file_input=$idfile."-file-".$i."-".$idfile;
+        writeTmpRetrieveFiles($file[$i],$file_input);
 
 		writeTimeFile($idfile."--GetDocument Retrieve: La dimensione del file è:".filesize($tmp_retrieve_path.$idfile."-file-".$i."-".$idfile));
 
@@ -152,9 +154,9 @@ elseif($Action!="urn:ihe:iti:2007:RetrieveDocumentSet"){
 		$repositoryUniqueId_response = makeSoapedFailureResponse($error_message,$errorcode,$Action);
 			
 		$file_input=$_SESSION['idfile']."-repositoryUniqueId_failure_response-".$_SESSION['idfile'];
-		writeTmpRetriveFiles($repositoryUniqueId_response,$file_input);
+		writeTmpRetrieveFiles($repositoryUniqueId_response,$file_input);
 
-		SendResponse($repositoryUniqueId_response);
+		SendResponseFile($_SESSION['tmp_retrieve_path'].$file_input);
 		exit;
 		}
 	}
@@ -240,7 +242,7 @@ $SOAP_stringaxml.="
 
 	$pacchetto=$head_content_type."\r\n\r\n".$SOAP_stringaxml.$lista_file;
 	if($save_files){
-	writeTmpRetriveFiles($pacchetto,$idfile."-HTTP_POSTED-".$idfile);
+	writeTmpRetrieveFiles($pacchetto,$idfile."-HTTP_POSTED-".$idfile);
 	}
 	//ob_end_flush();
 
