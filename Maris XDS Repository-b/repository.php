@@ -18,6 +18,7 @@ ob_start();//OKKIO FONADAMENTALE!!!!!!!!!!
 
 ##### CONFIGURAZIONE DEL REPOSITORY
 require("config/REP_configuration.php");
+require_once('lib/mcrypt.php');
 #######################################
 
 $system=PHP_OS;
@@ -216,7 +217,7 @@ if($Action==""){
     $error_code=array("XDSRepositoryActionError");
     $SOAPED_failure_response = makeSoapedFailureResponse($failure_response,$error_code,$Action,$MessageID);
     $file_input=$idfile."-SOAPED_Action_failure.xml";
-    writeTmpQueryFiles($SOAPED_failure_response,$file_input,true);
+    writeTmpFiles($SOAPED_failure_response,$file_input,true);
     SendResponseFile($_SESSION['tmp_path'].$file_input);
     exit;
 }
@@ -509,12 +510,9 @@ for($o = 0 ; $o < $conta_EO ; $o++)
 
 
     $datetime="CURRENT_TIMESTAMP";
-    $insert_into_DOCUMENTS = "INSERT INTO DOCUMENTS (XDSDOCUMENTENTRY_UNIQUEID,DATA,URI,MIMETYPE) VALUES ('".$UniqueId_valid_array[1][$o]."',".$datetime.",'".$document_URI2."','".$AllegatiExtrinsicObject[2][$o]."')";
-    //writeTimeFile($idfile."--Repository: INSERT INTO DOCUMENTS".$insert_into_DOCUMENTS);
+    $insert_into_DOCUMENTS = "INSERT INTO DOCUMENTS (XDSDOCUMENTENTRY_UNIQUEID,DATA,URI,MIMETYPE,CRYPT) VALUES ('".$UniqueId_valid_array[1][$o]."',".$datetime.",'".$document_URI2."','".$AllegatiExtrinsicObject[2][$o]."','".$REP_crypt."')";
 
-    $fp_insert_into_DOCUMENTS= fopen($tmp_path.$idfile."-insert_into_DOCUMENTS-".$idfile, "wb+");
-    fwrite($fp_insert_into_DOCUMENTS,$insert_into_DOCUMENTS);
-    fclose($fp_insert_into_DOCUMENTS);
+    //writeTimeFile($idfile."--Repository: INSERT INTO DOCUMENTS".$insert_into_DOCUMENTS);
 
 
     $ris = query_execute2($insert_into_DOCUMENTS,$connessione); //FINO A QUA OK!!!
@@ -566,6 +564,15 @@ for($o = 0 ; $o < $conta_EO ; $o++)
 
 
 
+    //Cripto il documento
+    if($REP_crypt=="A"){
+
+        exec('rm -f '.$document_URI2);
+
+        file_put_contents($document_URI,encrypt($keycrypt, $allegato_STRING));
+    }
+
+
 }//END OF for($o = 0 ; $o < (count($ExtrinsicObject_array)) ; $o++)
 
 
@@ -580,9 +587,6 @@ $_SESSION['boundary_to_reg']=md5(time());
 $_SESSION['idDoc']=md5(time()+1);
 $_SESSION['Content_ID']=md5(time()+2);
 //$_SESSION['messageID']=md5(time()+3);
-
-if($save_files){
-    writeTmpFiles($submissionToForward,$idfile."-ebxmlToForward-".$idfile);}
 
 
 ## 1- elimino la stringa <?amp;xml version="1.0"?amp;>  dall'ebxmlToForward
@@ -727,7 +731,8 @@ writeTmpFiles($body_response,$idfile."-body_response.xml");
 
 
 header("HTTP/1.1 200 OK");
-header("Content-Type: application/soap+xml;charset=UTF-8");
+//header("Content-Type: application/soap+xml;charset=UTF-8");
+header("Content-Type: application/soap+xml; action=\"urn:ihe:iti:2007:RegisterDocumentSet-bResponse\";charset=UTF-8");
 //header("Content-Length: ".(string)filesize($tmp_path.$idfile."-body_response-".$idfile));
 
 

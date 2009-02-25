@@ -88,11 +88,6 @@ function validate_XDSSubmissionSetSourceId($dom,$connessione)
     	//$query = "SELECT * FROM SUBMISSIONS WHERE XDSSubmissionSet_uniqueId = '$ebxml_value'";
 	$query = "SELECT * FROM KNOWN_SOUCES_IDS WHERE XDSSUBMISSIONSET_SOURCEID = '$ebxml_value'";
 	 
-  	if($_SESSION['save_files']){
-    	$fp_sourceIdQuery = fopen($_SESSION['tmp_path'].$_SESSION['idfile']."-SubmissionSetSourceIdQuery-".$_SESSION['idfile'],"w+");
-		fwrite($fp_sourceIdQuery,$query);
-	fclose($fp_sourceIdQuery);
-	}
 	#### ESEGUO LA QUERY
     	$res = query_select2($query,$connessione); //array bidimensionale
 

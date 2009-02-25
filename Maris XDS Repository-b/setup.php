@@ -95,7 +95,7 @@ return false;
 <title>
 <?php
 
-$v_maris_repository="3.1";
+$v_maris_repository="3.2";
 
 echo "MARIS XDS REPOSITORY-B v$v_maris_repository SETUP"; //."   (".$_SESSION["idcode"].")";
 	?></title>
@@ -115,18 +115,19 @@ echo '<tr bgcolor="#FF8F10"><td colspan="2">';
 $ip = $_SERVER['SERVER_NAME'];
 $script = $_SERVER['PHP_SELF'];
 $root = $_SERVER['DOCUMENT_ROOT'];
+$port = $_SERVER['SERVER_PORT'];
 
 
 if($ip=="127.0.0.1" || $ip=="localhost"){
-$repository_link="http://repository.ip".str_replace('setup.php', 'repository.php',$script);
-$repository_get="http://repository.ip".str_replace('setup.php', 'getDocumentb.php',$script);
-$repository_getxop="http://repository.ip".str_replace('setup.php', 'getDocumentbopt.php',$script);
+$repository_link="http://repository.ip:".$port.str_replace('setup.php', 'repository.php',$script);
+$repository_get="http://repository.ip:".$port.str_replace('setup.php', 'getDocumentb.php',$script);
+$repository_getxop="http://repository.ip:".$port.str_replace('setup.php', 'getDocumentbopt.php',$script);
 $ip_new="repository.ip";
 }
 else {
-$repository_link="http://".$ip.str_replace('setup.php', 'repository.php',$script);
-$repository_get="http://".$ip.str_replace('setup.php', 'getDocumentb.php',$script);
-$repository_getxop="http://".$ip.str_replace('setup.php', 'getDocumentbopt.php',$script);
+$repository_link="http://".$ip.":".$port.str_replace('setup.php', 'repository.php',$script);
+$repository_get="http://".$ip.":".$port.str_replace('setup.php', 'getDocumentb.php',$script);
+$repository_getxop="http://".$ip.":".$port.str_replace('setup.php', 'getDocumentbopt.php',$script);
 $ip_new=$ip;
 }
 
@@ -162,7 +163,7 @@ echo "<br><br>";
 
 
 
-$get_REP_config="SELECT LOG,CACHE,FILES,UNIQUEID,STATUS FROM CONFIG_B";
+$get_REP_config="SELECT LOG,CACHE,FILES,UNIQUEID,STATUS,CRYPT FROM CONFIG_B";
 $res_REP_config = query_select2($get_REP_config,$connessione);
 
 $REP_www = str_replace('setup.php','',$script);
@@ -171,6 +172,7 @@ $REP_cache = $res_REP_config[0][1];
 $REP_files = $res_REP_config[0][2];
 $REP_uniqueID = $res_REP_config[0][3];
 $REP_status = $res_REP_config[0][4];
+$REP_crypt = $res_REP_config[0][5];
 
 
 echo "<h3>Repository Status</h3>";
@@ -192,7 +194,7 @@ else {
 
 echo "<h3>Repository parameters</h3>";
 echo "Repository Host: (".$ip_new.") <INPUT type=\"text\" name=\"repository_host\" value=\"$REP_host\" size=\"20\" maxlength=\"30\"><br></br>";
-echo "Repository Port: (80 default) <INPUT type=\"text\" name=\"repository_port\" value=\"$REP_port\" size=\"4\" maxlength=\"10\"><br></br>";
+echo "Repository Port: ($port default) <INPUT type=\"text\" name=\"repository_port\" value=\"$REP_port\" size=\"4\" maxlength=\"10\"><br></br>";
 
 
 
@@ -267,7 +269,18 @@ else {
 	}
 
 
-
+if($REP_crypt=="A"){
+	echo "Crypt Submitted Documents: <select name=\"repository_crypt\">
+  	<option value=\"A\" selected=\"selected\">ON</option>
+   	<option value=\"O\">OFF</option>
+  	</select><br></br>";
+	}
+else {
+	echo "Crypt Submitted Documents: <select name=\"repository_crypt\">
+   	<option value=\"A\">ON</option>
+  	<option value=\"O\" selected=\"selected\">OFF</option>
+  	</select><br></br>";
+	}
 
 
 

@@ -13,7 +13,7 @@
 # ------------------------------------------------------------------------------------
 
 require_once("./config/REP_configuration.php");
-
+require_once('lib/mcrypt.php');
 if($repository_status=="O") {
 	$errorcode[]="XDSRepositoryNotAvailable";
 	$error_message[] = "Repository is down for maintenance";
@@ -32,8 +32,8 @@ $connessione=connectDB();
 //ob_get_clean();//OKKIO FONDAMENTALE!!!!! Pulisco il buffer
 //ob_end_flush();// Spedisco il contenuto del buffer
 $token=$_GET["token"];
-$get_token="SELECT URI FROM DOCUMENTS WHERE KEY_PROG=$token";
-$uri_token=query_select2($get_token,$connessione);
+$get_token="SELECT URI,MIMETYPE,CRYPT FROM DOCUMENTS WHERE KEY_PROG=$token";
+$res_token=query_select2($get_token,$connessione);
 
 
 // Da verificare se si possono usare funzioni php al posto di java
@@ -67,8 +67,14 @@ if($ATNA_active=='A'){
 
 }
 
+
+header('Content-type: '.$res_token[0][1]);
+header('Content-Disposition: inline;');
+if($res_token[0][2]=="A"){
+    echo decrypt($keycrypt,file_get_contents("http://".$rep_host.":".$rep_port.$www_REP_path.$res_token[0][0]));
+}
+else{
+    echo file_get_contents("http://".$rep_host.":".$rep_port.$www_REP_path.$res_token[0][0]);
+}
 disconnectDB($connessione);
-
-header("Location: ".$www_REP_path.$uri_token[0][0]);
-
 ?>
