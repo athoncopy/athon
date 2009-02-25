@@ -13,7 +13,6 @@
 # ------------------------------------------------------------------------------------
 
 require_once("./config/REP_configuration.php");
-require_once('lib/mcrypt.php');
 if($repository_status=="O") {
 	$errorcode[]="XDSRepositoryNotAvailable";
 	$error_message[] = "Repository is down for maintenance";
@@ -71,10 +70,10 @@ if($ATNA_active=='A'){
 header('Content-type: '.$res_token[0][1]);
 header('Content-Disposition: inline;');
 if($res_token[0][2]=="A"){
-    echo decrypt($keycrypt,file_get_contents("http://".$rep_host.":".$rep_port.$www_REP_path.$res_token[0][0]));
+    echo decrypt($keycrypt,file_get_contents("./".$res_token[0][0]));
 }
 else{
-    echo file_get_contents("http://".$rep_host.":".$rep_port.$www_REP_path.$res_token[0][0]);
+    echo file_get_contents("./".$res_token[0][0]);
 }
 disconnectDB($connessione);
 ?>

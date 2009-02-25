@@ -87,7 +87,7 @@ $headers = apache_request_headers();
 writeTimeFile($idfile."--Repository Retrive: RECUPERO GLI HEADERS RICEVUTI DA APACHE");
 
 if($save_files){
-writeTmpRetriveFiles($headers,$idfile."-headers_received-".$idfile);
+writeTmpRetrieveFiles($headers,$idfile."-headers_received-".$idfile);
 }
 
 
@@ -101,7 +101,7 @@ $errorcode=array();
 $error_message=array();
 
 if($save_files){
-writeTmpRetriveFiles($input,$idfile."-pre_decode_received-".$idfile);
+writeTmpRetrieveFiles($input,$idfile."-pre_decode_received-".$idfile);
 }
 
 
@@ -112,7 +112,7 @@ $body = substr($input,strpos(strtoupper($input),"<".$presoap."ENVELOPE"));
 
 
 if($save_files){
-writeTmpRetriveFiles($body,$idfile."-body-".$idfile);
+writeTmpRetrieveFiles($body,$idfile."-body-".$idfile);
 }
 //echo $body;
 
@@ -173,10 +173,15 @@ elseif($Action!="urn:ihe:iti:2007:RetrieveDocumentSet"){
 		$res_repUniqueId=query_select($get_repUniqueId);
 		if($res_repUniqueId[0][0]==$DocumentRequests_array[$i][0]){
 		//se il repository unique id corrisponde alla richiesta
-		$get_DocUniqueId="SELECT XDSDOCUMENTENTRY_UNIQUEID,URI,MIMETYPE FROM DOCUMENTS WHERE XDSDOCUMENTENTRY_UNIQUEID='".$DocumentRequests_array[$i][1]."'";
+		$get_DocUniqueId="SELECT XDSDOCUMENTENTRY_UNIQUEID,URI,MIMETYPE,CRYPT FROM DOCUMENTS WHERE XDSDOCUMENTENTRY_UNIQUEID='".$DocumentRequests_array[$i][1]."'";
 		writeTimeFile($idfile."--GetDocument Retrieve: $get_DocUniqueId");
 		$res_DocUniqueId=query_select($get_DocUniqueId);
-		$file[$i] = file_get_contents("./".$res_DocUniqueId[0][1], "r");
+        if($res_DocUniqueId[0][3]=="A"){
+            $file[$i] = decrypt($keycrypt,file_get_contents("./".$res_DocUniqueId[0][1], "r"));
+        }
+        else {
+            $file[$i] = file_get_contents("./".$res_DocUniqueId[0][1], "r");
+        }
 		$documento_encoded64[$i]=base64_encode($file[$i]);
 		writeTimeFile($idfile."--Repository Retrieve: File $i: ".$file[$i]);
 		
@@ -189,7 +194,7 @@ elseif($Action!="urn:ihe:iti:2007:RetrieveDocumentSet"){
 		$repositoryUniqueId_response = makeSoapedFailureResponse($error_message,$errorcode,$Action);
 			
 		$file_input=$_SESSION['idfile']."-repositoryUniqueId_failure_response-".$_SESSION['idfile'];
-		writeTmpRetriveFiles($repositoryUniqueId_response,$file_input);
+		writeTmpRetrieveFiles($repositoryUniqueId_response,$file_input);
 
 		SendResponse($repositoryUniqueId_response);
 		}
@@ -256,7 +261,7 @@ $SOAP_stringaxml.="
 
 	$pacchetto=$head_content_type."\r\n".$SOAP_stringaxml;
 	if($save_files){
-	writeTmpRetriveFiles($pacchetto,$idfile."-HTTP_POSTED-".$idfile);
+	writeTmpRetrieveFiles($pacchetto,$idfile."-HTTP_POSTED-".$idfile);
 	}
 	//ob_end_flush();
 

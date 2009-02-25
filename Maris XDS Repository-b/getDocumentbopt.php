@@ -19,7 +19,6 @@ include_once("config/REP_configuration.php");
 include_once('./lib/functions_'.$database.'.php');
 include_once("./lib/log.php");
 include_once("./lib/utilities.php");
-require_once('lib/mcrypt.php');
 
 $_SESSION['tmp_path']=$tmp_path;
 $_SESSION['tmp_retrieve_path']=$tmp_retrieve_path;

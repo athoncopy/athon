@@ -18,7 +18,6 @@ ob_start();//OKKIO FONADAMENTALE!!!!!!!!!!
 
 ##### CONFIGURAZIONE DEL REPOSITORY
 require("config/REP_configuration.php");
-require_once('lib/mcrypt.php');
 #######################################
 
 $system=PHP_OS;
