@@ -1,0 +1,1 @@
+Cross Enterprise Document Sharing (XDS) is a profile created by Integrating the Healthcare Enterprise to facilitate the sharing of clinical documents between institutions. XDS re-uses ebXML registry methodology to provide a centralised method of indexing documents.
